@@ -992,6 +992,7 @@ shinyServer(function(input, output, session) {
     print("                                                                                                       ")
     print(".......................................................................................................") 
     print("                                                                                                       ")
+    print("   https://people.duke.edu/~rnau/arimrule.htm                                                          ")
     print("                                                                                                       ")
     print("                       Summary of rules for identifying ARIMA models                                   ")
     print("                                                                                                       ")
