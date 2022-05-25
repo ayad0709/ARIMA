@@ -895,7 +895,7 @@ shinyServer(function(input, output, session) {
   
   
   
-  
+  # the following code can be used to save the forecast data and the graphics
   
   
   output$downloadData <- downloadHandler(
