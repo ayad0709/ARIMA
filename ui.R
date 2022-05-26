@@ -201,8 +201,8 @@ shinyUI(pageWithSidebar (
                                 mainPanel(width=1100,
                                   
                                   tabsetPanel(
-                                    tabPanel("Classique 1", plotOutput("decompose",width=800,height = 700 )),
-                                    tabPanel("Classique 2", plotOutput("decompose2",width=800,height = 700 )),
+                                    tabPanel("Classical", plotOutput("decompose",width=800,height = 700 )),
+                                    tabPanel("Classical", plotOutput("decompose2",width=800,height = 700 )),
                                     tabPanel("Coefficients saisonnier", verbatimTextOutput("dFactors" )),
                                     
                                   ))
@@ -236,7 +236,7 @@ shinyUI(pageWithSidebar (
         
         
         
-        tabPanel("Forcast",
+        tabPanel("Forecast",
                  fluidPage(
                    tabsetPanel(
                      tabPanel("Forecasted Plot", plotOutput("M",width=900,height = 630)),
