@@ -1,7 +1,7 @@
 
 packages = c("shiny", "shinythemes","data.table", "ggplot2",
              "dplyr","fpp2","forecast","stats", "Kendall",
-             "tseries","seasonal","ggfortify","xts",
+             "tseries","seasonal","ggfortify", "xts", "astsa",
              "tsibble", "feasts", "readxl")
 
 
@@ -193,16 +193,16 @@ shinyUI(pageWithSidebar (
 
                      tabPanel("Classique model", br(),
                               sidebarLayout(
-                                sidebarPanel(width=2,
-                                             selectInput("model1",label = "model", choices=c("add","mult"),selected="additive"),
+                                sidebarPanel(width=3,
+                                             selectInput("model1",label = "model", choices=c("additive","multiplicative"),selected="additive"),
                                              submitButton("Submit"),
                                              
                                 ),
-                                mainPanel(
+                                mainPanel(width=1100,
                                   
                                   tabsetPanel(
-                                    tabPanel("Classique 1", plotOutput("decompose",width=700,height = 600 )),
-                                    tabPanel("Classique 2", plotOutput("decompose2",width=700,height = 600 )),
+                                    tabPanel("Classique 1", plotOutput("decompose",width=800,height = 700 )),
+                                    tabPanel("Classique 2", plotOutput("decompose2",width=800,height = 700 )),
                                     tabPanel("Coefficients saisonnier", verbatimTextOutput("dFactors" )),
                                     
                                   ))
@@ -240,9 +240,16 @@ shinyUI(pageWithSidebar (
                  fluidPage(
                    tabsetPanel(
                      tabPanel("Forecasted Plot", plotOutput("M",width=900,height = 630)),
-                     tabPanel("Model", verbatimTextOutput("P"), class="span7"),
                      
-                     tabPanel("tests", 
+                     tabPanel("Model", 
+                              tabsetPanel(
+                                 tabPanel("Model", verbatimTextOutput("P"), class="span7"),
+                                 tabPanel("Slow Model", verbatimTextOutput("Pslow"), class="span7"),
+                                
+                              )),  
+                     
+                     
+                     tabPanel("Tests", 
                               tabsetPanel(
                                 tabPanel("Stationarité [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarite")),
                                 tabPanel("Trend [Mann-Kendall]", verbatimTextOutput("testTrend")),
@@ -287,24 +294,27 @@ shinyUI(pageWithSidebar (
                      
                      tabPanel("ARIMA pdq", br(),
                               sidebarLayout(
-                                sidebarPanel(width=3,
+                                sidebarPanel(width=2,
                                              numericInput("ARIMAp", label = "p:", min=0, value=0),
                                              numericInput("ARIMAd", label = "d:",min=0,  value=0),
                                              numericInput("ARIMAq", label = "q:", min=0, value=0),
                                              numericInput("ARIMAps", label = "P:",min=0,  value=0),
                                              numericInput("ARIMAds", label = "D:",min=0,  value=0),
                                              numericInput("ARIMAqs", label = "Q:", min=0, value=0),
-                                             submitButton("Submit ==>"),
+                                             submitButton("Submit"),
                                              
                                 ),
                                 mainPanel(
                                   
                                   tabsetPanel(
-                                    tabPanel("ARIMA", plotOutput("PrevisionsPlotpdq", width=700, height = 550)),
+                                    tabPanel("ARIMA", plotOutput("PrevisionsPlotpdq", width=750, height = 580)),
                                     tabPanel("Modèle", verbatimTextOutput("textARIMApdq")),  
-                                    tabPanel("ACF.Res Plot", plotOutput("plotACFRespdq", width=650, height = 500)),
-                                    tabPanel("PACF.Res Plot", plotOutput("plotPACFRespdq", width=650, height = 500)),
-                                    # tabPanel("ndiffs(St)", verbatimTextOutput("ndiffsts" )),
+                                    tabPanel("ACF.R", plotOutput("plotACFRespdq", width=650, height = 500)),
+                                    tabPanel("PACF.R", plotOutput("plotPACFRespdq", width=650, height = 500)),
+                                    tabPanel("ACF+PACF Res", plotOutput("plotACFPACFRespdq", width=600, height = 550)),
+                                    tabPanel("SARIMA", plotOutput("SARIMAplot", width=600, height = 550)),
+                                    
+                                     # tabPanel("ndiffs(St)", verbatimTextOutput("ndiffsts" )),
                                     
                                   ))
                                 
@@ -345,6 +355,15 @@ shinyUI(pageWithSidebar (
                      
                      
                      tabPanel("Forecaste", tableOutput("FARIMApdq")),
+                     
+                     
+                     tabPanel("SARIMA", 
+                              tabsetPanel(
+                                 tabPanel("Forcast", plotOutput("SARIMAforcastplot", width=830, height = 600)),
+                                 tabPanel("SARIMA", plotOutput("SARIMAplot2", width=750, height = 600)),
+                                 
+                              )),  
+                     
                      
                      # tabPanel("Forecaste", verbatimTextOutput("FARIMApdq")),
                    ))),  

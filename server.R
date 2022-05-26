@@ -190,6 +190,107 @@ shinyServer(function(input, output, session) {
 
   
   
+  
+  
+  
+  mm <- function(Model, col, time, year, month, length) {
+    inFile <- reactive({
+      input$file1
+    })
+    d <- reactive({
+      validate(
+        need(
+          input$file1 != "",
+          "Please select a data set, right now only .txt, .csv and .xlsx data files can be processed, make sure the 1st row of your data contains the variable name."
+        )
+      )
+      if (is.null(inFile))
+        return(NULL)
+      if (file_ext(inFile()$name) == "xlsx") {
+        read.xlsx(inFile()$datapath)
+      }
+      else if (file_ext(inFile()$name) == "csv")  {
+        read.csv(inFile()$datapath, header = T)
+      }
+      else {
+        read.table(inFile()$datapath, header = T)
+      }
+    })
+    output$fileUploaded <- reactive({
+      return(!is.null(inFile()))
+    })
+    outputOptions(output, 'fileUploaded', suspendWhenHidden = FALSE)
+    
+    
+    xx <- c("Daily", "Monthly", "Quarterly", "Yearly")
+    yy <- c(365, 12, 4, 1)
+    if (time != "Yearly") {
+      b <-
+        ts(d()[, col],
+           frequency = yy[which(xx == time)],
+           start = c(year, month))
+    }
+    else {
+      b <- ts(d()[, col], frequency = yy[which(xx == time)], start = c(year))
+    }
+    
+    
+    bb <- holt(b, h = length)
+    if (Model == "ARIMA") {
+      
+      # Rapid Arima
+      a <- auto.arima(b, trace=TRUE, allowdrift=TRUE)
+      
+      # Slow Arima
+      # a <- auto.arima(b, stepwise=FALSE, approximation=FALSE, trace=TRUE, allowdrift=TRUE)
+      
+    }
+    else if (Model == "Holt-Winters Additive") {
+      a <- hw(b, "additive", h = length)$model
+    }
+    else if (Model == "Holt-Winters Multiplicative") {
+      a <- hw(b, "multiplicative", h = length)$model
+    }
+    else {
+      a <- holt(b, h = length)$model
+    }
+    f <- forecast(a, level = c(80, 95), h = length)
+    
+    #     Plot the ts with forcast
+    #
+    # pp <- autoplot(f, predict.size = 1, size = 1) + ggtitle(tsMainTitle) + xlab(tsXlabel) + ylab(tsYlabel) +theme_bw() 
+    
+    
+    # pp <- autoplot(f, lwd = 2)   # , shadecols = "oldstyle"
+    pp <- plot(f, lwd = 2) 
+    ff <- as.data.frame(f)
+    fff <- data.frame(date = row.names(ff), ff)
+    
+    
+    modelRes <- a$resid
+    modelResdf <- as.data.frame(modelRes)
+    
+    
+    if (input$time == "Daily") {
+      row.names(ff) <- ((nrow(d()) + 1):(nrow(d()) + length))
+    }
+    list(
+      model = a,
+      plot = pp,
+      fore = f,
+      foreT = ff,
+      tab = fff,
+      tsdata = d(),
+      tsdata2 = b,
+      modelResidual = modelResdf
+    )
+  }
+  
+  
+  
+  
+  
+  
   mmm <- function(Model, col, time, year, month, length) {
     inFile <- reactive({
       input$file1
@@ -242,7 +343,6 @@ shinyServer(function(input, output, session) {
   
   
   
-
   
 
   ####### data visualisation  ###############################################################
@@ -613,13 +713,18 @@ shinyServer(function(input, output, session) {
       plot(Acf(fit$residuals), lwd = 2)
     })
     
+    
     output$plotPACFRespdq <- renderPlot({
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE)
       plot(Pacf(fit$residuals), lwd = 2)
     })
     
-    
+    output$plotACFPACFRespdq <- renderPlot({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE)
+      acf2(fit$residuals, lwd = 3) 
+    })
     
     output$chkResARIMApdq <- renderPlot({
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
@@ -628,13 +733,39 @@ shinyServer(function(input, output, session) {
     })
     
     
+    output$SARIMAplot <- renderPlot({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      
+      nsais <- mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      sarima(myData, p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq, P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs, S = nsais, lwd = 2)
+    })
+    
+    output$SARIMAplot2 <- renderPlot({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      
+      nsais <- mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      sarima(myData, p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq, P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs, S = nsais, lwd = 2)
+    })
+    
+    
+ ###########-----------------   
+    output$SARIMAforcastplot <- renderPlot({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      
+      nsais <- mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      sarima.for(myData, n.ahead = input$length, p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq, P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs, S = nsais, lwd = 2)
+      
+       })
+    
+    
     output$tsdiagARIMApdq <- renderPlot({
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
       ggtsdiag(fit)
     })
-    
-    
     
 
     
@@ -683,7 +814,7 @@ shinyServer(function(input, output, session) {
     output$decompose <- renderPlot({
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       decompose_time_Series <- decompose(myData,input$model1)
-      plot(decompose_time_Series)
+      plot(decompose_time_Series, lwd = 2)
     })  
     
     
@@ -771,18 +902,37 @@ shinyServer(function(input, output, session) {
       )[[2]]
     })
   
- 
-  output$P <-
-    renderPrint({
-      mm(
-        input$Model,
-        input$col,
-        input$time,
-        input$year,
-        as.numeric(input$month),
-        input$length
-      )$model
-    })
+    
+    
+    
+
+
+    
+    output$P <-
+      renderPrint({
+        mm(
+          input$Model,
+          input$col,
+          input$time,
+          input$year,
+          as.numeric(input$month),
+          input$length
+        )$model
+      })
+    
+    
+    
+    output$Pslow <-
+      renderPrint({
+        myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+        fit <- auto.arima(myData, stepwise=FALSE, approximation=FALSE, trace=TRUE, allowdrift=TRUE)
+        fit
+        # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
+        
+      })
+    
+    
+    
 
   output$F <-
     renderTable({
@@ -807,11 +957,9 @@ shinyServer(function(input, output, session) {
     myData<-mm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$model
     ggtsdiag(myData)
   })
+
   
-  
-  
-###########----------------------------------------------- 
-  
+
   output$plotACFRes <- renderPlot({
     myData<-mm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$modelResidual
     fit<-myData
@@ -820,19 +968,17 @@ shinyServer(function(input, output, session) {
     
   })
   
+  
   output$plotPACFRes <- renderPlot({
     myData<-mm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$modelResidual
     fit<-myData
     plot(Pacf(fit), lwd = 2)
   })
   
-###########-----------------------------------------------  
-  
+
   output$testLBn <- renderPrint({
     helpLjungBox()
-    
     b<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-    
 
         if (input$Model == "ARIMA") {
           a <- auto.arima(b, trace=FALSE, allowdrift=TRUE)
@@ -847,7 +993,6 @@ shinyServer(function(input, output, session) {
           a <- input$Model(b, h = length)$model
         }
 
-    
     myDataResiduals <- a$resid
     Box.test(myDataResiduals , lag=input$lagorder, type="Ljung-Box")
     
@@ -895,7 +1040,7 @@ shinyServer(function(input, output, session) {
   
   
   
-  # the following code can be used to save the forecast data and the graphics
+  
   
   
   output$downloadData <- downloadHandler(
@@ -992,11 +1137,10 @@ shinyServer(function(input, output, session) {
     print("                                                                                                       ")
     print(".......................................................................................................") 
     print("                                                                                                       ")
-    print("   https://people.duke.edu/~rnau/arimrule.htm                                                          ")
     print("                                                                                                       ")
     print("                       Summary of rules for identifying ARIMA models                                   ")
     print("                                                                                                       ")
-    print("                                                                                                       ")
+    print("   https://people.duke.edu/~rnau/arimrule.htm                                                          ")
     print("                                                                                                       ")
     print("-> Identifying the order of differencing and the constant:                                             ")
     print("   ------------------------------------------------------                                              ")
