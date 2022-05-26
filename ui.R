@@ -191,7 +191,7 @@ shinyUI(pageWithSidebar (
                    tabsetPanel(
                      
 
-                     tabPanel("Classique model", br(),
+                     tabPanel("Classical model", br(),
                               sidebarLayout(
                                 sidebarPanel(width=3,
                                              selectInput("model1",label = "model", choices=c("additive","multiplicative"),selected="additive"),
