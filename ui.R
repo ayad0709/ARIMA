@@ -56,18 +56,30 @@ shinyUI(pageWithSidebar (
   
   mainPanel (
     
-    navbarPage("ARIMA", selected = "Time Series", collapsible = TRUE, inverse = TRUE, theme = shinytheme("spacelab"),
+    navbarPage("ARIMA", selected = "Data", collapsible = TRUE, inverse = TRUE, theme = shinytheme("spacelab"),
+               
+               
+               
+       tabPanel("Data",
+                fluidPage(
+                  tabsetPanel(
+                    tabPanel("data", tableOutput("dataPrint")), 
+                    
+                    
+                  ))),       
+               
                
         tabPanel("Time Series",
                  fluidPage(
                     tabsetPanel(
-                      tabPanel("data", tableOutput("dataPrint")), 
-                      
-                      tabPanel("St", 
+                    
+                      tabPanel("S(t)", 
                                tabsetPanel(
                                  tabPanel("St", plotOutput("tsPlot",width=900,height = 630 )),
                                  tabPanel("ACF", plotOutput("StACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("StPACF",width=800,height = 500)),
+                                 tabPanel("ACF + PACF", plotOutput("StACFPACF",width=620,height = 570)),
+                                 
                                )),  
                       
                       tabPanel("log(St)", 
@@ -75,100 +87,88 @@ shinyUI(pageWithSidebar (
                                  tabPanel("log(St)",plotOutput("plotLogSt",width=900,height = 630)),
                                  tabPanel("ACF", plotOutput("logStACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("logStPACF",width=800,height = 500)),
+                                 tabPanel("ACF + PACF", plotOutput("logStACFPACF",width=620,height = 570)),
+                                 
                                )), 
                       
-                      tabPanel("diff [1] (St)", 
+                      tabPanel("d1(St)", 
                                tabsetPanel(
                                  tabPanel("d[1](St)",plotOutput("difference1",width=900,height = 630)),
                                  tabPanel("ACF", plotOutput("d1StACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("d1StPACF",width=800,height = 500)),
+                                 tabPanel("ACF + PACF", plotOutput("d1StACFPACF",width=620,height = 570)),
+                                 
                                )), 
                       
                       
-                      tabPanel("diff[1] (log(St))", 
+                      tabPanel("D1(St)", 
+                               tabsetPanel(
+                                 tabPanel("D[1](St)",plotOutput("DS1Stplot",width=900,height = 630)),
+                                 tabPanel("ACF", plotOutput("DS1StACF",width=800,height = 500)),
+                                 tabPanel("PACF", plotOutput("DS1StPACF",width=800,height = 500)),
+                                 tabPanel("ACF + PACF", plotOutput("DS1StACFPACF",width=620,height = 570)),
+                                 
+                               )),  
+                      
+                      
+                      tabPanel("d1(D1(St))", 
+                               tabsetPanel(
+                                 tabPanel("d[1](D[1](St))",plotOutput("ddsplot",width=900,height = 630)),
+                                 tabPanel("ACF", plotOutput("ddsplotACF",width=800,height = 500)),
+                                 tabPanel("PACF", plotOutput("ddsplotPACF",width=800,height = 500)),
+                                 tabPanel("ACF + PACF", plotOutput("ddsplotACFPACF",width=620,height = 570)),
+                                 
+                               )),  
+                      
+                      
+                      tabPanel("d1(log(St))", 
                                tabsetPanel(
                                  tabPanel("d[1](log(St))",plotOutput("plot10a",width=900,height = 630)),
                                  tabPanel("ACF", plotOutput("d1LogStACFa",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("d1LogStPACFa",width=800,height = 500)),
+                                 tabPanel("ACF + PACF", plotOutput("d1LogStACFPACFa",width=620,height = 570)),
+                                 
                                )), 
                       
+                      
+                      tabPanel("D1(log(St))", 
+                               tabsetPanel(
+                                 tabPanel("D[1](log(St))",plotOutput("Dlogplot",width=900,height = 630)),
+                                 tabPanel("ACF", plotOutput("DlogplotACF",width=800,height = 500)),
+                                 tabPanel("PACF", plotOutput("DlogplotPACF",width=800,height = 500)),
+                                 tabPanel("ACF + PACF", plotOutput("DlogplotACFPACF",width=620,height = 570)),
+                                 
+                               )),  
+                      
 
+                      
+                      tabPanel("d1(D1(log(St)))", 
+                               tabsetPanel(
+                                 tabPanel("d[1](D[1](log(St)))",plotOutput("dDlogplot",width=900,height = 630)),
+                                 tabPanel("ACF", plotOutput("dDlogplotACF",width=800,height = 500)),
+                                 tabPanel("PACF", plotOutput("dDlogplotPACF",width=800,height = 500)),
+                                 tabPanel("ACF + PACF", plotOutput("dDlogplotACFPACF",width=620,height = 570)),
+                                 
+                               )),  
+                      
+                      
+                      
+                      tabPanel("d2(St)", 
+                               tabsetPanel(
+                                 tabPanel("d[2](St)",plotOutput("difference2",width=900,height = 630)),
+                                 tabPanel("ACF", plotOutput("difference2ACF",width=800,height = 500)),
+                                 tabPanel("PACF", plotOutput("difference2PACF",width=800,height = 500)),
+                                 tabPanel("ACF + PACF", plotOutput("difference2ACFPACF",width=620,height = 570)),
+                                 
+                               )), 
+                      
+                      
+                      
+                      
                 ))),
         
         
-        tabPanel("differences",
-                 fluidPage(
-                   tabsetPanel(
-                    
-                     tabPanel("d[1](St)", 
-                              tabsetPanel(
-                                tabPanel("d[1](St)",plotOutput("difference12",width=900,height = 630)),
-                                tabPanel("ACF", plotOutput("d1StACF2",width=800,height = 500)),
-                                tabPanel("PACF", plotOutput("d1StPACF2",width=800,height = 500)),
-                              )), 
-                     
-                     
-                     tabPanel("D[1](St)", 
-                              tabsetPanel(
-                                tabPanel("D[1](St)",plotOutput("DS1Stplot",width=900,height = 630)),
-                                tabPanel("ACF", plotOutput("DS1StACF",width=800,height = 500)),
-                                tabPanel("PACF", plotOutput("DS1StPACF",width=800,height = 500)),
-                              )),  
-                     
-                     
-                     tabPanel("d[1](log(St))", 
-                              tabsetPanel(
-                                tabPanel("d[1](log(St))",plotOutput("plot10",width=900,height = 630)),
-                                tabPanel("ACF", plotOutput("d1LogStACF",width=800,height = 500)),
-                                tabPanel("PACF", plotOutput("d1LogStPACF",width=800,height = 500)),
-                              )),  
-                     
-                     
-                     
-                     tabPanel("D[1](log(St))", 
-                              tabsetPanel(
-                                tabPanel("D[1](log(St))",plotOutput("Dlogplot",width=900,height = 630)),
-                                tabPanel("ACF", plotOutput("DlogplotACF",width=800,height = 500)),
-                                tabPanel("PACF", plotOutput("DlogplotPACF",width=800,height = 500)),
-                              )),  
-                     
-                     
-                     
-                     tabPanel("d[1](D[1](St))", 
-                              tabsetPanel(
-                                tabPanel("d[1](D[1](St))",plotOutput("ddsplot",width=900,height = 630)),
-                                tabPanel("ACF", plotOutput("ddsplotACF",width=800,height = 500)),
-                                tabPanel("PACF", plotOutput("ddsplotPACF",width=800,height = 500)),
-                              )),  
-                     
-                     
-                     
-                     tabPanel("d[1](D[1](log(St)))", 
-                              tabsetPanel(
-                                tabPanel("d[1](D[1](log(St)))",plotOutput("dDlogplot",width=900,height = 630)),
-                                tabPanel("ACF", plotOutput("dDlogplotACF",width=800,height = 500)),
-                                tabPanel("PACF", plotOutput("dDlogplotPACF",width=800,height = 500)),
-                              )),  
-                     
-                     
-                     
-                     tabPanel("d[2](St)", 
-                              tabsetPanel(
-                                tabPanel("d[2](St)",plotOutput("difference2",width=900,height = 630)),
-                                tabPanel("ACF", plotOutput("difference2ACF",width=800,height = 500)),
-                                tabPanel("PACF", plotOutput("difference2PACF",width=800,height = 500)),
-                              )), 
-                     
-                     
-                     
-                     #tabPanel("d[n](St)", 
-                     #         tabsetPanel(
-                     #          tabPanel("d[n](St)",plotOutput("diffLagnplot",width=900,height = 630)),
-                                #tabPanel("ACF", plotOutput("diffLagnplotACF",width=800,height = 500)),
-                                #tabPanel("PACF", plotOutput("diffLagnplotPACF",width=800,height = 500)),
-                     #         )),
-                     
-                   ))),
+
         
         
         
@@ -304,15 +304,26 @@ shinyUI(pageWithSidebar (
                                              submitButton("Submit"),
                                              
                                 ),
-                                mainPanel(
+                               
+                                 mainPanel(
                                   
                                   tabsetPanel(
                                     tabPanel("ARIMA", plotOutput("PrevisionsPlotpdq", width=750, height = 580)),
-                                    tabPanel("Modèle", verbatimTextOutput("textARIMApdq")),  
-                                    tabPanel("ACF.R", plotOutput("plotACFRespdq", width=650, height = 500)),
-                                    tabPanel("PACF.R", plotOutput("plotPACFRespdq", width=650, height = 500)),
-                                    tabPanel("ACF+PACF Res", plotOutput("plotACFPACFRespdq", width=600, height = 550)),
-                                    tabPanel("SARIMA", plotOutput("SARIMAplot", width=600, height = 550)),
+                                    tabPanel("Model", verbatimTextOutput("textARIMApdq")),  
+                                    
+                                    # without drift
+                                    tabPanel("ACF+PACF Res.no.drift", plotOutput("plotACFPACFRespdqwithoutdrift", width=600, height = 550)),
+                                    
+                                    # with drift
+                                    tabPanel("ACF+PACF Res.with.drift", plotOutput("plotACFPACFRespdq", width=600, height = 550)),
+
+                                    
+                                    # tabPanel("ACF.R.", plotOutput("plotACFRespdq", width=650, height = 500)),
+                                    # tabPanel("PACF.R.", plotOutput("plotPACFRespdq", width=650, height = 500)),
+                                    
+                                    
+                                    
+                                    # tabPanel("SARIMA", plotOutput("SARIMAplot", width=600, height = 550)),
                                     
                                      # tabPanel("ndiffs(St)", verbatimTextOutput("ndiffsts" )),
                                     
@@ -357,12 +368,15 @@ shinyUI(pageWithSidebar (
                      tabPanel("Forecaste", tableOutput("FARIMApdq")),
                      
                      
-                     tabPanel("SARIMA", 
-                              tabsetPanel(
-                                 tabPanel("Forcast", plotOutput("SARIMAforcastplot", width=830, height = 600)),
-                                 tabPanel("SARIMA", plotOutput("SARIMAplot2", width=750, height = 600)),
-                                 
-                              )),  
+                     tabPanel("Forecast Plot", plotOutput("SARIMAforcastplot", width=830, height = 600)),
+                     
+                     
+                     # tabPanel("SARIMA", 
+                     #         tabsetPanel(
+                     #            tabPanel("Forecast Plot", plotOutput("SARIMAforcastplot", width=830, height = 600)),
+                     #            tabPanel("SARIMA", plotOutput("SARIMAplot2", width=750, height = 600)),
+                     #            
+                     #         )),  
                      
                      
                      # tabPanel("Forecaste", verbatimTextOutput("FARIMApdq")),

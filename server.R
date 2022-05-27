@@ -376,6 +376,13 @@ shinyServer(function(input, output, session) {
     })
     
     
+    output$StACFPACF <- renderPlot({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      acf2(myData, lwd = 3) 
+    })
+    
+    
+    
     ####### log(St) plot + ACF + PACF ###############################################################
     
     
@@ -400,6 +407,12 @@ shinyServer(function(input, output, session) {
     })
     
     
+    output$logStACFPACF <- renderPlot({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      log_st <- log(myData)
+      acf2(log_st, lwd = 3) 
+    })
+    
     ####### difference d'ordre 1 ################################################# ##############  
     
     output$difference1 <- renderPlot({
@@ -414,13 +427,18 @@ shinyServer(function(input, output, session) {
       plot(Acf(diff_st), lwd = 2)
     })
     
+    
     output$d1StPACF <- renderPlot({
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       diff_st <- diff(myData)
       plot(Pacf(diff_st), lwd = 2)
     })
     
-    
+    output$d1StACFPACF <- renderPlot({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      diff_st <- diff(myData)
+      acf2(diff_st, lwd = 3) 
+    })
     
     
     ######## diff log copie ##############################################################  
@@ -442,6 +460,13 @@ shinyServer(function(input, output, session) {
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       dlog_st <- diff(log(myData))
       plot(Pacf(dlog_st), lwd = 2)
+    })
+    
+    
+    output$d1LogStACFPACFa <- renderPlot({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      dlog_st <- diff(log(myData))
+      acf2(dlog_st, lwd = 3) 
     })
     
     ######################################################################
@@ -548,6 +573,16 @@ shinyServer(function(input, output, session) {
       plot(Pacf(diffS_st), lwd = 2)
     })  
     
+    
+    output$DS1StACFPACF <- renderPlot({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffS_st <- diff(myData, ns)
+      acf2(diffS_st, lwd = 3) 
+      
+    })  
+    
     ######################## diff log ############################################## 
     
     output$plot10 <- renderPlot({
@@ -592,6 +627,15 @@ shinyServer(function(input, output, session) {
     })  
     
     
+    output$difference2ACFPACF <- renderPlot({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      diff2_ts <- diff(myData, differences = 2)
+      acf2(diff2_ts , lwd = 3) 
+      
+    })  
+    
+    
+    
     
     ################## d[1] ( D[1] ( log(St) ) ) ####################################################  
     
@@ -617,7 +661,17 @@ shinyServer(function(input, output, session) {
       
       diffS_x <- diff(diff(log(myData), ns))
       plot(Pacf(diffS_x), lwd = 2)
-    }) 
+    })
+    
+    
+    output$dDlogplotACFPACF <- renderPlot({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffS_x <- diff(diff(log(myData), ns))
+      acf2(diffS_x , lwd = 3) 
+    })
+    
     
     
     
@@ -646,6 +700,16 @@ shinyServer(function(input, output, session) {
       
       diffSlog_x <- diff(log(myData), ns)
       plot(Pacf(diffSlog_x), lwd = 2)
+    }) 
+    
+    
+    output$DlogplotACFPACF <- renderPlot({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffSlog_x <- diff(log(myData), ns)
+      acf2(diffSlog_x , lwd = 3) 
+      
     }) 
     
     
@@ -678,7 +742,14 @@ shinyServer(function(input, output, session) {
     }) 
     
     
-
+    output$ddsplotACFPACF <- renderPlot({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffS_x <- diff(diff(myData, ns))
+      acf2(diffS_x, lwd = 3) 
+    }) 
+    
     
     
     
@@ -723,6 +794,13 @@ shinyServer(function(input, output, session) {
     output$plotACFPACFRespdq <- renderPlot({
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE)
+      acf2(fit$residuals, lwd = 3) 
+    })
+    
+    
+    output$plotACFPACFRespdqwithoutdrift <- renderPlot({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = FALSE)
       acf2(fit$residuals, lwd = 3) 
     })
     
@@ -796,8 +874,8 @@ shinyServer(function(input, output, session) {
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       print(".............................................................................................") 
       print("                                                                                             ")
-      print("  (H0)  la série a été générée par un processus présentant une racine unitaire,              ") 
-      print("        et donc, qu'elle n'est pas stationnaire                                              ")
+      print("  (H0)  La série comporte une racine unitaire, et donc, elle n'est pas stationnaire          ") 
+      print("                                                                                             ")
       print("  (H1)  la série est stationnaire                                                            ")
       print("                                                                                             ")
       print(".............................................................................................") 
@@ -1023,13 +1101,13 @@ shinyServer(function(input, output, session) {
   
   output$teststationarite <- renderPrint({
     myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-    print("..............................................................................................") 
-    print("                                                                                              ")
-    print("  (H0)  la série a été générée par un processus présentant une racine unitaire,               ") 
-    print("        et donc, qu'elle n'est pas stationnaire                                               ")
-    print("  (H1)  la série est stationnaire                                                             ")
-    print("                                                                                              ")
-    print("..............................................................................................") 
+    print(".............................................................................................") 
+    print("                                                                                             ")
+    print("  (H0)  La série comporte une racine unitaire, et donc, elle n'est pas stationnaire          ") 
+    print("                                                                                             ")
+    print("  (H1)  la série est stationnaire                                                            ")
+    print("                                                                                             ")
+    print(".............................................................................................") 
     
     adf.test(myData) 
   })
