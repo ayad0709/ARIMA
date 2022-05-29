@@ -36,6 +36,7 @@ shinyServer(function(input, output, session) {
     print(".........................................................................................")
   }
   
+  
   observe({
     val <- input$time
     val1 <- input$year
@@ -91,9 +92,6 @@ shinyServer(function(input, output, session) {
     }
   })
 
-  
-  
-  
 
   mm <- function(Model, col, time, year, month, length) {
     inFile <- reactive({
@@ -188,11 +186,7 @@ shinyServer(function(input, output, session) {
     )
   }
 
-  
-  
-  
-  
-  
+
   mm <- function(Model, col, time, year, month, length) {
     inFile <- reactive({
       input$file1
@@ -285,10 +279,6 @@ shinyServer(function(input, output, session) {
       modelResidual = modelResdf
     )
   }
-  
-  
-  
-  
   
   
   mmm <- function(Model, col, time, year, month, length) {
@@ -1003,8 +993,46 @@ shinyServer(function(input, output, session) {
     output$Pslow <-
       renderPrint({
         myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-        fit <- auto.arima(myData, stepwise=FALSE, approximation=FALSE, trace=TRUE, allowdrift=TRUE)
+        
+        # oreginal:
+        
+        
+        # fit <- auto.arima(myData,   
+        #                   stepwise=FALSE, 
+        #                   approximation=FALSE, 
+        #                   trace=TRUE, 
+        #                   allowdrift=TRUE)
+        
+        
+        fit <- auto.arima(myData,
+                          max.p = input$maxp,
+                          max.d = input$maxd,
+                          max.q = input$maxq,
+                          max.P = input$maxPs,
+                          max.D = input$maxDs,
+                          max.Q = input$maxQs,
+                          max.order = input$maxorder,
+                          stepwise=FALSE,
+                          approximation=FALSE,
+                          trace=TRUE,
+                          allowdrift=TRUE)
+
+        
+        # fit <- auto.arima(myData,
+        #                   stepwise=TRUE, 
+        #                   max.p = input$maxp,
+        #                   max.q = input$maxq,
+        #                   max.P = input$maxPs,
+        #                   max.Q = input$maxQs,
+        #                   max.d = input$maxd,
+        #                   max.D = input$maxDs,
+        #                   max.order=input$maxorder,
+        #                   approximation=FALSE, 
+        #                   trace=TRUE, 
+        #                   allowdrift=TRUE)
+
         fit
+        
         # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
         
       })

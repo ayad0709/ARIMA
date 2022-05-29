@@ -1,11 +1,18 @@
+#################################
+#### SHINY APP ##################
+#################################
 
-packages = c("shiny", "shinythemes","data.table", "ggplot2",
+##################
+### LIBRARIES ####
+##################
+
+packages = c("shiny", "shinythemes","shinydashboard","data.table", "ggplot2",
              "dplyr","fpp2","forecast","stats", "Kendall",
              "tseries","seasonal","ggfortify", "xts", "astsa",
              "tsibble", "feasts", "readxl")
 
 
-## Now load or install&load all
+# Now load or install&load all
 package.check <- lapply(
   packages,
   FUN = function(x) {
@@ -16,7 +23,11 @@ package.check <- lapply(
   }
 )
 
+# rm(list=ls())  
 
+##################
+### DASHBOARD ####
+##################
 
 
 shinyUI(pageWithSidebar (
@@ -236,7 +247,7 @@ shinyUI(pageWithSidebar (
         
         
         
-        tabPanel("Forecast",
+        tabPanel("Auto Forecast",
                  fluidPage(
                    tabsetPanel(
                      tabPanel("Forecasted Plot", plotOutput("M",width=900,height = 630)),
@@ -244,7 +255,33 @@ shinyUI(pageWithSidebar (
                      tabPanel("Model", 
                               tabsetPanel(
                                  tabPanel("Model", verbatimTextOutput("P"), class="span7"),
-                                 tabPanel("Slow Model", verbatimTextOutput("Pslow"), class="span7"),
+                                
+                                # tabPanel("ARIMA Slow Model", verbatimTextOutput("Pslow"), class="span7"),
+
+                                tabPanel("ARIMA Slow Model", 
+                                         sidebarLayout(
+                                           sidebarPanel(width=3,
+                                                        numericInput("maxp", label = "max.p:", min=0, value=5),
+                                                        numericInput("maxd", label = "max.d:",min=0,  value=2),
+                                                        numericInput("maxq", label = "max.q:", min=0, value=5),
+                                                        numericInput("maxPs", label = "max.P:",min=0,  value=2),
+                                                        numericInput("maxDs", label = "max.D:",min=0,  value=1),
+                                                        numericInput("maxQs", label = "max.Q:", min=0, value=2),
+                                                        numericInput("maxorder", label = "max.order:", min=0, value=5),
+                                                        submitButton("Submit"),
+                                           ),
+
+                                               tabPanel("ARIMA Slow Model", verbatimTextOutput("Pslow"), class="span7"),
+                                         )),
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                 
+                                 
                                 
                               )),  
                      
