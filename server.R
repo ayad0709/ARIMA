@@ -40,9 +40,9 @@ shinyServer(function(input, output, session) {
   observe({
     val <- input$time
     val1 <- input$year
-    v1 <- c("Daily", "Monthly", "Quarterly", "Yearly")
-    v2 <- list(c(1:366), c(1:12), c(1:4), c(1))
-    v3 <- c("Day", "Month", "Quarter", "Year")
+    v1 <- c("Daily", "Monthly", "1/2 year", "Quarterly", "Yearly")
+    v2 <- list(c(1:366), c(1:12), c(1:6), c(1:4), c(1))
+    v3 <- c("Day", "Month", "halfYear", "Quarter", "Year")
     w <- which(v1 == val)
     if (val != "Yearly") {
       updateSelectInput(
@@ -92,194 +92,105 @@ shinyServer(function(input, output, session) {
     }
   })
 
-
-  mm <- function(Model, col, time, year, month, length) {
-    inFile <- reactive({
-      input$file1
-    })
-    d <- reactive({
-      validate(
-        need(
-          input$file1 != "",
-          "Please select a data set, right now only .txt, .csv and .xlsx data files can be processed, make sure the 1st row of your data contains the variable name."
-        )
-      )
-      if (is.null(inFile))
-        return(NULL)
-      if (file_ext(inFile()$name) == "xlsx") {
-        read.xlsx(inFile()$datapath)
-      }
-      else if (file_ext(inFile()$name) == "csv")  {
-        read.csv(inFile()$datapath, header = T)
-      }
-      else {
-        read.table(inFile()$datapath, header = T)
-      }
-    })
-    output$fileUploaded <- reactive({
-      return(!is.null(inFile()))
-    })
-    outputOptions(output, 'fileUploaded', suspendWhenHidden = FALSE)
-    
-    
-    xx <- c("Daily", "Monthly", "Quarterly", "Yearly")
-    yy <- c(365, 12, 4, 1)
-    if (time != "Yearly") {
-      b <-
-        ts(d()[, col],
-           frequency = yy[which(xx == time)],
-           start = c(year, month))
-    }
-    else {
-      b <- ts(d()[, col], frequency = yy[which(xx == time)], start = c(year))
-    }
-    
-    
-    bb <- holt(b, h = length)
-    if (Model == "ARIMA") {
-      
-      # Rapid Arima
-      a <- auto.arima(b, trace=TRUE, allowdrift=TRUE)
-      
-      # Slow Arima
-      # a <- auto.arima(b, stepwise=FALSE, approximation=FALSE, trace=TRUE, allowdrift=TRUE)
-      
-    }
-    else if (Model == "Holt-Winters Additive") {
-      a <- hw(b, "additive", h = length)$model
-    }
-    else if (Model == "Holt-Winters Multiplicative") {
-      a <- hw(b, "multiplicative", h = length)$model
-    }
-    else {
-      a <- holt(b, h = length)$model
-    }
-    f <- forecast(a, level = c(80, 95), h = length)
-    
-    #     Plot the ts with forcast
-    #
-    # pp <- autoplot(f, predict.size = 1, size = 1) + ggtitle(tsMainTitle) + xlab(tsXlabel) + ylab(tsYlabel) +theme_bw() 
-    
-    
-    # pp <- autoplot(f, lwd = 2)   # , shadecols = "oldstyle"
-    pp <- plot(f, lwd = 2) 
-    ff <- as.data.frame(f)
-    fff <- data.frame(date = row.names(ff), ff)
-    
-    
-    modelRes <- a$resid
-    modelResdf <- as.data.frame(modelRes)
-    
-    
-    if (input$time == "Daily") {
-      row.names(ff) <- ((nrow(d()) + 1):(nrow(d()) + length))
-    }
-    list(
-      model = a,
-      plot = pp,
-      fore = f,
-      foreT = ff,
-      tab = fff,
-      tsdata = d(),
-      tsdata2 = b,
-      modelResidual = modelResdf
-    )
-  }
-
-
-  mm <- function(Model, col, time, year, month, length) {
-    inFile <- reactive({
-      input$file1
-    })
-    d <- reactive({
-      validate(
-        need(
-          input$file1 != "",
-          "Please select a data set, right now only .txt, .csv and .xlsx data files can be processed, make sure the 1st row of your data contains the variable name."
-        )
-      )
-      if (is.null(inFile))
-        return(NULL)
-      if (file_ext(inFile()$name) == "xlsx") {
-        read.xlsx(inFile()$datapath)
-      }
-      else if (file_ext(inFile()$name) == "csv")  {
-        read.csv(inFile()$datapath, header = T)
-      }
-      else {
-        read.table(inFile()$datapath, header = T)
-      }
-    })
-    output$fileUploaded <- reactive({
-      return(!is.null(inFile()))
-    })
-    outputOptions(output, 'fileUploaded', suspendWhenHidden = FALSE)
-    
-    
-    xx <- c("Daily", "Monthly", "Quarterly", "Yearly")
-    yy <- c(365, 12, 4, 1)
-    if (time != "Yearly") {
-      b <-
-        ts(d()[, col],
-           frequency = yy[which(xx == time)],
-           start = c(year, month))
-    }
-    else {
-      b <- ts(d()[, col], frequency = yy[which(xx == time)], start = c(year))
-    }
-    
-    
-    bb <- holt(b, h = length)
-    if (Model == "ARIMA") {
-      
-      # Rapid Arima
-      a <- auto.arima(b, trace=TRUE, allowdrift=TRUE)
-      
-      # Slow Arima
-      # a <- auto.arima(b, stepwise=FALSE, approximation=FALSE, trace=TRUE, allowdrift=TRUE)
-      
-    }
-    else if (Model == "Holt-Winters Additive") {
-      a <- hw(b, "additive", h = length)$model
-    }
-    else if (Model == "Holt-Winters Multiplicative") {
-      a <- hw(b, "multiplicative", h = length)$model
-    }
-    else {
-      a <- holt(b, h = length)$model
-    }
-    f <- forecast(a, level = c(80, 95), h = length)
-    
-    #     Plot the ts with forcast
-    #
-    # pp <- autoplot(f, predict.size = 1, size = 1) + ggtitle(tsMainTitle) + xlab(tsXlabel) + ylab(tsYlabel) +theme_bw() 
-    
-    
-    # pp <- autoplot(f, lwd = 2)   # , shadecols = "oldstyle"
-    pp <- plot(f, lwd = 2) 
-    ff <- as.data.frame(f)
-    fff <- data.frame(date = row.names(ff), ff)
-    
-    
-    modelRes <- a$resid
-    modelResdf <- as.data.frame(modelRes)
-    
-    
-    if (input$time == "Daily") {
-      row.names(ff) <- ((nrow(d()) + 1):(nrow(d()) + length))
-    }
-    list(
-      model = a,
-      plot = pp,
-      fore = f,
-      foreT = ff,
-      tab = fff,
-      tsdata = d(),
-      tsdata2 = b,
-      modelResidual = modelResdf
-    )
-  }
   
+  # load data and performe modelisation
+
+  mm <- function(Model, col, time, year, month, length) {
+    inFile <- reactive({
+      input$file1
+    })
+    d <- reactive({
+      validate(
+        need(
+          input$file1 != "",
+          "Please select a data set, right now only .txt, .csv and .xlsx data files can be processed, make sure the 1st row of your data contains the variable name."
+        )
+      )
+      if (is.null(inFile))
+        return(NULL)
+      if (file_ext(inFile()$name) == "xlsx") {
+        read.xlsx(inFile()$datapath)
+      }
+      else if (file_ext(inFile()$name) == "csv")  {
+        read.csv(inFile()$datapath, header = T)
+      }
+      else {
+        read.table(inFile()$datapath, header = T)
+      }
+    })
+    output$fileUploaded <- reactive({
+      return(!is.null(inFile()))
+    })
+    outputOptions(output, 'fileUploaded', suspendWhenHidden = FALSE)
+    
+    
+    xx <- c("Daily", "Monthly", "1/2 year", "Quarterly", "Yearly")
+    yy <- c(365, 12, 6, 4, 1)
+    if (time != "Yearly") {
+      b <-
+        ts(d()[, col],
+           frequency = yy[which(xx == time)],
+           start = c(year, month))
+    }
+    else {
+      b <- ts(d()[, col], frequency = yy[which(xx == time)], start = c(year))
+    }
+    
+    
+    bb <- holt(b, h = length)
+    if (Model == "ARIMA") {
+      
+      # Rapid Arima
+      a <- auto.arima(b, trace=TRUE, allowdrift=TRUE)
+      
+      # Slow Arima
+      # a <- auto.arima(b, stepwise=FALSE, approximation=FALSE, trace=TRUE, allowdrift=TRUE)
+      
+    }
+    else if (Model == "Holt-Winters Additive") {
+      a <- hw(b, "additive", h = length)$model
+    }
+    else if (Model == "Holt-Winters Multiplicative") {
+      a <- hw(b, "multiplicative", h = length)$model
+    }
+    else {
+      a <- holt(b, h = length)$model
+    }
+    f <- forecast(a, level = c(80, 95), h = length)
+    
+    #     Plot the ts with forcast
+    #
+    # pp <- autoplot(f, predict.size = 1, size = 1) + ggtitle(tsMainTitle) + xlab(tsXlabel) + ylab(tsYlabel) +theme_bw() 
+    
+    
+    # pp <- autoplot(f, lwd = 2)   # , shadecols = "oldstyle"
+    pp <- plot(f, lwd = 2) 
+    ff <- as.data.frame(f)
+    fff <- data.frame(date = row.names(ff), ff)
+    
+    
+    modelRes <- a$resid
+    modelResdf <- as.data.frame(modelRes)
+    
+    
+    if (input$time == "Daily") {
+      row.names(ff) <- ((nrow(d()) + 1):(nrow(d()) + length))
+    }
+    list(
+      model = a,
+      plot = pp,
+      fore = f,
+      foreT = ff,
+      tab = fff,
+      tsdata = d(),
+      tsdata2 = b,
+      modelResidual = modelResdf
+    )
+  }
+
+
+  
+  # load data only
   
   mmm <- function(Model, col, time, year, month, length) {
     inFile <- reactive({
@@ -310,8 +221,8 @@ shinyServer(function(input, output, session) {
     outputOptions(output, 'fileUploaded', suspendWhenHidden = FALSE)
     
     
-    xx <- c("Daily", "Monthly", "Quarterly", "Yearly")
-    yy <- c(365, 12, 4, 1)
+    xx <- c("Daily", "Monthly", "1/2 year", "Quarterly", "Yearly")
+    yy <- c(365, 12, 6, 4, 1)
     if (time != "Yearly") {
       b <-
         ts(d()[, col],
@@ -754,8 +665,8 @@ shinyServer(function(input, output, session) {
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
     
       
-      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
-      fcst <- forecast(fit,h=input$length)
+      model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
+      fcst <- forecast(model_fit,h=input$length)
       plot(fcst, lwd = 2)
       # autoplot(fcst, lwd = 2, include =2)
       
@@ -764,14 +675,15 @@ shinyServer(function(input, output, session) {
     
     output$textARIMApdq <- renderPrint({
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
-      fit
+      model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
+      # summary(model_fit)
+      model_fit
     })
     
     output$plotACFRespdq <- renderPlot({
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE)
-      plot(Acf(fit$residuals), lwd = 2)
+      model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE)
+      plot(Acf(model_fit$residuals), lwd = 2)
     })
     
     
@@ -818,7 +730,28 @@ shinyServer(function(input, output, session) {
     })
     
     
- ###########-----------------   
+    
+    ###########-----------------   
+    
+    
+    
+    output$SARIMAforcastplot2 <- renderPlot({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      
+      nsais <- mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
+      
+      #sarima.for(myData, n.ahead = input$length, p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq, P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs, S = nsais, lwd = 2)
+      sarima.for(myData, n.ahead = input$length, arimaorder(fit),S = nsais, lwd = 2)
+      
+    })  
+    
+    
+    ###########-----------------   
+    
+    
+    
+    
     output$SARIMAforcastplot <- renderPlot({
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       
@@ -847,6 +780,65 @@ shinyServer(function(input, output, session) {
     })
     
     
+    output$testTrendMK2 <- renderPrint({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      print("....................................................................................................") 
+      print("                                                                                                    ") 
+      print("  Un test de tendance de Mann-Kendall est utilisé pour déterminer s'il existe ou non                ") 
+      print("  une tendance dans les données de séries chronologiques.                                           ") 
+      print("  Il s'agit d'un test non paramétrique, ce qui signifie qu'aucune hypothèse sous-jacente            ") 
+      print("  n'est faite quant à la normalité des données.                                                     ") 
+      print("                                                                                                    ")
+      print("  (H0) : Il n'y a pas de tendance dans la série                                                     ") 
+      print("  (Ha) : Il existe une tendance dans la série                                                       ") 
+      print("                                                                                                    ")
+      print("....................................................................................................") 
+      print("                                                                                                    ")
+      
+      MannKendall(myData) 
+    })
+    
+    
+    
+    output$kpssTest2 <- renderPrint({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      print("....................................................................................................") 
+      print("     Kwiatkowski-Phillips-Schmidt-Shin (KPSS)                                                       ")
+      print("....................................................................................................") 
+      print("     A KPSS test can be used to determine if a time series is trend stationary.                     ") 
+      print("                                                                                                    ")
+      print("  (H0) : The time series is trend stationary. (the data is stationary)                              ") 
+      print("  (Ha) : The time series is not trend stationary. (the data is not stationary)                      ") 
+      print("                                                                                                    ")
+      print("  If the p-value of the test is less than some significance level (e.g. α = .05) then we            ") 
+      print("  reject the null hypothesis and conclude that the time series is not trend stationary.             ") 
+      print("....................................................................................................") 
+      print("  A major disadvantage for the KPSS test is that it has a high rate of Type I errors                ")
+      print("  (it tends to reject the null hypothesis too often).                                               ")
+      print("  One way to deal with the potential for high Type I errors is to combine the KPSS with an ADF test.")
+      print("  If the result from both tests suggests that the time series in stationary, then it probably is.   ")
+      print("....................................................................................................") 
+      print("                                                                                                    ")
+     
+      kpss.test(myData, null = "Trend") 
+    })
+    
+    
+    output$DFGLS <- renderPrint({
+      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      print("....................................................................................................") 
+      print("     DF-GLS Unit Root Test                                                                          ")
+      print("....................................................................................................") 
+      print("                                                                                                    ")
+      print("                                                                                                    ")
+      print("                                                                                                    ")
+      
+      summary(ur.ers(myData,  model = "trend",lag.max = 4)) 
+    })
+    
+    
+    
+    
     output$testLBnARIMApdq <- renderPrint({
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       best_ARIMA <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
@@ -858,20 +850,44 @@ shinyServer(function(input, output, session) {
       Box.test(myDataResiduals, lag=input$lagorder1, type="Ljung-Box")
       
     })
+  
+    
+  
     
     
     output$teststationariteARIMApdq <- renderPrint({
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      print(".............................................................................................") 
-      print("                                                                                             ")
-      print("  (H0)  La série comporte une racine unitaire, et donc, elle n'est pas stationnaire          ") 
-      print("                                                                                             ")
-      print("  (H1)  la série est stationnaire                                                            ")
-      print("                                                                                             ")
-      print(".............................................................................................") 
+      print("..........Augmented Dickey-Fuller Test................") 
+      print("                                                      ")     
+      print("Augmented Dickey-Fuller Test is used to check whether ")
+      print(" a given time series is at rest.                      ")
+      print("                                                      ")
+      print("A given time series can be called stationary if:      ")     
+      print("  - it doesn’t have any trend                         ")     
+      print("  - depicts a constant variance over time             ")     
+      print("  - and follows autocorrelation structure over        ")     
+      print("    a period constantly.                              ")     
+      print("......................................................") 
+      print("                                                      ")
+      print(" (H0) La série comporte une racine unitaire, et donc, ") 
+      print("     elle n'est pas stationnaire                      ")
+      print(" (H1) La série est stationnaire                       ")
+      print("                                                      ")
+      print("......................................................")
+      print("   p-value < 0.05 indicates the TS is stationary      ")
+      print("......................................................")
+
+      # adf.test(myData, alternative ="stationary", k=12) 
       
-      adf.test(myData) 
+      adf.test(myData, alternative =input$altern2, k=input$LagOrderADF2)
+      
+      
+      # adf.test(x, alternative = c("stationary", "explosive"), k = trunc((length(x)-1)^(1/3)))
+      
+      
+      
     })
+    
     
     
     #########################################################################
@@ -971,11 +987,7 @@ shinyServer(function(input, output, session) {
     })
   
     
-    
-    
 
-
-    
     output$P <-
       renderPrint({
         mm(
@@ -994,16 +1006,6 @@ shinyServer(function(input, output, session) {
       renderPrint({
         myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
         
-        # oreginal:
-        
-        
-        # fit <- auto.arima(myData,   
-        #                   stepwise=FALSE, 
-        #                   approximation=FALSE, 
-        #                   trace=TRUE, 
-        #                   allowdrift=TRUE)
-        
-        
         fit <- auto.arima(myData,
                           max.p = input$maxp,
                           max.d = input$maxd,
@@ -1015,25 +1017,11 @@ shinyServer(function(input, output, session) {
                           stepwise=FALSE,
                           approximation=FALSE,
                           trace=TRUE,
-                          allowdrift=TRUE)
-
-        
-        # fit <- auto.arima(myData,
-        #                   stepwise=TRUE, 
-        #                   max.p = input$maxp,
-        #                   max.q = input$maxq,
-        #                   max.P = input$maxPs,
-        #                   max.Q = input$maxQs,
-        #                   max.d = input$maxd,
-        #                   max.D = input$maxDs,
-        #                   max.order=input$maxorder,
-        #                   approximation=FALSE, 
-        #                   trace=TRUE, 
-        #                   allowdrift=TRUE)
+                          allowdrift=TRUE,
+                          test = c("kpss", "adf", "pp")
+                    )
 
         fit
-        
-        # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
         
       })
     
@@ -1108,7 +1096,7 @@ shinyServer(function(input, output, session) {
   
 
   
-  output$testTrend <- renderPrint({
+  output$testTrendMK <- renderPrint({
     myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
     print("....................................................................................................") 
     print("                                                                                                    ") 
@@ -1124,30 +1112,63 @@ shinyServer(function(input, output, session) {
     print("                                                                                                    ")
     
     MannKendall(myData) 
+    
   })
+  
+  output$kpssTest <- renderPrint({
+    myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+    print("....................................................................................................") 
+    print("     Kwiatkowski-Phillips-Schmidt-Shin (KPSS)                                                       ")
+    print("....................................................................................................") 
+    print("     A KPSS test can be used to determine if a time series is trend stationary.                     ") 
+    print("                                                                                                    ")
+    print("  (H0) : The time series is trend stationary. (the data is stationary)                              ") 
+    print("  (Ha) : The time series is not trend stationary. (the data is not stationary)                      ") 
+    print("                                                                                                    ")
+    print("  If the p-value of the test is less than some significance level (e.g. α = .05) then we            ") 
+    print("  reject the null hypothesis and conclude that the time series is not trend stationary.             ") 
+    print("....................................................................................................") 
+    print("  A major disadvantage for the KPSS test is that it has a high rate of Type I errors                ")
+    print("  (it tends to reject the null hypothesis too often).                                               ")
+    print("  One way to deal with the potential for high Type I errors is to combine the KPSS with an ADF test.")
+    print("  If the result from both tests suggests that the time series in stationary, then it probably is.   ")
+    print("....................................................................................................") 
+    print("                                                                                                    ")
+    
+    kpss.test(myData, null = "Trend") 
+  })
+  
   
   
   output$teststationarite <- renderPrint({
     myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-    print(".............................................................................................") 
-    print("                                                                                             ")
-    print("  (H0)  La série comporte une racine unitaire, et donc, elle n'est pas stationnaire          ") 
-    print("                                                                                             ")
-    print("  (H1)  la série est stationnaire                                                            ")
-    print("                                                                                             ")
-    print(".............................................................................................") 
+    print(".................................................") 
+    print("        Augmented Dickey-Fuller Test             ")
+    print(".................................................") 
+    print("                                                 ")
+    print("  (H0)  La série comporte une racine unitaire,   ") 
+    print("        et donc, elle n'est pas stationnaire     ")
+    print("  (H1)  la série est stationnaire                ")
+    print("                                                 ")      
+    print(".................................................")
+    print("  p-value < 0.05 indicates the TS is stationary  ")
+    print(".................................................")
     
-    adf.test(myData) 
+    # adf.test(myData)
+    
+    # adf.test(myData, alternative ="stationary", k=12) 
+    
+    adf.test(myData, alternative =input$altern, k=input$LagOrderADF)
+    
+    
+    # adf.test(x, alternative = c("stationary", "explosive"), k = trunc((length(x)-1)^(1/3)))
+    
+
   })
   
   
   
-  
-  
-  
-  
-  
-  
+   
   
   output$downloadData <- downloadHandler(
     filename = paste("forecast_", Sys.Date(), ".xlsx"),
