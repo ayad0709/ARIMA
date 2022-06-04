@@ -12,16 +12,17 @@ shinyServer(function(input, output, session) {
   tsYlabel = "y-axix label" 
   
   
-  helpLjungBox <- function(){
+  
+             
+             
+            
+  
+  helpLjungBoxFr <- function(){
     print(".........................................................................................") 
-    print(" The Ljung (pronounced Young) Box test ( or just the Box test)                           ")
-    print(" is a way to test for the absence of serial autocorrelation, up to a specified lag k.    ")
+    print(" La statistique de Ljung-Box (prononcé Young) permet de tester l'hypothèse d'indépendance")
+    print(" sérielle d'une série (ou que la série est bruit blanc). Plus spécifiquement cette       ")
+    print(" statistique teste l'hypothèse que les m coefficients d'autocorrélation sont nuls.       ")
     print("                                                                                         ")
-    print(" The test determines whether or not errors are iid (i.e. white noise) or whether there   ")
-    print(" is something more behind them; whether or not the autocorrelations for the errors       ")
-    print(" or residuals are non zero. Essentially, it is a test of lack of fit: if the             ")
-    print(" autocorrelations of the residuals are very small, we say that the model doesn’t show    ")
-    print(" ‘significant lack of fit’.                                                              ")
     print(".........................................................................................") 
     print("                 (H0) il n'y a pas auto-corrélation des erreurs d'ordre 1 à r.           ") 
     print("                 (H1) il y a auto-corrélation des erreurs d'ordre 1 à r.                 ")
@@ -33,6 +34,32 @@ shinyServer(function(input, output, session) {
     print(" ce qui est souvent une hypothèse que nous faisons lors de la création d'un modèle.      ") 
     print(".........................................................................................")
     print("  Changer la valeur du 'lag' puis cliquer sur 'Soumettre' pour exectuter un autre test   ") 
+    print(".........................................................................................")
+  }
+  
+  
+  helpLjungBox <- function(){
+    print(".........................................................................................") 
+    print(" The Ljung (pronounced Young) Box test ( or just the Box test)                           ")
+    print(" is a way to test for the absence of serial autocorrelation, up to a specified lag k.    ")
+    print("                                                                                         ")
+    print(" The test determines whether or not errors are iid (i.e. white noise) or whether there   ")
+    print(" is something more behind them; whether or not the autocorrelations for the errors       ")
+    print(" or residuals are non zero. Essentially, it is a test of lack of fit: if the             ")
+    print(" autocorrelations of the residuals are very small, we say that the model doesn’t show    ")
+    print(" ‘significant lack of fit’.                                                              ")
+    print(".........................................................................................") 
+    print("   (H0) The residuals are independently distributed.                                     ") 
+    print("   (H1) The residuals are not independently distributed; they exhibit serial correlation.")
+    print(".........................................................................................") 
+    
+    print(" Ideally, we would like to fail to reject the null hypothesis.                           ")
+    print(" That is, we would like to see the p-value of the test be greater than 0.05 because      ")
+    print(" this means the residuals for our time series model are independent,                     ")
+    print(" which is often an assumption we make when creating a model.                             ")
+   
+    print(".........................................................................................")
+    print("  Change the 'lag' value then click 'Submit' to run another test                         ") 
     print(".........................................................................................")
   }
   
@@ -780,10 +807,22 @@ shinyServer(function(input, output, session) {
     })
     
     
+     
+     
+    
+    
     output$testTrendMK2 <- renderPrint({
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       print("....................................................................................................") 
+      print("  A Mann-Kendall trend test is used to determine whether or not there is a trend in the             ") 
+      print("  time series data.                                                                                 ") 
+      print("  It is a nonparametric test, which means that no underlying assumptions                            ") 
+      print("  are made about the normality of the data.                                                         ") 
       print("                                                                                                    ") 
+      print("  (H0) : There is no trend in the series                                                            ") 
+      print("  (Ha) : There is a trend in the series                                                             ") 
+      print("....................................................................................................") 
+      
       print("  Un test de tendance de Mann-Kendall est utilisé pour déterminer s'il existe ou non                ") 
       print("  une tendance dans les données de séries chronologiques.                                           ") 
       print("  Il s'agit d'un test non paramétrique, ce qui signifie qu'aucune hypothèse sous-jacente            ") 
@@ -791,7 +830,6 @@ shinyServer(function(input, output, session) {
       print("                                                                                                    ")
       print("  (H0) : Il n'y a pas de tendance dans la série                                                     ") 
       print("  (Ha) : Il existe une tendance dans la série                                                       ") 
-      print("                                                                                                    ")
       print("....................................................................................................") 
       print("                                                                                                    ")
       
@@ -826,13 +864,11 @@ shinyServer(function(input, output, session) {
     
     output$DFGLS <- renderPrint({
       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      print("....................................................................................................") 
-      print("     DF-GLS Unit Root Test                                                                          ")
-      print("....................................................................................................") 
-      print("                                                                                                    ")
-      print("                                                                                                    ")
-      print("                                                                                                    ")
-      
+      print(".........................................................................................") 
+      print("     DF-GLS Unit Root Test                                                               ")
+      print(".........................................................................................") 
+      print("                                                                                         ")
+     
       summary(ur.ers(myData,  model = "trend",lag.max = 4)) 
     })
     
