@@ -64,8 +64,7 @@ shinyUI(pageWithSidebar (
     
     navbarPage("ARIMA", selected = "Data", collapsible = TRUE, inverse = TRUE, theme = shinytheme("spacelab"),
                
-               
-               
+
        tabPanel("Data",
                 fluidPage(
                   tabsetPanel(
@@ -83,6 +82,16 @@ shinyUI(pageWithSidebar (
                                  tabPanel("ACF", plotOutput("StACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("StPACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("StACFPACF",width=620,height = 570)),
+                                 
+                                 tabPanel("stationary [ADF]", 
+                                          sidebarLayout(
+                                            sidebarPanel(width=3,
+                                                         selectInput("alternSt", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
+                                                         numericInput("LagOrderADFSt", label = "Lag", value=12),
+                                                         submitButton("Submit ==>"),
+                                            ),
+                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteSt")),
+                                          )),
                                )),  
                       
                       
@@ -92,7 +101,17 @@ shinyUI(pageWithSidebar (
                                  tabPanel("ACF", plotOutput("logStACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("logStPACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("logStACFPACF",width=620,height = 570)),
-                               )), 
+
+                                 tabPanel("stationary [ADF]", 
+                                          sidebarLayout(
+                                            sidebarPanel(width=3,
+                                                         selectInput("alternLogSt", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
+                                                         numericInput("LagOrderADFLogSt", label = "Lag", value=12),
+                                                         submitButton("Submit ==>"),
+                                            ),
+                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteLogSt")),
+                                          )),
+                              )), 
                       
                       
                       tabPanel("d1(St)", 
@@ -101,6 +120,16 @@ shinyUI(pageWithSidebar (
                                  tabPanel("ACF", plotOutput("d1StACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("d1StPACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("d1StACFPACF",width=620,height = 570)),
+                                 
+                                 tabPanel("stationary [ADF]", 
+                                          sidebarLayout(
+                                            sidebarPanel(width=3,
+                                                         selectInput("alternd1St", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
+                                                         numericInput("LagOrderADFd1St", label = "Lag", value=12),
+                                                         submitButton("Submit ==>"),
+                                            ),
+                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited1St")),
+                                          )),
                                )), 
                       
                       
@@ -110,7 +139,18 @@ shinyUI(pageWithSidebar (
                                  tabPanel("ACF", plotOutput("DS1StACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("DS1StPACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("DS1StACFPACF",width=620,height = 570)),
-                               )),  
+                                 
+                                 tabPanel("stationary [ADF]", 
+                                          sidebarLayout(
+                                            sidebarPanel(width=3,
+                                                         selectInput("alternDs1St", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
+                                                         numericInput("LagOrderADFDs1St", label = "Lag", value=12),
+                                                         submitButton("Submit ==>"),
+                                            ),
+                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteDs1St")),
+                                          )),
+                               )), 
+                              
                       
                       
                       tabPanel("d1(D1(St))", 
@@ -119,15 +159,37 @@ shinyUI(pageWithSidebar (
                                  tabPanel("ACF", plotOutput("ddsplotACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("ddsplotPACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("ddsplotACFPACF",width=620,height = 570)),
+                              
+                                 tabPanel("stationary [ADF]", 
+                                          sidebarLayout(
+                                            sidebarPanel(width=3,
+                                                         selectInput("alternd1Ds1St", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
+                                                         numericInput("LagOrderADFd1Ds1St", label = "Lag", value=12),
+                                                         submitButton("Submit ==>"),
+                                            ),
+                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited1Ds1St")),
+                                          )),
+                                 
                                )),  
                       
                       
                       tabPanel("d1(log(St))", 
                                tabsetPanel(
-                                 tabPanel("d[1](log(St))",plotOutput("plot10a",width=900,height = 630)),
+                                 tabPanel("d[1](log(St))",plotOutput("plotd1Log",width=900,height = 630)),
                                  tabPanel("ACF", plotOutput("d1LogStACFa",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("d1LogStPACFa",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("d1LogStACFPACFa",width=620,height = 570)),
+                                 
+                                 tabPanel("stationary [ADF]", 
+                                          sidebarLayout(
+                                            sidebarPanel(width=3,
+                                                         selectInput("alternd1LogSt", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
+                                                         numericInput("LagOrderADFd1LogSt", label = "Lag", value=12),
+                                                         submitButton("Submit ==>"),
+                                            ),
+                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited1LogSt")),
+                                          )),
+                                 
                                )), 
                       
                       
@@ -137,6 +199,17 @@ shinyUI(pageWithSidebar (
                                  tabPanel("ACF", plotOutput("DlogplotACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("DlogplotPACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("DlogplotACFPACF",width=620,height = 570)),
+                                 
+                                 tabPanel("stationary [ADF]", 
+                                          sidebarLayout(
+                                            sidebarPanel(width=3,
+                                                         selectInput("alternDs1LogSt", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
+                                                         numericInput("LagOrderADFDs1LogSt", label = "Lag", value=12),
+                                                         submitButton("Submit ==>"),
+                                            ),
+                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteDs1LogSt")),
+                                          )),
+                                 
                                )),  
                       
                       
@@ -146,6 +219,18 @@ shinyUI(pageWithSidebar (
                                  tabPanel("ACF", plotOutput("dDlogplotACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("dDlogplotPACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("dDlogplotACFPACF",width=620,height = 570)),
+                                 
+                                 tabPanel("stationary [ADF]", 
+                                          sidebarLayout(
+                                            sidebarPanel(width=3,
+                                                         selectInput("alternd1Ds1LogSt", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
+                                                         numericInput("LagOrderADFd1Ds1LogSt", label = "Lag", value=12),
+                                                         submitButton("Submit ==>"),
+                                            ),
+                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited1Ds1LogSt")),
+                                          )),
+                                 
+                                 
                                )),  
                       
                       
@@ -155,6 +240,18 @@ shinyUI(pageWithSidebar (
                                  tabPanel("ACF", plotOutput("difference2ACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("difference2PACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("difference2ACFPACF",width=620,height = 570)),
+                                 
+                                 tabPanel("stationary [ADF]", 
+                                          sidebarLayout(
+                                            sidebarPanel(width=3,
+                                                         selectInput("alternd2St", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
+                                                         numericInput("LagOrderADFd2St", label = "Lag", value=12),
+                                                         submitButton("Submit ==>"),
+                                            ),
+                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited2St")),
+                                          )),
+                                 
+                                 
                                  
                                )), 
                 ))),
@@ -188,7 +285,6 @@ shinyUI(pageWithSidebar (
                                     tabPanel("Classical", plotOutput("decompose",width=800,height = 700 )),
                                     tabPanel("Classical", plotOutput("decompose2",width=800,height = 700 )),
                                     tabPanel("Coefficients saisonnier", verbatimTextOutput("dFactors" )),
-                                    
                                   ))
                               )),
                      
@@ -218,15 +314,14 @@ shinyUI(pageWithSidebar (
         tabPanel("Auto Forecast",
                  fluidPage(
                    tabsetPanel(
+                     
                      tabPanel("Forecasted Plot", plotOutput("M",width=900,height = 630)),
                      
                      tabPanel("Model", 
                               tabsetPanel(
                                  tabPanel("Model", verbatimTextOutput("P"), class="span7"),
-                                
-                                # tabPanel("ARIMA Slow Model", verbatimTextOutput("Pslow"), class="span7"),
 
-                                tabPanel("ARIMA Slow Model", 
+                                 tabPanel("ARIMA Slow Model", 
                                          sidebarLayout(
                                            sidebarPanel(width=3,
                                                         numericInput("maxp", label = "max.p", min=0, value=5),
@@ -248,23 +343,18 @@ shinyUI(pageWithSidebar (
                               tabsetPanel(
                                 tabPanel("Trend [Mann-Kendall]", verbatimTextOutput("testTrendMK")),
 
-                                
-                                
-                                
-                                
-                                
+
                                 #tabPanel("Stationarité [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarite")),
                                 
-                                tabPanel("Stationarité [Augmented Dickey-Fuller]", 
+                                tabPanel("stationary [Augmented Dickey-Fuller]", 
                                          sidebarLayout(
                                            sidebarPanel(width=3,
                                                         selectInput("altern", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                        
                                                         numericInput("LagOrderADF", label = "Lag", value=12),
                                                         submitButton("Submit ==>"),
                                            ),
                                            
-                                           tabPanel("Stationarité [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarite")),
+                                           tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarite")),
 
                                          )),
                                 
@@ -278,6 +368,8 @@ shinyUI(pageWithSidebar (
                                          sidebarLayout(
                                            sidebarPanel(width=2,
                                                         numericInput("lagorder", label = "Lag order for test:", min=0, value=5),
+                                                        selectInput("typeBoxTest", label = "type", choices=c("Box-Pierce","Ljung-Box"),selected="Ljung-Box"),
+                                                        
                                                         submitButton("Submit"),
                                            ),
 
@@ -362,7 +454,7 @@ shinyUI(pageWithSidebar (
                                    
                                    # tabPanel("[Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteARIMApdq")),
                                   
-                                   tabPanel("Stationarité [Augmented Dickey-Fuller]", 
+                                   tabPanel("stationary [Augmented Dickey-Fuller]", 
                                             sidebarLayout(
                                               sidebarPanel(width=3,
                                                            selectInput("altern2", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
@@ -371,7 +463,7 @@ shinyUI(pageWithSidebar (
                                                            submitButton("Submit ==>"),
                                               ),
                                               
-                                              tabPanel("Stationarité [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteARIMApdq")),
+                                              tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteARIMApdq")),
                                               
                                             )),
                                    
@@ -389,6 +481,8 @@ shinyUI(pageWithSidebar (
                                            sidebarLayout(
                                              sidebarPanel(width=2,
                                                           numericInput("lagorder1", label = "Lag order for test:", min=0, value=5),
+                                                          selectInput("typeBoxTest1", label = "type", choices=c("Box-Pierce","Ljung-Box"),selected="Ljung-Box"),
+                                                          
                                                           submitButton("Submit"),
                                              ),
                                              

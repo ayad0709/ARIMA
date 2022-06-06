@@ -11,11 +11,7 @@ shinyServer(function(input, output, session) {
   tsXlabel = "X-axis label"
   tsYlabel = "y-axix label" 
   
-  
-  
              
-             
-            
   
   helpLjungBoxFr <- function(){
     print(".........................................................................................") 
@@ -52,16 +48,36 @@ shinyServer(function(input, output, session) {
     print("   (H0) The residuals are independently distributed.                                     ") 
     print("   (H1) The residuals are not independently distributed; they exhibit serial correlation.")
     print(".........................................................................................") 
-    
     print(" Ideally, we would like to fail to reject the null hypothesis.                           ")
     print(" That is, we would like to see the p-value of the test be greater than 0.05 because      ")
     print(" this means the residuals for our time series model are independent,                     ")
     print(" which is often an assumption we make when creating a model.                             ")
-   
     print(".........................................................................................")
     print("  Change the 'lag' value then click 'Submit' to run another test                         ") 
     print(".........................................................................................")
   }
+  
+  
+  
+  helpADF <- function(){  
+      print(".......................................................................") 
+      print("               Augmented Dickey-Fuller Test                            ")
+      print(".......................................................................") 
+      print("  Augmented Dickey-Fuller Test is used to check whether a given        ")
+      print("  time series is at rest.                                              ")
+      print("                                                                       ")
+      print("  A given time series can be called stationary if:                     ")     
+      print("  - it doesn’t have any trend                                          ")     
+      print("  - depicts a constant variance over time                              ")     
+      print("  - and follows autocorrelation structure over a period constantly.    ")     
+      print(".......................................................................") 
+      print("  (H0)  The series has a unit root, so it is not stationary.           ") 
+      print("  (Ha)  The series is stationary.                                      ")
+      print(".......................................................................")
+      print("  p-value < 0.05 indicates the Time Series is stationary               ")
+      print(".......................................................................")
+  }
+  
   
   
   observe({
@@ -219,7 +235,7 @@ shinyServer(function(input, output, session) {
   
   # load data only
   
-  mmm <- function(Model, col, time, year, month, length) {
+  loadData <- function(Model, col, time, year, month, length) {
     inFile <- reactive({
       input$file1
     })
@@ -276,7 +292,7 @@ shinyServer(function(input, output, session) {
   ####### data visualisation  ###############################################################
 
   output$dataPrint <- renderTable({
-    myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$data
+    myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$data
     # dd <- as.data.frame(myData)
     # ddd <- data.frame(date = row.names(dd), dd)
     #ddd 
@@ -287,117 +303,387 @@ shinyServer(function(input, output, session) {
   ####### time series plot + ACF + PACF ###############################################################
 
   output$tsPlot <- renderPlot({
-    myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+    myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
     plot(myData, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, type = 'l',lwd = 2)
   })
     
     
   output$StACF <- renderPlot({
-    myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+    myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
     plot(Acf(myData), lwd = 2)
   })
     
     
     output$StPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       plot(Pacf(myData), lwd = 2)
     })
     
     
     output$StACFPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       acf2(myData, lwd = 3) 
     })
     
     
+    output$teststationariteSt <- renderPrint({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      helpADF()
+      
+      adf.test(myData, alternative =input$alternSt, k=input$LagOrderADFSt)
+      
+    })
     
     ####### log(St) plot + ACF + PACF ###############################################################
     
     
     output$plotLogSt <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       log_x <- log(myData)
-      plot(log_x, type = 'l', lwd = 2)
+      plot(log_x, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, type = 'l', lwd = 2)
     })
     
     
     output$logStACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       log_st <- log(myData)
       plot(Acf(log_st), lwd = 2)
     })
     
     
     output$logStPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       log_st <- log(myData)
       plot(Pacf(log_st), lwd = 2)
     })
     
     
     output$logStACFPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       log_st <- log(myData)
       acf2(log_st, lwd = 3) 
+    })
+    
+    output$teststationariteLogSt <- renderPrint({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      helpADF()
+      log_st <- log(myData)
+      adf.test(log_st, alternative =input$alternLogSt, k=input$LagOrderADFLogSt)
+      
     })
     
     ####### difference d'ordre 1 ################################################# ##############  
     
     output$difference1 <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       diff_st <- diff(myData)
-      plot(diff_st, type = 'l', lwd = 2)
+      plot(diff_st, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, type = 'l', lwd = 2)
     })
     
     output$d1StACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       diff_st <- diff(myData)
       plot(Acf(diff_st), lwd = 2)
     })
     
     
     output$d1StPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       diff_st <- diff(myData)
       plot(Pacf(diff_st), lwd = 2)
     })
     
     output$d1StACFPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       diff_st <- diff(myData)
       acf2(diff_st, lwd = 3) 
+    })
+    
+    output$teststationarited1St <- renderPrint({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      helpADF()
+      diff_st <- diff(myData)
+      adf.test(diff_st, alternative =input$alternd1St, k=input$LagOrderADFd1St)
+      
+    })
+    
+    ####################### Diff Sainonniere ###############################################  
+    
+    output$DS1Stplot <- renderPlot({
+      myData <- loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      diffS_st <- diff(myData, ns)
+      plot(diffS_st, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, lwd = 2)
+    })
+    
+    output$DS1StACF <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      diffS_st <- diff(myData, ns)
+      plot(Acf(diffS_st), lwd = 2)
+    })
+    
+    output$DS1StPACF <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffS_st <- diff(myData, ns)
+      plot(Pacf(diffS_st), lwd = 2)
+    })  
+    
+    
+    output$DS1StACFPACF <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffS_st <- diff(myData, ns)
+      acf2(diffS_st, lwd = 3) 
+      
+    })  
+    
+    
+    output$teststationariteDs1St <- renderPrint({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      helpADF()
+      diffS_st <- diff(myData, ns)
+      
+      adf.test(diffS_st, alternative =input$alternDs1St, k=input$LagOrderADFDs1St)
+      
+    })
+    
+
+    ######################## d[1] ( D[1] (St) ) ##############################################  
+    
+    
+    output$ddsplot <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      d1_D1_St <- diff(diff(myData, ns))
+      plot(d1_D1_St, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, lwd = 2)
+    })
+    
+    
+    output$ddsplotACF <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      d1_D1_St <- diff(diff(myData, ns))
+      plot(Acf(d1_D1_St), lwd = 2)
+    })
+    
+    output$ddsplotPACF <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      d1_D1_St <- diff(diff(myData, ns))
+      plot(Pacf(d1_D1_St), lwd = 2)
+    }) 
+    
+    
+    output$ddsplotACFPACF <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      d1_D1_St <- diff(diff(myData, ns))
+      acf2(d1_D1_St, lwd = 3) 
+    }) 
+    
+    
+    output$teststationarited1Ds1St <- renderPrint({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      helpADF()
+      d1_D1_St <- diff(diff(myData, ns))
+      
+      adf.test(d1_D1_St, alternative =input$alternd1Ds1St, k=input$LagOrderADFd1Ds1St)
+      
     })
     
     
     ######## diff log copie ##############################################################  
     
-    output$plot10a <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      dlog_st <- diff(log(myData))
-      plot(dlog_st, type = 'l', lwd = 2)
+    output$plotd1Log <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      d1_log_st <- diff(log(myData))
+      plot(d1_log_st, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, type = 'l', lwd = 2)
     })
     
     output$d1LogStACFa <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      dlog_st <- diff(log(myData))
-      plot(Acf(dlog_st), lwd = 2)
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      d1_log_st <- diff(log(myData))
+      plot(Acf(d1_log_st), lwd = 2)
     })
     
     
     output$d1LogStPACFa <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      dlog_st <- diff(log(myData))
-      plot(Pacf(dlog_st), lwd = 2)
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      d1_log_st <- diff(log(myData))
+      plot(Pacf(d1_log_st), lwd = 2)
     })
     
     
     output$d1LogStACFPACFa <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      dlog_st <- diff(log(myData))
-      acf2(dlog_st, lwd = 3) 
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      d1_log_st <- diff(log(myData))
+      acf2(d1_log_st, lwd = 3) 
     })
     
-    ######################################################################
+    output$teststationarited1LogSt <- renderPrint({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+
+      helpADF()
+      d1_log_st <- diff(log(myData))
+      
+      adf.test(d1_log_st, alternative =input$alternd1LogSt, k=input$LagOrderADFd1LogSt)
+      
+    })
+    
+    
+    
+    
+    ##################### D[1] ( log(S(t)) )#################################################  
+    
+    output$Dlogplot <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffSlog_x <- diff(log(myData), ns)
+      plot(diffSlog_x, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, lwd = 2)
+    })
+    
+    
+    output$DlogplotACF <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffSlog_x <- diff(log(myData), ns)
+      plot(Acf(diffSlog_x), lwd = 2)
+    })
+    
+    output$DlogplotPACF <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffSlog_x <- diff(log(myData), ns)
+      plot(Pacf(diffSlog_x), lwd = 2)
+    }) 
+    
+    
+    output$DlogplotACFPACF <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffSlog_x <- diff(log(myData), ns)
+      acf2(diffSlog_x , lwd = 3) 
+      
+    }) 
+    
+    
+    output$teststationariteDs1LogSt <- renderPrint({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      helpADF()
+      Ds1_log_St <- diff(log(myData), ns)
+      
+      adf.test(Ds1_log_St, alternative =input$alternDs1LogSt, k=input$LagOrderADFDs1LogSt)
+      
+    })
+    
+    
+    ################## d[1] ( D[1] ( log(St) ) ) ####################################################  
+    
+    output$dDlogplot <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffS_x <- diff(diff(log(myData), ns))
+      plot(diffS_x, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, lwd = 2)
+    })
+    
+    output$dDlogplotACF <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffS_x <- diff(diff(log(myData), ns))
+      plot(Acf(diffS_x), lwd = 2)
+    })
+    
+    output$dDlogplotPACF <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffS_x <- diff(diff(log(myData), ns))
+      plot(Pacf(diffS_x), lwd = 2)
+    })
+    
+    
+    output$dDlogplotACFPACF <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffS_x <- diff(diff(log(myData), ns))
+      acf2(diffS_x , lwd = 3) 
+    })
+    
+    
+    output$teststationarited1Ds1LogSt <- renderPrint({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      helpADF()
+      d1_Ds1_log_St <- diff(diff(log(myData), ns))
+      
+      adf.test(d1_Ds1_log_St, alternative =input$alternd1Ds1LogSt, k=input$LagOrderADFd1Ds1LogSt)
+      
+    })
+
+    
+    ######################### diff d'ordre 2 #############################################  
+    
+    
+    output$difference2 <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      diff2_ts <- diff(myData, differences = 2)
+      plot(diff2_ts, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, lwd = 2)
+    }) 
+    
+    
+    output$difference2ACF <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      diff2_ts <- diff(myData, differences = 2)
+      plot(Acf(diff2_ts), lwd = 2)
+    })
+    
+    output$difference2PACF <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      diff2_ts <- diff(myData, differences = 2)
+      plot(Pacf(diff2_ts), lwd = 2)
+    })  
+    
+    
+    output$difference2ACFPACF <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      diff2_ts <- diff(myData, differences = 2)
+      acf2(diff2_ts , lwd = 3) 
+      
+    })  
+    
+    
+    output$teststationarited2St <- renderPrint({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+
+      helpADF()
+      diff2_ts <- diff(myData, differences = 2)
+      
+      adf.test(diff2_ts, alternative =input$alternd2St, k=input$LagOrderADFd2St)
+      
+    })
+    
     
     
     
@@ -408,19 +694,19 @@ shinyServer(function(input, output, session) {
     ######################################################################
    
      output$tsDisplay <- renderPlot({
-       myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
        ggtsdisplay(myData)
       
     })
     
     output$boxP <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       boxplot(myData~cycle(myData),xlab="Date")
     })
     
     
     output$SubSeriesPlot <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       ggsubseriesplot(myData)+
         ylab("y label") +
         ggtitle("Title")
@@ -428,7 +714,7 @@ shinyServer(function(input, output, session) {
     })
     
     output$SeasonPlot <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       ggseasonplot(myData, year.labels=TRUE, year.labels.left=TRUE) +
         ylab("y label") +
         ggtitle("Title SeasonPlot")
@@ -436,14 +722,14 @@ shinyServer(function(input, output, session) {
     
     
     output$SeasonPlotPolar <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       ggseasonplot(myData, polar=TRUE) +
         ylab("y label") +
         ggtitle("Title SeasonPlotPolar")
     }) 
     
     output$lagPlot <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       gglagplot(myData)
     })
     
@@ -459,227 +745,51 @@ shinyServer(function(input, output, session) {
     
     
     output$difference12 <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       diff_st <- diff(myData)
-      plot(diff_st, lwd = 2)
+      plot(diff_st, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, lwd = 2)
     })
     
     output$d1StACF2 <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       diff_st <- diff(myData)
       plot(Acf(diff_st), lwd = 2)
     })
     
     output$d1StPACF2 <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       diff_st <- diff(myData)
       plot(Pacf(diff_st), lwd = 2)
     })
     
     
-    ####################### Diff Sainonniere ###############################################  
-    
-    output$DS1Stplot <- renderPlot({
-      myData <- mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      diffS_st <- diff(myData, ns)
-      plot(diffS_st, lwd = 2)
-    })
-    
-    output$DS1StACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      diffS_st <- diff(myData, ns)
-      plot(Acf(diffS_st), lwd = 2)
-    })
-    
-    output$DS1StPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      
-      diffS_st <- diff(myData, ns)
-      plot(Pacf(diffS_st), lwd = 2)
-    })  
-    
-    
-    output$DS1StACFPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      
-      diffS_st <- diff(myData, ns)
-      acf2(diffS_st, lwd = 3) 
-      
-    })  
+
     
     ######################## diff log ############################################## 
     
     output$plot10 <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       dlog_st <- diff(log(myData))
-      plot(dlog_st, lwd = 2)
+      plot(dlog_st, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, lwd = 2)
     })
     
     output$d1LogStACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       dlog_st <- diff(log(myData))
       plot(Acf(dlog_st), lwd = 2)
     })
     
     
     output$d1LogStPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       dlog_st <- diff(log(myData))
       plot(Pacf(dlog_st), lwd = 2)
     })
     
-    ######################### diff d'ordre 2 #############################################  
+
     
-    
-    output$difference2 <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      diff2_ts <- diff(myData, differences = 2)
-      plot(diff2_ts, lwd = 2)
-    }) 
-    
-    
-    output$difference2ACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      diff2_ts <- diff(myData, differences = 2)
-      plot(Acf(diff2_ts), lwd = 2)
-    })
-    
-    output$difference2PACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      diff2_ts <- diff(myData, differences = 2)
-      plot(Pacf(diff2_ts), lwd = 2)
-    })  
-    
-    
-    output$difference2ACFPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      diff2_ts <- diff(myData, differences = 2)
-      acf2(diff2_ts , lwd = 3) 
-      
-    })  
-    
-    
-    
-    
-    ################## d[1] ( D[1] ( log(St) ) ) ####################################################  
-    
-    output$dDlogplot <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      
-      diffS_x <- diff(diff(log(myData), ns))
-      plot(diffS_x, lwd = 2)
-    })
-    
-    output$dDlogplotACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      
-      diffS_x <- diff(diff(log(myData), ns))
-      plot(Acf(diffS_x), lwd = 2)
-    })
-    
-    output$dDlogplotPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      
-      diffS_x <- diff(diff(log(myData), ns))
-      plot(Pacf(diffS_x), lwd = 2)
-    })
-    
-    
-    output$dDlogplotACFPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      
-      diffS_x <- diff(diff(log(myData), ns))
-      acf2(diffS_x , lwd = 3) 
-    })
-    
-    
-    
-    
-    ##################### D[1] ( log(S(t)) )#################################################  
-    
-    output$Dlogplot <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      
-      diffSlog_x <- diff(log(myData), ns)
-      plot(diffSlog_x, lwd = 2)
-    })
-    
-    
-    output$DlogplotACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      
-      diffSlog_x <- diff(log(myData), ns)
-      plot(Acf(diffSlog_x), lwd = 2)
-    })
-    
-    output$DlogplotPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      
-      diffSlog_x <- diff(log(myData), ns)
-      plot(Pacf(diffSlog_x), lwd = 2)
-    }) 
-    
-    
-    output$DlogplotACFPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      
-      diffSlog_x <- diff(log(myData), ns)
-      acf2(diffSlog_x , lwd = 3) 
-      
-    }) 
-    
-    
-    ######################## d[1] ( D[1] (St) ) ##############################################  
-    
-    
-    output$ddsplot <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      
-      diffS_x <- diff(diff(myData, ns))
-      plot(diffS_x, lwd = 2)
-    })
-    
-    
-    output$ddsplotACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      
-      diffS_x <- diff(diff(myData, ns))
-      plot(Acf(diffS_x), lwd = 2)
-    })
-    
-    output$ddsplotPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      
-      diffS_x <- diff(diff(myData, ns))
-      plot(Pacf(diffS_x), lwd = 2)
-    }) 
-    
-    
-    output$ddsplotACFPACF <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      ns <-  mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      
-      diffS_x <- diff(diff(myData, ns))
-      acf2(diffS_x, lwd = 3) 
-    }) 
-    
-    
-    
+  
+
     
     
     ###############################################################################
@@ -689,7 +799,7 @@ shinyServer(function(input, output, session) {
     
 
     output$PrevisionsPlotpdq <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
     
       
       model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
@@ -701,57 +811,57 @@ shinyServer(function(input, output, session) {
     
     
     output$textARIMApdq <- renderPrint({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
       # summary(model_fit)
       model_fit
     })
     
     output$plotACFRespdq <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE)
       plot(Acf(model_fit$residuals), lwd = 2)
     })
     
     
     output$plotPACFRespdq <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE)
       plot(Pacf(fit$residuals), lwd = 2)
     })
     
     output$plotACFPACFRespdq <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE)
       acf2(fit$residuals, lwd = 3) 
     })
     
     
     output$plotACFPACFRespdqwithoutdrift <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = FALSE)
       acf2(fit$residuals, lwd = 3) 
     })
     
     output$chkResARIMApdq <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
       checkresiduals(fit)
     })
     
     
     output$SARIMAplot <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       
-      nsais <- mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      nsais <- loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
       sarima(myData, p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq, P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs, S = nsais, lwd = 2)
     })
     
     output$SARIMAplot2 <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       
-      nsais <- mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      nsais <- loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
       sarima(myData, p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq, P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs, S = nsais, lwd = 2)
     })
@@ -763,9 +873,9 @@ shinyServer(function(input, output, session) {
     
     
     output$SARIMAforcastplot2 <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       
-      nsais <- mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      nsais <- loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
       
       #sarima.for(myData, n.ahead = input$length, p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq, P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs, S = nsais, lwd = 2)
@@ -780,9 +890,9 @@ shinyServer(function(input, output, session) {
     
     
     output$SARIMAforcastplot <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       
-      nsais <- mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      nsais <- loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
       sarima.for(myData, n.ahead = input$length, p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq, P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs, S = nsais, lwd = 2)
       
@@ -790,7 +900,7 @@ shinyServer(function(input, output, session) {
     
     
     output$tsdiagARIMApdq <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
       ggtsdiag(fit)
     })
@@ -798,7 +908,7 @@ shinyServer(function(input, output, session) {
 
     
     output$FARIMApdq <- renderTable({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
       pred <- forecast(fit, h=input$length)
       asdfpred <- as.data.frame(pred)
@@ -812,7 +922,7 @@ shinyServer(function(input, output, session) {
     
     
     output$testTrendMK2 <- renderPrint({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       print("....................................................................................................") 
       print("  A Mann-Kendall trend test is used to determine whether or not there is a trend in the             ") 
       print("  time series data.                                                                                 ") 
@@ -839,7 +949,7 @@ shinyServer(function(input, output, session) {
     
     
     output$kpssTest2 <- renderPrint({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       print("....................................................................................................") 
       print("     Kwiatkowski-Phillips-Schmidt-Shin (KPSS)                                                       ")
       print("....................................................................................................") 
@@ -863,7 +973,7 @@ shinyServer(function(input, output, session) {
     
     
     output$DFGLS <- renderPrint({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       print(".........................................................................................") 
       print("     DF-GLS Unit Root Test                                                               ")
       print(".........................................................................................") 
@@ -876,14 +986,14 @@ shinyServer(function(input, output, session) {
     
     
     output$testLBnARIMApdq <- renderPrint({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       best_ARIMA <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
       
       helpLjungBox()
       
       myDataResiduals <- best_ARIMA$resid
       
-      Box.test(myDataResiduals, lag=input$lagorder1, type="Ljung-Box")
+      Box.test(myDataResiduals, lag=input$lagorder1, type=input$typeBoxTest1)
       
     })
   
@@ -892,35 +1002,13 @@ shinyServer(function(input, output, session) {
     
     
     output$teststationariteARIMApdq <- renderPrint({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      print("..........Augmented Dickey-Fuller Test............................") 
-      print("                                                                  ")     
-      print("Augmented Dickey-Fuller Test is used to check whether             ")
-      print(" a given time series is at rest.                                  ")
-      print("                                                                  ")
-      print("A given time series can be called stationary if:                  ")     
-      print("  - it doesn’t have any trend                                     ")     
-      print("  - depicts a constant variance over time                         ")     
-      print("  - and follows autocorrelation structure over                    ")     
-      print("    a period constantly.                                          ")     
-      print("..................................................................") 
-      print("                                                                  ")
-      print(" (H0) La série comporte une racine unitaire, et donc,             ") 
-      print("     elle n'est pas stationnaire                                  ")
-      print(" (H1) La série est stationnaire                                   ")
-      print("                                                                  ")
-      print("..................................................................")
-      print("   p-value < 0.05 indicates the TS is stationary                  ")
-      print("..................................................................")
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+
+      helpADF()
 
       # adf.test(myData, alternative ="stationary", k=12) 
       
       adf.test(myData, alternative =input$altern2, k=input$LagOrderADF2)
-      
-      
-      # adf.test(x, alternative = c("stationary", "explosive"), k = trunc((length(x)-1)^(1/3)))
-      
-      
       
     })
     
@@ -932,14 +1020,14 @@ shinyServer(function(input, output, session) {
     
     
     output$decompose <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       decompose_time_Series <- decompose(myData,input$model1)
       plot(decompose_time_Series, lwd = 2)
     })  
     
     
     output$decompose2 <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       myData %>% decompose(type=input$model1) %>%
         autoplot() + 
         ggtitle("Title")
@@ -948,7 +1036,7 @@ shinyServer(function(input, output, session) {
     
     
     output$dFactors <- renderPrint({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       myData %>% decompose(type=input$model1) -> fit
       print(".......................................................") 
       print("                                                       ")
@@ -963,7 +1051,7 @@ shinyServer(function(input, output, session) {
     
     
     output$X11decompose <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       myData %>% seas(x11="") -> fit
       autoplot(fit) +
         ggtitle("X11 decomposition of ...............")
@@ -972,7 +1060,7 @@ shinyServer(function(input, output, session) {
     
     
     output$SEATSdecompose <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       myData %>% seas() %>%
         autoplot() +
         ggtitle("SEATS decomposition of ..............")
@@ -980,25 +1068,25 @@ shinyServer(function(input, output, session) {
     
     
     output$SEATSFactors <- renderPrint({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       myData %>% seas() -> fit
       summary(fit)
     })
     
     output$X11Factors <- renderPrint({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       myData %>% seas(x11="") -> fit
       summary(fit)
     })
     
     output$STLdecompose <- renderPlot({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       myData %>% stl(t.window=13, s.window="periodic", robust=TRUE) %>% autoplot()
     })
     
     
     output$STLFactors <- renderPrint({
-      myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       myData %>% stl(t.window=13, s.window="periodic", robust=TRUE) -> fit
       fit
     })   
@@ -1007,7 +1095,6 @@ shinyServer(function(input, output, session) {
     #########################################################################
     ########### Forecasting Models ( SARIMA and HW ) #########################
     #########################################################################
-    
     
     
   output$M <-
@@ -1022,7 +1109,6 @@ shinyServer(function(input, output, session) {
       )[[2]]
     })
   
-    
 
     output$P <-
       renderPrint({
@@ -1040,7 +1126,7 @@ shinyServer(function(input, output, session) {
     
     output$Pslow <-
       renderPrint({
-        myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+        myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
         
         fit <- auto.arima(myData,
                           max.p = input$maxp,
@@ -1108,7 +1194,7 @@ shinyServer(function(input, output, session) {
 
   output$testLBn <- renderPrint({
     helpLjungBox()
-    b<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+    b<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
 
         if (input$Model == "ARIMA") {
           a <- auto.arima(b, trace=FALSE, allowdrift=TRUE)
@@ -1124,8 +1210,9 @@ shinyServer(function(input, output, session) {
         }
 
     myDataResiduals <- a$resid
-    Box.test(myDataResiduals , lag=input$lagorder, type="Ljung-Box")
+    Box.test(myDataResiduals, lag=input$lagorder, type=input$typeBoxTest)
     
+
   })
   
   
@@ -1133,7 +1220,7 @@ shinyServer(function(input, output, session) {
 
   
   output$testTrendMK <- renderPrint({
-    myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+    myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
     print("....................................................................................................") 
     print("                                                                                                    ") 
     print("  Un test de tendance de Mann-Kendall est utilisé pour déterminer s'il existe ou non                ") 
@@ -1152,7 +1239,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$kpssTest <- renderPrint({
-    myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+    myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
     print("....................................................................................................") 
     print("     Kwiatkowski-Phillips-Schmidt-Shin (KPSS)                                                       ")
     print("....................................................................................................") 
@@ -1177,17 +1264,10 @@ shinyServer(function(input, output, session) {
   
   
   output$teststationarite <- renderPrint({
-    myData<-mmm(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-    print("..............................................................") 
-    print("               Augmented Dickey-Fuller Test                   ")
-    print("..............................................................") 
-    print("                                                              ")
-    print("  (H0)  La série comporte une racine unitaire,                ") 
-    print("        et donc, elle n'est pas stationnaire                  ")
-    print("  (H1)  la série est stationnaire                             ")
-    print("                                                              ")      
-    print("..............................................................")
-    print("  p-value < 0.05 indicates the TS is stationary               ")
+    myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+
+    helpADF()
+    
     print("..............................................................")
     
     # adf.test(myData)
@@ -1196,10 +1276,7 @@ shinyServer(function(input, output, session) {
     
     adf.test(myData, alternative =input$altern, k=input$LagOrderADF)
     
-    
     # adf.test(x, alternative = c("stationary", "explosive"), k = trunc((length(x)-1)^(1/3)))
-    
-
   })
   
   
