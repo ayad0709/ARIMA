@@ -87,7 +87,7 @@ shinyUI(pageWithSidebar (
                                           sidebarLayout(
                                             sidebarPanel(width=3,
                                                          selectInput("alternSt", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                         numericInput("LagOrderADFSt", label = "Lag", value=12),
+                                                         numericInput("LagOrderADFSt", label = "Lag",  min=0, value=12),
                                                          submitButton("Submit ==>"),
                                             ),
                                             tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteSt")),
@@ -106,7 +106,7 @@ shinyUI(pageWithSidebar (
                                           sidebarLayout(
                                             sidebarPanel(width=3,
                                                          selectInput("alternLogSt", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                         numericInput("LagOrderADFLogSt", label = "Lag", value=12),
+                                                         numericInput("LagOrderADFLogSt", label = "Lag", min=0, value=12),
                                                          submitButton("Submit ==>"),
                                             ),
                                             tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteLogSt")),
@@ -125,7 +125,7 @@ shinyUI(pageWithSidebar (
                                           sidebarLayout(
                                             sidebarPanel(width=3,
                                                          selectInput("alternd1St", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                         numericInput("LagOrderADFd1St", label = "Lag", value=12),
+                                                         numericInput("LagOrderADFd1St", label = "Lag",  min=0, value=12),
                                                          submitButton("Submit ==>"),
                                             ),
                                             tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited1St")),
@@ -144,7 +144,7 @@ shinyUI(pageWithSidebar (
                                           sidebarLayout(
                                             sidebarPanel(width=3,
                                                          selectInput("alternDs1St", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                         numericInput("LagOrderADFDs1St", label = "Lag", value=12),
+                                                         numericInput("LagOrderADFDs1St", label = "Lag",  min=0, value=12),
                                                          submitButton("Submit ==>"),
                                             ),
                                             tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteDs1St")),
@@ -164,7 +164,7 @@ shinyUI(pageWithSidebar (
                                           sidebarLayout(
                                             sidebarPanel(width=3,
                                                          selectInput("alternd1Ds1St", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                         numericInput("LagOrderADFd1Ds1St", label = "Lag", value=12),
+                                                         numericInput("LagOrderADFd1Ds1St", label = "Lag",  min=0, value=12),
                                                          submitButton("Submit ==>"),
                                             ),
                                             tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited1Ds1St")),
@@ -184,7 +184,7 @@ shinyUI(pageWithSidebar (
                                           sidebarLayout(
                                             sidebarPanel(width=3,
                                                          selectInput("alternd1LogSt", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                         numericInput("LagOrderADFd1LogSt", label = "Lag", value=12),
+                                                         numericInput("LagOrderADFd1LogSt", label = "Lag",  min=0, value=12),
                                                          submitButton("Submit ==>"),
                                             ),
                                             tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited1LogSt")),
@@ -204,7 +204,7 @@ shinyUI(pageWithSidebar (
                                           sidebarLayout(
                                             sidebarPanel(width=3,
                                                          selectInput("alternDs1LogSt", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                         numericInput("LagOrderADFDs1LogSt", label = "Lag", value=12),
+                                                         numericInput("LagOrderADFDs1LogSt", label = "Lag",  min=0, value=12),
                                                          submitButton("Submit ==>"),
                                             ),
                                             tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteDs1LogSt")),
@@ -224,7 +224,7 @@ shinyUI(pageWithSidebar (
                                           sidebarLayout(
                                             sidebarPanel(width=3,
                                                          selectInput("alternd1Ds1LogSt", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                         numericInput("LagOrderADFd1Ds1LogSt", label = "Lag", value=12),
+                                                         numericInput("LagOrderADFd1Ds1LogSt", label = "Lag",  min=0, value=12),
                                                          submitButton("Submit ==>"),
                                             ),
                                             tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited1Ds1LogSt")),
@@ -245,7 +245,7 @@ shinyUI(pageWithSidebar (
                                           sidebarLayout(
                                             sidebarPanel(width=3,
                                                          selectInput("alternd2St", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                         numericInput("LagOrderADFd2St", label = "Lag", value=12),
+                                                         numericInput("LagOrderADFd2St", label = "Lag",  min=0, value=12),
                                                          submitButton("Submit ==>"),
                                             ),
                                             tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited2St")),
@@ -350,7 +350,7 @@ shinyUI(pageWithSidebar (
                                          sidebarLayout(
                                            sidebarPanel(width=3,
                                                         selectInput("altern", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                        numericInput("LagOrderADF", label = "Lag", value=12),
+                                                        numericInput("LagOrderADF", label = "Lag",  min=0, value=12),
                                                         submitButton("Submit ==>"),
                                            ),
                                            
@@ -459,7 +459,7 @@ shinyUI(pageWithSidebar (
                                               sidebarPanel(width=3,
                                                            selectInput("altern2", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
                                                            
-                                                           numericInput("LagOrderADF2", label = "Lag", value=12),
+                                                           numericInput("LagOrderADF2", label = "Lag",  min=0, value=12),
                                                            submitButton("Submit ==>"),
                                               ),
                                               
