@@ -331,7 +331,7 @@ shinyServer(function(input, output, session) {
       helpADF()
       
       adf.test(myData, alternative =input$alternSt, k=input$LagOrderADFSt)
-      
+
     })
     
     ####### log(St) plot + ACF + PACF ###############################################################
@@ -368,8 +368,9 @@ shinyServer(function(input, output, session) {
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       helpADF()
       log_st <- log(myData)
-      adf.test(log_st, alternative =input$alternLogSt, k=input$LagOrderADFLogSt)
       
+      adf.test(log_st, alternative =input$alternLogSt, k=input$LagOrderADFLogSt)
+
     })
     
     ####### difference d'ordre 1 ################################################# ##############  
@@ -810,6 +811,17 @@ shinyServer(function(input, output, session) {
     })
     
     
+    output$unitCerclepdq <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      
+      model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
+      #fcst <- forecast(model_fit,h=input$length)
+      #plot(fcst, lwd = 2)
+      plot(model_fit) 
+      
+    })
+    
+    
     output$textARIMApdq <- renderPrint({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
@@ -848,6 +860,9 @@ shinyServer(function(input, output, session) {
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
       checkresiduals(fit)
     })
+    
+    
+    
     
     
     output$SARIMAplot <- renderPlot({
@@ -940,8 +955,10 @@ shinyServer(function(input, output, session) {
       print("                                                                                                    ")
       print("  (H0) : Il n'y a pas de tendance dans la série                                                     ") 
       print("  (Ha) : Il existe une tendance dans la série                                                       ") 
+      print("....................................................................................................")
+      print("  p-value < 0.05 indicates the Time Series is not stationary, there is trend in the time series.    ")
       print("....................................................................................................") 
-      print("                                                                                                    ")
+      print("                                                                                                    ") 
       
       MannKendall(myData) 
     })
@@ -1128,7 +1145,7 @@ shinyServer(function(input, output, session) {
       renderPrint({
         myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
         
-        fit <- auto.arima(myData,
+        model_fit <- auto.arima(myData,
                           max.p = input$maxp,
                           max.d = input$maxd,
                           max.q = input$maxq,
@@ -1143,9 +1160,26 @@ shinyServer(function(input, output, session) {
                           test = c("kpss", "adf", "pp")
                     )
 
-        fit
+        model_fit
         
       })
+    
+    
+    output$unitCercle <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      
+      model_fit <- mm(
+                      input$Model,
+                      input$col,
+                      input$time,
+                      input$year,
+                      as.numeric(input$month),
+                      input$length
+                    )$model
+      
+      plot(model_fit) 
+      
+    })
     
     
     
@@ -1222,7 +1256,15 @@ shinyServer(function(input, output, session) {
   output$testTrendMK <- renderPrint({
     myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
     print("....................................................................................................") 
+    print("  A Mann-Kendall trend test is used to determine whether or not there is a trend in the             ") 
+    print("  time series data.                                                                                 ") 
+    print("  It is a nonparametric test, which means that no underlying assumptions                            ") 
+    print("  are made about the normality of the data.                                                         ") 
     print("                                                                                                    ") 
+    print("  (H0) : There is no trend in the series                                                            ") 
+    print("  (Ha) : There is a trend in the series                                                             ") 
+    print("....................................................................................................") 
+    
     print("  Un test de tendance de Mann-Kendall est utilisé pour déterminer s'il existe ou non                ") 
     print("  une tendance dans les données de séries chronologiques.                                           ") 
     print("  Il s'agit d'un test non paramétrique, ce qui signifie qu'aucune hypothèse sous-jacente            ") 
@@ -1230,9 +1272,10 @@ shinyServer(function(input, output, session) {
     print("                                                                                                    ")
     print("  (H0) : Il n'y a pas de tendance dans la série                                                     ") 
     print("  (Ha) : Il existe une tendance dans la série                                                       ") 
-    print("                                                                                                    ")
+    print("....................................................................................................")
+    print("  p-value < 0.05 indicates the Time Series is not stationary, there is trend in the time series.    ")
     print("....................................................................................................") 
-    print("                                                                                                    ")
+    print("                                                                                                    ") 
     
     MannKendall(myData) 
     

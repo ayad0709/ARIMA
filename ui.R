@@ -4,15 +4,15 @@
 
 ##################
 ### LIBRARIES ####
-##################
+##################"ggfortify",
 
 packages = c("shiny", "shinythemes","data.table", "ggplot2","lubridate","urca",
              "dplyr","fpp2","forecast","stats", "Kendall",
-             "tseries","seasonal","ggfortify", "xts", "astsa",
+             "tseries","seasonal", "xts", "astsa","ggfortify",
              "tsibble", "feasts", "readxl")
 
 
-# Now load or install&load all
+# Now load or install&load LIBRARIES
 package.check <- lapply(
   packages,
   FUN = function(x) {
@@ -22,6 +22,18 @@ package.check <- lapply(
     }
   }
 )
+
+#theme_set(theme_classic())
+theme_set(theme_bw())
+#theme_set(theme_light())
+#theme_set(theme_linedraw())
+#theme_set(theme_gray())
+#theme_set(theme_minimal())
+#theme_set(theme_dark())
+#theme_set(theme_void())
+
+
+
 
 # rm(list=ls())  
 
@@ -51,11 +63,8 @@ shinyUI(pageWithSidebar (
     # selectInput("model1",label = "Additive or Multiplicative model ?", choices=c("additive","multiplicative"),selected="additive"),
     
     br(),
-    
     submitButton("Submit ==>"),
-    
     br(),
-    
   ),
   
   
@@ -151,8 +160,7 @@ shinyUI(pageWithSidebar (
                                           )),
                                )), 
                               
-                      
-                      
+
                       tabPanel("d1(D1(St))", 
                                tabsetPanel(
                                  tabPanel("d[1](D[1](St))",plotOutput("ddsplot",width=900,height = 630)),
@@ -169,7 +177,6 @@ shinyUI(pageWithSidebar (
                                             ),
                                             tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited1Ds1St")),
                                           )),
-                                 
                                )),  
                       
                       
@@ -189,7 +196,6 @@ shinyUI(pageWithSidebar (
                                             ),
                                             tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited1LogSt")),
                                           )),
-                                 
                                )), 
                       
                       
@@ -209,7 +215,6 @@ shinyUI(pageWithSidebar (
                                             ),
                                             tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteDs1LogSt")),
                                           )),
-                                 
                                )),  
                       
                       
@@ -229,8 +234,6 @@ shinyUI(pageWithSidebar (
                                             ),
                                             tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited1Ds1LogSt")),
                                           )),
-                                 
-                                 
                                )),  
                       
                       
@@ -250,9 +253,6 @@ shinyUI(pageWithSidebar (
                                             ),
                                             tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited2St")),
                                           )),
-                                 
-                                 
-                                 
                                )), 
                 ))),
         
@@ -311,7 +311,7 @@ shinyUI(pageWithSidebar (
         
         
         
-        tabPanel("Auto Forecast",
+        tabPanel("Auto Forecast", width=1200,
                  fluidPage(
                    tabsetPanel(
                      
@@ -333,7 +333,6 @@ shinyUI(pageWithSidebar (
                                                         numericInput("maxorder", label = "max.order[p+q+P+Q]", min=0, value=5),
                                                         submitButton("Submit ==>"),
                                            ),
-
                                                tabPanel("ARIMA Slow Model", verbatimTextOutput("Pslow"), class="span7"),
                                          )),
                               )),  
@@ -343,7 +342,6 @@ shinyUI(pageWithSidebar (
                               tabsetPanel(
                                 tabPanel("Trend [Mann-Kendall]", verbatimTextOutput("testTrendMK")),
 
-
                                 #tabPanel("Stationarité [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarite")),
                                 
                                 tabPanel("stationary [Augmented Dickey-Fuller]", 
@@ -352,16 +350,11 @@ shinyUI(pageWithSidebar (
                                                         selectInput("altern", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
                                                         numericInput("LagOrderADF", label = "Lag",  min=0, value=12),
                                                         submitButton("Submit ==>"),
-                                           ),
-                                           
+                                                       ),
                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarite")),
-
                                          )),
                                 
-                                
-                                
-                                
-                                
+
                                 tabPanel("KPSS", verbatimTextOutput("kpssTest")),
 
                                 tabPanel("Ljung-Box lag(n)", br(),
@@ -372,17 +365,14 @@ shinyUI(pageWithSidebar (
                                                         
                                                         submitButton("Submit"),
                                            ),
-
                                            tabPanel("Ljung-Box lag(n) [Auto-corrélation des Erreurs]", verbatimTextOutput("testLBn")),
-
                                          )),
                               )), 
                      
                      
-                     tabPanel("Forecasted Values", tableOutput("F")),
+                     tabPanel("Forcasted Values", tableOutput("F")),
                      
                      #tabPanel("Forecast Plot", plotOutput("SARIMAforcastplot2", width=830, height = 600)),
-                     
                      
                      tabPanel("Residuals", 
                               tabsetPanel(
@@ -391,9 +381,11 @@ shinyUI(pageWithSidebar (
                               )), 
                      
                      
-                     tabPanel("ACF Res.", plotOutput("plotACFRes",width=700,height = 500)),
+                     tabPanel("ACF Res", plotOutput("plotACFRes",width=700,height = 500)),
                      
-                     tabPanel("PACF Res.", plotOutput("plotPACFRes",width=700,height = 500)),
+                     tabPanel("PACF Res", plotOutput("plotPACFRes",width=700,height = 500)),
+                     
+                     tabPanel("unit Cercle", plotOutput("unitCercle", width=750, height = 580)),
                      
                    ))),
         
@@ -415,7 +407,7 @@ shinyUI(pageWithSidebar (
                                              submitButton("Submit"),
                                 ),
                                
-                                 mainPanel(
+                                 mainPanel(width=10,
                                   
                                   tabsetPanel(
                                     tabPanel("ARIMA", plotOutput("PrevisionsPlotpdq", width=750, height = 580)),
@@ -427,18 +419,14 @@ shinyUI(pageWithSidebar (
                                     # with drift
                                     tabPanel("ACF+PACF Res.with.drift", plotOutput("plotACFPACFRespdq", width=600, height = 550)),
 
-                                    
                                     # tabPanel("ACF.R.", plotOutput("plotACFRespdq", width=650, height = 500)),
                                     # tabPanel("PACF.R.", plotOutput("plotPACFRespdq", width=650, height = 500)),
                                     
-                                    
-                                    
                                     # tabPanel("SARIMA", plotOutput("SARIMAplot", width=600, height = 550)),
                                     
-                                     # tabPanel("ndiffs(St)", verbatimTextOutput("ndiffsts" )),
-                                    
+                                    # tabPanel("ndiffs(St)", verbatimTextOutput("ndiffsts" )),
+                                    tabPanel("unit Cercle", plotOutput("unitCerclepdq", width=750, height = 580)),
                                   ))
-                                
                               )),
                      
                      # tabPanel("ARIMA pdq", plotOutput("PrevisionsPlotpdq",width=800,height = 1050)),
@@ -448,10 +436,7 @@ shinyUI(pageWithSidebar (
                               tabsetPanel(
 
                                    tabPanel("Trend [Mann-Kendall]", verbatimTextOutput("testTrendMK2")),
-                                   
-                                   
-                                   
-                                   
+
                                    # tabPanel("[Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteARIMApdq")),
                                   
                                    tabPanel("stationary [Augmented Dickey-Fuller]", 
@@ -461,22 +446,14 @@ shinyUI(pageWithSidebar (
                                                            
                                                            numericInput("LagOrderADF2", label = "Lag",  min=0, value=12),
                                                            submitButton("Submit ==>"),
-                                              ),
-                                              
+                                                          ),
                                               tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteARIMApdq")),
-                                              
                                             )),
                                    
-                                   
-                                   
-                                   
-                                   
-                                   
-                                   
+
                                    tabPanel("KPSS", verbatimTextOutput("kpssTest2")),
                                    tabPanel("DF-GLS", verbatimTextOutput("DFGLS")),
                                    
-                                  
                                    tabPanel("Ljung-Box lag(n)", br(),
                                            sidebarLayout(
                                              sidebarPanel(width=2,
@@ -484,16 +461,13 @@ shinyUI(pageWithSidebar (
                                                           selectInput("typeBoxTest1", label = "type", choices=c("Box-Pierce","Ljung-Box"),selected="Ljung-Box"),
                                                           
                                                           submitButton("Submit"),
-                                             ),
-                                             
+                                                        ),
                                              tabPanel("Ljung-Box lag(n)", verbatimTextOutput("testLBnARIMApdq")),
-
                                            )),                             
                                    )), 
                      
 
-                     
-                     
+
                      tabPanel("Residuals", 
                               tabsetPanel(
                                 tabPanel("Res.", plotOutput("chkResARIMApdq",width=830,height = 600)),
@@ -506,7 +480,6 @@ shinyUI(pageWithSidebar (
                      
                      tabPanel("Forecast Plot", plotOutput("SARIMAforcastplot", width=830, height = 600)),
                      
-                     
                      # tabPanel("SARIMA", 
                      #         tabsetPanel(
                      #            tabPanel("Forecast Plot", plotOutput("SARIMAforcastplot", width=830, height = 600)),
@@ -517,18 +490,15 @@ shinyUI(pageWithSidebar (
                      
                      # tabPanel("Forecaste", verbatimTextOutput("FARIMApdq")),
                    ))),  
-        
-        
+
         
         tabPanel("About",
                  fluidPage(
                    tabsetPanel(
                      tabPanel("Help", verbatimTextOutput("AboutAng")),
                      tabPanel("Aide", verbatimTextOutput("AboutFr")),                     
-                   ))),
-
+                   ))
+                 ),
      )
-  
   )
-  
 ))
