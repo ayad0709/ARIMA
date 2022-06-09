@@ -1,5 +1,5 @@
 # ARIMA
-SARIMA
+SARIMA & Holt Winters
 
 Need to be cleaned
 
