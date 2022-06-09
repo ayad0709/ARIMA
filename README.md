@@ -1,4 +1,3 @@
-# ARIMA
 
 ----------------------
 SARIMA & Holt Winters
