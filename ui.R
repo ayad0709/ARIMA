@@ -4,12 +4,13 @@
 
 ##################
 ### LIBRARIES ####
-##################"ggfortify",
+##################
 
 packages = c("shiny", "shinythemes","data.table", "ggplot2","lubridate","urca",
              "dplyr","fpp2","forecast","stats", "Kendall",
              "tseries","seasonal", "xts", "astsa","ggfortify",
-             "tsibble", "feasts", "readxl")
+             "tsibble", "feasts", "readxl","TSstudio")
+
 
 
 # Now load or install&load LIBRARIES
@@ -330,7 +331,7 @@ shinyUI(pageWithSidebar (
                                                         numericInput("maxPs", label = "max.P",min=0,  value=2),
                                                         numericInput("maxDs", label = "max.D",min=0,  value=1),
                                                         numericInput("maxQs", label = "max.Q", min=0, value=2),
-                                                        numericInput("maxorder", label = "max.order[p+q+P+Q]", min=0, value=5),
+                                                        numericInput("maxorder", label = "max.order[p+q+P+Q]", min=0, value=8),
                                                         submitButton("Submit ==>"),
                                            ),
                                                tabPanel("ARIMA Slow Model", verbatimTextOutput("Pslow"), class="span7"),
@@ -404,6 +405,8 @@ shinyUI(pageWithSidebar (
                                              numericInput("ARIMAps", label = "P:",min=0,  value=0),
                                              numericInput("ARIMAds", label = "D:",min=0,  value=0),
                                              numericInput("ARIMAqs", label = "Q:", min=0, value=0),
+                                             selectInput("driftYN", label = "drift", choices=c("TRUE","FALSE"),selected="TRUE"),
+                                             
                                              submitButton("Submit"),
                                 ),
                                
@@ -472,6 +475,7 @@ shinyUI(pageWithSidebar (
                               tabsetPanel(
                                 tabPanel("Res.", plotOutput("chkResARIMApdq",width=830,height = 600)),
                                 tabPanel("Diag.", plotOutput("tsdiagARIMApdq",width=700,height = 600)),
+                                tabPanel("Diag 2.", plotOutput("tsdiag2",width=700,height = 600)),
                               )),  
                      
                      

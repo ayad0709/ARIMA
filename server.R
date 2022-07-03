@@ -7,78 +7,12 @@ shinyServer(function(input, output, session) {
   }
 
   
-  tsMainTitle = "Main title"
-  tsXlabel = "X-axis label"
-  tsYlabel = "y-axix label" 
+  tsMainTitle = ""
+  tsXlabel = "date"
+  tsYlabel = "RH (%)" 
+  tsXlabelmd ="month"  #month ou mois
   
-             
-  
-  helpLjungBoxFr <- function(){
-    print(".........................................................................................") 
-    print(" La statistique de Ljung-Box (prononcé Young) permet de tester l'hypothèse d'indépendance")
-    print(" sérielle d'une série (ou que la série est bruit blanc). Plus spécifiquement cette       ")
-    print(" statistique teste l'hypothèse que les m coefficients d'autocorrélation sont nuls.       ")
-    print("                                                                                         ")
-    print(".........................................................................................") 
-    print("                 (H0) il n'y a pas auto-corrélation des erreurs d'ordre 1 à r.           ") 
-    print("                 (H1) il y a auto-corrélation des erreurs d'ordre 1 à r.                 ")
-    print(".........................................................................................") 
-    print(" Idéalement, nous aimerions ne pas rejeter l'hypothèse nulle.                            ") 
-    print(" Autrement dit,                                                                          ") 
-    print(" nous aimerions que la valeur p du test soit supérieure à 0,05 car                       ") 
-    print(" cela signifie que les résidus de notre modèle de série chronologique sont indépendants, ") 
-    print(" ce qui est souvent une hypothèse que nous faisons lors de la création d'un modèle.      ") 
-    print(".........................................................................................")
-    print("  Changer la valeur du 'lag' puis cliquer sur 'Soumettre' pour exectuter un autre test   ") 
-    print(".........................................................................................")
-  }
-  
-  
-  helpLjungBox <- function(){
-    print(".........................................................................................") 
-    print(" The Ljung (pronounced Young) Box test ( or just the Box test)                           ")
-    print(" is a way to test for the absence of serial autocorrelation, up to a specified lag k.    ")
-    print("                                                                                         ")
-    print(" The test determines whether or not errors are iid (i.e. white noise) or whether there   ")
-    print(" is something more behind them; whether or not the autocorrelations for the errors       ")
-    print(" or residuals are non zero. Essentially, it is a test of lack of fit: if the             ")
-    print(" autocorrelations of the residuals are very small, we say that the model doesn’t show    ")
-    print(" ‘significant lack of fit’.                                                              ")
-    print(".........................................................................................") 
-    print("   (H0) The residuals are independently distributed.                                     ") 
-    print("   (H1) The residuals are not independently distributed; they exhibit serial correlation.")
-    print(".........................................................................................") 
-    print(" Ideally, we would like to fail to reject the null hypothesis.                           ")
-    print(" That is, we would like to see the p-value of the test be greater than 0.05 because      ")
-    print(" this means the residuals for our time series model are independent,                     ")
-    print(" which is often an assumption we make when creating a model.                             ")
-    print(".........................................................................................")
-    print("  Change the 'lag' value then click 'Submit' to run another test                         ") 
-    print(".........................................................................................")
-  }
-  
-  
-  
-  helpADF <- function(){  
-      print(".......................................................................") 
-      print("               Augmented Dickey-Fuller Test                            ")
-      print(".......................................................................") 
-      print("  Augmented Dickey-Fuller Test is used to check whether a given        ")
-      print("  time series is at rest.                                              ")
-      print("                                                                       ")
-      print("  A given time series can be called stationary if:                     ")     
-      print("  - it doesn’t have any trend                                          ")     
-      print("  - depicts a constant variance over time                              ")     
-      print("  - and follows autocorrelation structure over a period constantly.    ")     
-      print(".......................................................................") 
-      print("  (H0)  The series has a unit root, so it is not stationary.           ") 
-      print("  (Ha)  The series is stationary.                                      ")
-      print(".......................................................................")
-      print("  p-value < 0.05 indicates the Time Series is stationary               ")
-      print(".......................................................................")
-  }
-  
-  
+   
   
   observe({
     val <- input$time
@@ -201,12 +135,7 @@ shinyServer(function(input, output, session) {
     }
     f <- forecast(a, level = c(80, 95), h = length)
     
-    #     Plot the ts with forcast
-    #
-    # pp <- autoplot(f, predict.size = 1, size = 1) + ggtitle(tsMainTitle) + xlab(tsXlabel) + ylab(tsYlabel) +theme_bw() 
-    
-    
-    # pp <- autoplot(f, lwd = 2)   # , shadecols = "oldstyle"
+
     pp <- plot(f, lwd = 2) 
     ff <- as.data.frame(f)
     fff <- data.frame(date = row.names(ff), ff)
@@ -702,7 +631,8 @@ shinyServer(function(input, output, session) {
     
     output$boxP <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      boxplot(myData~cycle(myData),xlab="Date")
+      boxplot(myData~cycle(myData),xlab=tsXlabelmd, ylab=tsYlabel)
+      
     })
     
     
@@ -797,13 +727,21 @@ shinyServer(function(input, output, session) {
     ####  ARIMA p d q P D Q S###################################################### 
     ###############################################################################
     
-    
+
 
     output$PrevisionsPlotpdq <- renderPlot({
+      
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
     
       
-      model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
+      model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
       fcst <- forecast(model_fit,h=input$length)
       plot(fcst, lwd = 2)
       # autoplot(fcst, lwd = 2, include =2)
@@ -812,9 +750,17 @@ shinyServer(function(input, output, session) {
     
     
     output$unitCerclepdq <- renderPlot({
+      
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       
-      model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
+      model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
       #fcst <- forecast(model_fit,h=input$length)
       #plot(fcst, lwd = 2)
       plot(model_fit) 
@@ -823,41 +769,80 @@ shinyServer(function(input, output, session) {
     
     
     output$textARIMApdq <- renderPrint({
+      
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
+      model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
       # summary(model_fit)
       model_fit
     })
     
     output$plotACFRespdq <- renderPlot({
+      
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE)
+      model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
       plot(Acf(model_fit$residuals), lwd = 2)
     })
     
     
     output$plotPACFRespdq <- renderPlot({
+      
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE)
+      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
       plot(Pacf(fit$residuals), lwd = 2)
     })
     
     output$plotACFPACFRespdq <- renderPlot({
+
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE)
-      acf2(fit$residuals, lwd = 3) 
+      nsais <- loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      mainTitle = paste('Residuals ARIMA(',input$ARIMAp,',',input$ARIMAd,',',input$ARIMAq,')','(',input$ARIMAps,',',input$ARIMAds,',',input$ARIMAqs,')','[',nsais,']')
+      
+      acf2(fit$residuals, lwd = 3, main=mainTitle) 
     })
     
     
     output$plotACFPACFRespdqwithoutdrift <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = FALSE)
-      acf2(fit$residuals, lwd = 3) 
+      nsais <- loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      mainTitle = paste('Residuals ARIMA(',input$ARIMAp,',',input$ARIMAd,',',input$ARIMAq,')','(',input$ARIMAps,',',input$ARIMAds,',',input$ARIMAqs,')','[',nsais,']')
+      
+      acf2(fit$residuals, lwd = 3, main=mainTitle) 
     })
     
     output$chkResARIMApdq <- renderPlot({
+      
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
+      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
       checkresiduals(fit)
     })
     
@@ -888,13 +873,22 @@ shinyServer(function(input, output, session) {
     
     
     output$SARIMAforcastplot2 <- renderPlot({
+      
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       
       nsais <- loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
-      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
+      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
       
       #sarima.for(myData, n.ahead = input$length, p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq, P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs, S = nsais, lwd = 2)
       sarima.for(myData, n.ahead = input$length, arimaorder(fit),S = nsais, lwd = 2)
+      +xlab(tsXlabel) + ylab(tsYlabel)
       
     })  
     
@@ -905,26 +899,66 @@ shinyServer(function(input, output, session) {
     
     
     output$SARIMAforcastplot <- renderPlot({
+      
+      if (input$driftYN == "TRUE") {
+        nodriftConsideration =FALSE
+      }
+      else {
+        nodriftConsideration =TRUE
+      }
+      
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       
       nsais <- loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
-      sarima.for(myData, n.ahead = input$length, p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq, P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs, S = nsais, lwd = 2)
+      sarima.for(myData, n.ahead = input$length, p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq, P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs, S = nsais, no.constant=nodriftConsideration, lwd = 2)
       
        })
     
     
     output$tsdiagARIMApdq <- renderPlot({
+      
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
+      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
       ggtsdiag(fit)
     })
     
+    
+    output$tsdiag2 <- renderPlot({
+      
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
+      qqnorm(resid(fit), main = "Normal Q-Q Plot, Residual", col = "darkgrey")
+      qqline(resid(fit), col = "dodgerblue", lwd = 2)
+   
+    })
 
     
     output$FARIMApdq <- renderTable({
+      
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
+      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
       pred <- forecast(fit, h=input$length)
       asdfpred <- as.data.frame(pred)
       dfpred <- data.frame(date = row.names(asdfpred), asdfpred)
@@ -938,27 +972,8 @@ shinyServer(function(input, output, session) {
     
     output$testTrendMK2 <- renderPrint({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      print("....................................................................................................") 
-      print("  A Mann-Kendall trend test is used to determine whether or not there is a trend in the             ") 
-      print("  time series data.                                                                                 ") 
-      print("  It is a nonparametric test, which means that no underlying assumptions                            ") 
-      print("  are made about the normality of the data.                                                         ") 
-      print("                                                                                                    ") 
-      print("  (H0) : There is no trend in the series                                                            ") 
-      print("  (Ha) : There is a trend in the series                                                             ") 
-      print("....................................................................................................") 
-      
-      print("  Un test de tendance de Mann-Kendall est utilisé pour déterminer s'il existe ou non                ") 
-      print("  une tendance dans les données de séries chronologiques.                                           ") 
-      print("  Il s'agit d'un test non paramétrique, ce qui signifie qu'aucune hypothèse sous-jacente            ") 
-      print("  n'est faite quant à la normalité des données.                                                     ") 
-      print("                                                                                                    ")
-      print("  (H0) : Il n'y a pas de tendance dans la série                                                     ") 
-      print("  (Ha) : Il existe une tendance dans la série                                                       ") 
-      print("....................................................................................................")
-      print("  p-value < 0.05 indicates the Time Series is not stationary, there is trend in the time series.    ")
-      print("....................................................................................................") 
-      print("                                                                                                    ") 
+
+      helpMK()
       
       MannKendall(myData) 
     })
@@ -967,24 +982,9 @@ shinyServer(function(input, output, session) {
     
     output$kpssTest2 <- renderPrint({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      print("....................................................................................................") 
-      print("     Kwiatkowski-Phillips-Schmidt-Shin (KPSS)                                                       ")
-      print("....................................................................................................") 
-      print("     A KPSS test can be used to determine if a time series is trend stationary.                     ") 
-      print("                                                                                                    ")
-      print("  (H0) : The time series is trend stationary. (the data is stationary)                              ") 
-      print("  (Ha) : The time series is not trend stationary. (the data is not stationary)                      ") 
-      print("                                                                                                    ")
-      print("  If the p-value of the test is less than some significance level (e.g. α = .05) then we            ") 
-      print("  reject the null hypothesis and conclude that the time series is not trend stationary.             ") 
-      print("....................................................................................................") 
-      print("  A major disadvantage for the KPSS test is that it has a high rate of Type I errors                ")
-      print("  (it tends to reject the null hypothesis too often).                                               ")
-      print("  One way to deal with the potential for high Type I errors is to combine the KPSS with an ADF test.")
-      print("  If the result from both tests suggests that the time series in stationary, then it probably is.   ")
-      print("....................................................................................................") 
-      print("                                                                                                    ")
-     
+
+      helpKPSS()
+      
       kpss.test(myData, null = "Trend") 
     })
     
@@ -1003,8 +1003,16 @@ shinyServer(function(input, output, session) {
     
     
     output$testLBnARIMApdq <- renderPrint({
+      
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      best_ARIMA <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE) 
+      best_ARIMA <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
       
       helpLjungBox()
       
@@ -1014,9 +1022,8 @@ shinyServer(function(input, output, session) {
       
     })
   
-    
-  
-    
+
+ 
     
     output$teststationariteARIMApdq <- renderPrint({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
@@ -1255,27 +1262,8 @@ shinyServer(function(input, output, session) {
   
   output$testTrendMK <- renderPrint({
     myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-    print("....................................................................................................") 
-    print("  A Mann-Kendall trend test is used to determine whether or not there is a trend in the             ") 
-    print("  time series data.                                                                                 ") 
-    print("  It is a nonparametric test, which means that no underlying assumptions                            ") 
-    print("  are made about the normality of the data.                                                         ") 
-    print("                                                                                                    ") 
-    print("  (H0) : There is no trend in the series                                                            ") 
-    print("  (Ha) : There is a trend in the series                                                             ") 
-    print("....................................................................................................") 
-    
-    print("  Un test de tendance de Mann-Kendall est utilisé pour déterminer s'il existe ou non                ") 
-    print("  une tendance dans les données de séries chronologiques.                                           ") 
-    print("  Il s'agit d'un test non paramétrique, ce qui signifie qu'aucune hypothèse sous-jacente            ") 
-    print("  n'est faite quant à la normalité des données.                                                     ") 
-    print("                                                                                                    ")
-    print("  (H0) : Il n'y a pas de tendance dans la série                                                     ") 
-    print("  (Ha) : Il existe une tendance dans la série                                                       ") 
-    print("....................................................................................................")
-    print("  p-value < 0.05 indicates the Time Series is not stationary, there is trend in the time series.    ")
-    print("....................................................................................................") 
-    print("                                                                                                    ") 
+
+    helpMK()
     
     MannKendall(myData) 
     
@@ -1283,23 +1271,8 @@ shinyServer(function(input, output, session) {
   
   output$kpssTest <- renderPrint({
     myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-    print("....................................................................................................") 
-    print("     Kwiatkowski-Phillips-Schmidt-Shin (KPSS)                                                       ")
-    print("....................................................................................................") 
-    print("     A KPSS test can be used to determine if a time series is trend stationary.                     ") 
-    print("                                                                                                    ")
-    print("  (H0) : The time series is trend stationary. (the data is stationary)                              ") 
-    print("  (Ha) : The time series is not trend stationary. (the data is not stationary)                      ") 
-    print("                                                                                                    ")
-    print("  If the p-value of the test is less than some significance level (e.g. α = .05) then we            ") 
-    print("  reject the null hypothesis and conclude that the time series is not trend stationary.             ") 
-    print("....................................................................................................") 
-    print("  A major disadvantage for the KPSS test is that it has a high rate of Type I errors                ")
-    print("  (it tends to reject the null hypothesis too often).                                               ")
-    print("  One way to deal with the potential for high Type I errors is to combine the KPSS with an ADF test.")
-    print("  If the result from both tests suggests that the time series in stationary, then it probably is.   ")
-    print("....................................................................................................") 
-    print("                                                                                                    ")
+
+    helpKPSS()
     
     kpss.test(myData, null = "Trend") 
   })
@@ -1535,8 +1508,7 @@ shinyServer(function(input, output, session) {
     print(".......................................................................................................") 
   })
   
-  
-  
+
   output$AboutFr <- renderPrint({
     
     print(".......................................................................................................") 
@@ -1678,6 +1650,119 @@ shinyServer(function(input, output, session) {
     print("                                                                                                       ")
     print(".......................................................................................................") 
   })
+  
+  
+  
+  helpLjungBoxFr <- function(){
+    print(".........................................................................................") 
+    print(" La statistique de Ljung-Box (prononcé Young) permet de tester l'hypothèse d'indépendance")
+    print(" sérielle d'une série (ou que la série est bruit blanc). Plus spécifiquement cette       ")
+    print(" statistique teste l'hypothèse que les m coefficients d'autocorrélation sont nuls.       ")
+    print("                                                                                         ")
+    print(".........................................................................................") 
+    print("                 (H0) il n'y a pas auto-corrélation des erreurs d'ordre 1 à r.           ") 
+    print("                 (H1) il y a auto-corrélation des erreurs d'ordre 1 à r.                 ")
+    print(".........................................................................................") 
+    print(" Idéalement, nous aimerions ne pas rejeter l'hypothèse nulle.                            ") 
+    print(" Autrement dit,                                                                          ") 
+    print(" nous aimerions que la valeur p du test soit supérieure à 0,05 car                       ") 
+    print(" cela signifie que les résidus de notre modèle de série chronologique sont indépendants, ") 
+    print(" ce qui est souvent une hypothèse que nous faisons lors de la création d'un modèle.      ") 
+    print(".........................................................................................")
+    print("  Changer la valeur du 'lag' puis cliquer sur 'Soumettre' pour exectuter un autre test   ") 
+    print(".........................................................................................")
+  }
+  
+  
+  helpLjungBox <- function(){
+    print(".........................................................................................") 
+    print(" The Ljung (pronounced Young) Box test ( or just the Box test)                           ")
+    print(" is a way to test for the absence of serial autocorrelation, up to a specified lag k.    ")
+    print("                                                                                         ")
+    print(" The test determines whether or not errors are iid (i.e. white noise) or whether there   ")
+    print(" is something more behind them; whether or not the autocorrelations for the errors       ")
+    print(" or residuals are non zero. Essentially, it is a test of lack of fit: if the             ")
+    print(" autocorrelations of the residuals are very small, we say that the model doesn’t show    ")
+    print(" ‘significant lack of fit’.                                                              ")
+    print(".........................................................................................") 
+    print("   (H0) The residuals are independently distributed.                                     ") 
+    print("   (H1) The residuals are not independently distributed; they exhibit serial correlation.")
+    print(".........................................................................................") 
+    print(" Ideally, we would like to fail to reject the null hypothesis.                           ")
+    print(" That is, we would like to see the p-value of the test be greater than 0.05 because      ")
+    print(" this means the residuals for our time series model are independent,                     ")
+    print(" which is often an assumption we make when creating a model.                             ")
+    print(".........................................................................................")
+    print("  Change the 'lag' value then click 'Submit' to run another test                         ") 
+    print(".........................................................................................")
+  }
+  
+  
+  helpADF <- function(){  
+    print(".......................................................................") 
+    print("               Augmented Dickey-Fuller Test                            ")
+    print(".......................................................................") 
+    print("  Augmented Dickey-Fuller Test is used to check whether a given        ")
+    print("  time series is at rest.                                              ")
+    print("                                                                       ")
+    print("  A given time series can be called stationary if:                     ")     
+    print("  - it doesn’t have any trend                                          ")     
+    print("  - depicts a constant variance over time                              ")     
+    print("  - and follows autocorrelation structure over a period constantly.    ")     
+    print(".......................................................................") 
+    print("  (H0)  The series has a unit root, so it is not stationary.           ") 
+    print("  (Ha)  The series is stationary.                                      ")
+    print(".......................................................................")
+    print("  p-value < 0.05 indicates the Time Series is stationary               ")
+    print(".......................................................................")
+  }
+  
+  
+  helpKPSS <- function(){  
+    print("                                                                                                    ")
+    print("  One way to determine whether differencing is required is to use a unit root test.                 ")
+    print("....................................................................................................") 
+    print("     Kwiatkowski-Phillips-Schmidt-Shin (KPSS)                                                       ")
+    print("....................................................................................................") 
+    print("     A KPSS test can be used to determine if a time series is trend stationary.                     ") 
+    print("                                                                                                    ")
+    print("  (H0) : The time series is trend stationary. (the data is stationary)                              ") 
+    print("  (Ha) : The time series is not trend stationary. (the data is not stationary)                      ") 
+    print("                                                                                                    ")
+    print("  If the p-value of the test is less than some significance level (e.g. α = .05) then we            ") 
+    print("  reject the null hypothesis and conclude that the time series is not trend stationary.             ") 
+    print("....................................................................................................") 
+    print("  A major disadvantage for the KPSS test is that it has a high rate of Type I errors                ")
+    print("  (it tends to reject the null hypothesis too often).                                               ")
+    print("  One way to deal with the potential for high Type I errors is to combine the KPSS with an ADF test.")
+    print("  If the result from both tests suggests that the time series in stationary, then it probably is.   ")
+    print("....................................................................................................") 
+    print("                                                                                                    ")
+    
+  }
+  
+  
+  helpMK <- function(){  
+    print("....................................................................................................") 
+    print("  A Mann-Kendall trend test is used to determine whether or not there is a trend in the             ") 
+    print("  time series data.                                                                                 ") 
+    print("  It is a nonparametric test, which means that no underlying assumptions                            ") 
+    print("  are made about the normality of the data.                                                         ") 
+    print("                                                                                                    ") 
+    print("  (H0) : There is no trend in the series                                                            ") 
+    print("  (Ha) : There is a trend in the series                                                             ") 
+    print("....................................................................................................") 
+    print("  Un test de tendance de Mann-Kendall est utilisé pour déterminer s'il existe ou non                ") 
+    print("  une tendance dans les données de séries chronologiques.                                           ") 
+    print("  Il s'agit d'un test non paramétrique, ce qui signifie qu'aucune hypothèse sous-jacente            ") 
+    print("  n'est faite quant à la normalité des données.                                                     ") 
+    print("                                                                                                    ")
+    print("  (H0) : Il n'y a pas de tendance dans la série                                                     ") 
+    print("  (Ha) : Il existe une tendance dans la série                                                       ") 
+    print("....................................................................................................")
+    print("  p-value < 0.05 indicates the Time Series is not stationary, there is trend in the time series.    ")
+    print("....................................................................................................") 
+  }
   
   
 
