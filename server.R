@@ -136,7 +136,7 @@ shinyServer(function(input, output, session) {
     f <- forecast(a, level = c(80, 95), h = length)
     
 
-    pp <- plot(f, lwd = 2) 
+    pp <- plot(f, lwd = 2, xlab=input$lab_x, ylab=input$lab_y) 
     ff <- as.data.frame(f)
     fff <- data.frame(date = row.names(ff), ff)
     
@@ -233,27 +233,32 @@ shinyServer(function(input, output, session) {
 
   output$tsPlot <- renderPlot({
     myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-    plot(myData, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, type = 'l',lwd = 2)
+    plot(myData, main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y, type = 'l',lwd = 2)
   })
     
     
   output$StACF <- renderPlot({
     myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-    plot(Acf(myData), lwd = 2)
+    plot(Acf(myData), lwd = 2, main=input$Main_title)
   })
     
     
     output$StPACF <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      plot(Pacf(myData), lwd = 2)
+      plot(Pacf(myData), lwd = 2, main=input$Main_title)
     })
     
     
     output$StACFPACF <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      acf2(myData, lwd = 3) 
+      acf2(myData, lwd = 3, main=input$Main_title) 
     })
     
+    output$tsDisplay2 <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ggtsdisplay(myData, plot.type = input$plot_type , main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y)
+      
+    })
     
     output$teststationariteSt <- renderPrint({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
@@ -269,28 +274,35 @@ shinyServer(function(input, output, session) {
     output$plotLogSt <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       log_x <- log(myData)
-      plot(log_x, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, type = 'l', lwd = 2)
+      plot(log_x, main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y, type = 'l', lwd = 2)
     })
     
     
     output$logStACF <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       log_st <- log(myData)
-      plot(Acf(log_st), lwd = 2)
+      plot(Acf(log_st), lwd = 2, main=input$Main_title)
     })
     
     
     output$logStPACF <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       log_st <- log(myData)
-      plot(Pacf(log_st), lwd = 2)
+      plot(Pacf(log_st), lwd = 2, main=input$Main_title)
     })
     
     
     output$logStACFPACF <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       log_st <- log(myData)
-      acf2(log_st, lwd = 3) 
+      acf2(log_st, lwd = 3, main=input$Main_title) 
+    })
+    
+    output$log_ts_Display <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      log_st <- log(myData)
+      ggtsdisplay(log_st, plot.type = input$plot_type , main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y)
+      
     })
     
     output$teststationariteLogSt <- renderPrint({
@@ -307,26 +319,32 @@ shinyServer(function(input, output, session) {
     output$difference1 <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       diff_st <- diff(myData)
-      plot(diff_st, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, type = 'l', lwd = 2)
+      plot(diff_st, main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y, type = 'l', lwd = 2)
     })
     
     output$d1StACF <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       diff_st <- diff(myData)
-      plot(Acf(diff_st), lwd = 2)
+      plot(Acf(diff_st), lwd = 2, main=input$Main_title)
     })
     
     
     output$d1StPACF <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       diff_st <- diff(myData)
-      plot(Pacf(diff_st), lwd = 2)
+      plot(Pacf(diff_st), lwd = 2, main=input$Main_title)
     })
     
     output$d1StACFPACF <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       diff_st <- diff(myData)
-      acf2(diff_st, lwd = 3) 
+      acf2(diff_st, lwd = 3, main=input$Main_title) 
+    })
+    
+    output$d1_ts_Display <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      diff_st <- diff(myData)
+      ggtsdisplay(diff_st, plot.type = input$plot_type , main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y)
     })
     
     output$teststationarited1St <- renderPrint({
@@ -343,14 +361,14 @@ shinyServer(function(input, output, session) {
       myData <- loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       diffS_st <- diff(myData, ns)
-      plot(diffS_st, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, lwd = 2)
+      plot(diffS_st, main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y, lwd = 2)
     })
     
     output$DS1StACF <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       diffS_st <- diff(myData, ns)
-      plot(Acf(diffS_st), lwd = 2)
+      plot(Acf(diffS_st), lwd = 2, main=input$Main_title)
     })
     
     output$DS1StPACF <- renderPlot({
@@ -358,7 +376,7 @@ shinyServer(function(input, output, session) {
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
       diffS_st <- diff(myData, ns)
-      plot(Pacf(diffS_st), lwd = 2)
+      plot(Pacf(diffS_st), lwd = 2, main=input$Main_title)
     })  
     
     
@@ -367,9 +385,19 @@ shinyServer(function(input, output, session) {
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
       diffS_st <- diff(myData, ns)
-      acf2(diffS_st, lwd = 3) 
+      acf2(diffS_st, lwd = 3, main=input$Main_title) 
       
     })  
+    
+    
+    output$Ds1_ts_Display <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffS_st <- diff(myData, ns)
+      ggtsdisplay(diffS_st, plot.type = input$plot_type , main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y)
+      
+    })
     
     
     output$teststationariteDs1St <- renderPrint({
@@ -392,7 +420,7 @@ shinyServer(function(input, output, session) {
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
       d1_D1_St <- diff(diff(myData, ns))
-      plot(d1_D1_St, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, lwd = 2)
+      plot(d1_D1_St, main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y, lwd = 2)
     })
     
     
@@ -401,7 +429,7 @@ shinyServer(function(input, output, session) {
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
       d1_D1_St <- diff(diff(myData, ns))
-      plot(Acf(d1_D1_St), lwd = 2)
+      plot(Acf(d1_D1_St), lwd = 2, main=input$Main_title)
     })
     
     output$ddsplotPACF <- renderPlot({
@@ -409,7 +437,7 @@ shinyServer(function(input, output, session) {
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
       d1_D1_St <- diff(diff(myData, ns))
-      plot(Pacf(d1_D1_St), lwd = 2)
+      plot(Pacf(d1_D1_St), lwd = 2, main=input$Main_title)
     }) 
     
     
@@ -418,9 +446,18 @@ shinyServer(function(input, output, session) {
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
       d1_D1_St <- diff(diff(myData, ns))
-      acf2(d1_D1_St, lwd = 3) 
+      acf2(d1_D1_St, lwd = 3, main=input$Main_title) 
     }) 
     
+    
+    output$d1_D1_ts_Display <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      d1_D1_St <- diff(diff(myData, ns))
+      ggtsdisplay(d1_D1_St, plot.type = input$plot_type , main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y)
+      
+    })
     
     output$teststationarited1Ds1St <- renderPrint({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
@@ -439,28 +476,38 @@ shinyServer(function(input, output, session) {
     output$plotd1Log <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       d1_log_st <- diff(log(myData))
-      plot(d1_log_st, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, type = 'l', lwd = 2)
+      plot(d1_log_st, main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y, type = 'l', lwd = 2)
     })
     
     output$d1LogStACFa <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       d1_log_st <- diff(log(myData))
-      plot(Acf(d1_log_st), lwd = 2)
+      plot(Acf(d1_log_st), lwd = 2, main=input$Main_title)
     })
     
     
     output$d1LogStPACFa <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       d1_log_st <- diff(log(myData))
-      plot(Pacf(d1_log_st), lwd = 2)
+      plot(Pacf(d1_log_st), lwd = 2, main=input$Main_title)
     })
     
     
     output$d1LogStACFPACFa <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       d1_log_st <- diff(log(myData))
-      acf2(d1_log_st, lwd = 3) 
+      acf2(d1_log_st, lwd = 3, main=input$Main_title) 
     })
+    
+    
+    output$d1_log_ts_Display <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      d1_log_st <- diff(log(myData))
+      
+      ggtsdisplay(d1_log_st,plot.type = input$plot_type , main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y)
+      
+    })
+    
     
     output$teststationarited1LogSt <- renderPrint({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
@@ -482,7 +529,7 @@ shinyServer(function(input, output, session) {
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
       diffSlog_x <- diff(log(myData), ns)
-      plot(diffSlog_x, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, lwd = 2)
+      plot(diffSlog_x, main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y, lwd = 2)
     })
     
     
@@ -491,7 +538,7 @@ shinyServer(function(input, output, session) {
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
       diffSlog_x <- diff(log(myData), ns)
-      plot(Acf(diffSlog_x), lwd = 2)
+      plot(Acf(diffSlog_x), lwd = 2, main=input$Main_title)
     })
     
     output$DlogplotPACF <- renderPlot({
@@ -499,7 +546,7 @@ shinyServer(function(input, output, session) {
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
       diffSlog_x <- diff(log(myData), ns)
-      plot(Pacf(diffSlog_x), lwd = 2)
+      plot(Pacf(diffSlog_x), lwd = 2, main=input$Main_title)
     }) 
     
     
@@ -508,9 +555,19 @@ shinyServer(function(input, output, session) {
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
       diffSlog_x <- diff(log(myData), ns)
-      acf2(diffSlog_x , lwd = 3) 
+      acf2(diffSlog_x , lwd = 3, main=input$Main_title) 
       
     }) 
+    
+    
+    output$Ds1_log_ts_Display <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      diffSlog_x <- diff(log(myData), ns)
+      ggtsdisplay(diffSlog_x,plot.type = input$plot_type , main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y)
+      
+    })
     
     
     output$teststationariteDs1LogSt <- renderPrint({
@@ -531,24 +588,24 @@ shinyServer(function(input, output, session) {
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
-      diffS_x <- diff(diff(log(myData), ns))
-      plot(diffS_x, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, lwd = 2)
+      dDlog_St <- diff(diff(log(myData), ns))
+      plot(dDlog_St, main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y, lwd = 2)
     })
     
     output$dDlogplotACF <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
-      diffS_x <- diff(diff(log(myData), ns))
-      plot(Acf(diffS_x), lwd = 2)
+      dDlog_St <- diff(diff(log(myData), ns))
+      plot(Acf(dDlog_St), lwd = 2, main=input$Main_title)
     })
     
     output$dDlogplotPACF <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
-      diffS_x <- diff(diff(log(myData), ns))
-      plot(Pacf(diffS_x), lwd = 2)
+      dDlog_St <- diff(diff(log(myData), ns))
+      plot(Pacf(dDlog_St), lwd = 2, main=input$Main_title)
     })
     
     
@@ -556,10 +613,19 @@ shinyServer(function(input, output, session) {
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
-      diffS_x <- diff(diff(log(myData), ns))
-      acf2(diffS_x , lwd = 3) 
+      dDlog_St <- diff(diff(log(myData), ns))
+      acf2(dDlog_St , lwd = 3, main=input$Main_title) 
     })
     
+    
+    output$d1_Ds1_log_ts_Display <- renderPlot({
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      dDlog_St <- diff(diff(log(myData), ns))
+      ggtsdisplay(dDlog_St, plot.type = input$plot_type , main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y)
+      
+    })
     
     output$teststationarited1Ds1LogSt <- renderPrint({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
@@ -577,40 +643,322 @@ shinyServer(function(input, output, session) {
     
     
     output$difference2 <- renderPlot({
-      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      diff2_ts <- diff(myData, differences = 2)
-      plot(diff2_ts, main=tsMainTitle, xlab=tsXlabel, ylab=tsYlabel, lwd = 2)
+      myRawData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      if (input$islog == "Yes"){
+        if (input$d_n==0 && input$DS_n==0 ){
+           myData <- log(myRawData)
+        }else{
+          
+          if (input$d_n==0 && input$DS_n>0 ){
+             myData <- diff(log(myRawData), input$DS_n * ns)
+          }else{
+            
+            if (input$d_n>0 && input$DS_n==0){
+              
+              myData <- diff(log(myRawData), difference = input$d_n)
+              
+            }else{
+               myData <- diff(diff(log(myRawData), input$DS_n * ns), difference = input$d_n)
+
+            }
+
+          }
+
+        }
+        
+      }else{
+        if (input$d_n==0 && input$DS_n==0 ){
+          myData <- myRawData
+        }else{
+          
+          if (input$d_n==0 && input$DS_n>0 ){
+            myData <- diff(myRawData, input$DS_n * ns)
+          }else{
+            
+            if (input$d_n>0 && input$DS_n==0){
+              
+              myData <- diff(myRawData, difference = input$d_n)
+              
+            }else{
+              myData <- diff(diff(myRawData, input$DS_n * ns), difference = input$d_n)
+              
+            }
+            
+          }
+          
+        }
+      }
+      
+      plot(myData, main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y, lwd = 2)
     }) 
     
     
     output$difference2ACF <- renderPlot({
-      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      diff2_ts <- diff(myData, differences = 2)
-      plot(Acf(diff2_ts), lwd = 2)
+      myRawData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      if (input$islog == "Yes"){
+        if (input$d_n==0 && input$DS_n==0 ){
+          myData <- log(myRawData)
+        }else{
+          
+          if (input$d_n==0 && input$DS_n>0 ){
+            myData <- diff(log(myRawData), input$DS_n * ns)
+          }else{
+            
+            if (input$d_n>0 && input$DS_n==0){
+              
+              myData <- diff(log(myRawData), difference = input$d_n)
+              
+            }else{
+              myData <- diff(diff(log(myRawData), input$DS_n * ns), difference = input$d_n)
+              
+            }
+            
+          }
+          
+        }
+        
+      }else{
+        if (input$d_n==0 && input$DS_n==0 ){
+          myData <- myRawData
+        }else{
+          
+          if (input$d_n==0 && input$DS_n>0 ){
+            myData <- diff(myRawData, input$DS_n * ns)
+          }else{
+            
+            if (input$d_n>0 && input$DS_n==0){
+              
+              myData <- diff(myRawData, difference = input$d_n)
+              
+            }else{
+              myData <- diff(diff(myRawData, input$DS_n * ns), difference = input$d_n)
+              
+            }
+            
+          }
+          
+        }
+      }
+      
+      plot(Acf(myData), lwd = 2, main=input$Main_title)
     })
     
     output$difference2PACF <- renderPlot({
-      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      diff2_ts <- diff(myData, differences = 2)
-      plot(Pacf(diff2_ts), lwd = 2)
+      myRawData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      if (input$islog == "Yes"){
+        if (input$d_n==0 && input$DS_n==0 ){
+          myData <- log(myRawData)
+        }else{
+          
+          if (input$d_n==0 && input$DS_n>0 ){
+            myData <- diff(log(myRawData), input$DS_n * ns)
+          }else{
+            
+            if (input$d_n>0 && input$DS_n==0){
+              
+              myData <- diff(log(myRawData), difference = input$d_n)
+              
+            }else{
+              myData <- diff(diff(log(myRawData), input$DS_n * ns), difference = input$d_n)
+              
+            }
+            
+          }
+          
+        }
+        
+      }else{
+        if (input$d_n==0 && input$DS_n==0 ){
+          myData <- myRawData
+        }else{
+          
+          if (input$d_n==0 && input$DS_n>0 ){
+            myData <- diff(myRawData, input$DS_n * ns)
+          }else{
+            
+            if (input$d_n>0 && input$DS_n==0){
+              
+              myData <- diff(myRawData, difference = input$d_n)
+              
+            }else{
+              myData <- diff(diff(myRawData, input$DS_n * ns), difference = input$d_n)
+              
+            }
+            
+          }
+          
+        }
+      }
+      
+      plot(Pacf(myData), lwd = 2, main=input$Main_title)
     })  
     
     
     output$difference2ACFPACF <- renderPlot({
-      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      diff2_ts <- diff(myData, differences = 2)
-      acf2(diff2_ts , lwd = 3) 
+      myRawData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      if (input$islog == "Yes"){
+        if (input$d_n==0 && input$DS_n==0 ){
+          myData <- log(myRawData)
+        }else{
+          
+          if (input$d_n==0 && input$DS_n>0 ){
+            myData <- diff(log(myRawData), input$DS_n * ns)
+          }else{
+            
+            if (input$d_n>0 && input$DS_n==0){
+              
+              myData <- diff(log(myRawData), difference = input$d_n)
+              
+            }else{
+              myData <- diff(diff(log(myRawData), input$DS_n * ns), difference = input$d_n)
+              
+            }
+            
+          }
+          
+        }
+        
+      }else{
+        if (input$d_n==0 && input$DS_n==0 ){
+          myData <- myRawData
+        }else{
+          
+          if (input$d_n==0 && input$DS_n>0 ){
+            myData <- diff(myRawData, input$DS_n * ns)
+          }else{
+            
+            if (input$d_n>0 && input$DS_n==0){
+              
+              myData <- diff(myRawData, difference = input$d_n)
+              
+            }else{
+              myData <- diff(diff(myRawData, input$DS_n * ns), difference = input$d_n)
+              
+            }
+            
+          }
+          
+        }
+      }
+      
+      acf2(myData , lwd = 3, main=input$Main_title) 
       
     })  
     
     
-    output$teststationarited2St <- renderPrint({
-      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-
-      helpADF()
-      diff2_ts <- diff(myData, differences = 2)
+    output$d2_ts_Display <- renderPlot({
+      myRawData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
-      adf.test(diff2_ts, alternative =input$alternd2St, k=input$LagOrderADFd2St)
+      if (input$islog == "Yes"){
+        if (input$d_n==0 && input$DS_n==0 ){
+          myData <- log(myRawData)
+        }else{
+          
+          if (input$d_n==0 && input$DS_n>0 ){
+            myData <- diff(log(myRawData), input$DS_n * ns)
+          }else{
+            
+            if (input$d_n>0 && input$DS_n==0){
+              
+              myData <- diff(log(myRawData), difference = input$d_n)
+              
+            }else{
+              myData <- diff(diff(log(myRawData), input$DS_n * ns), difference = input$d_n)
+              
+            }
+            
+          }
+          
+        }
+        
+      }else{
+        if (input$d_n==0 && input$DS_n==0 ){
+          myData <- myRawData
+        }else{
+          
+          if (input$d_n==0 && input$DS_n>0 ){
+            myData <- diff(myRawData, input$DS_n * ns)
+          }else{
+            
+            if (input$d_n>0 && input$DS_n==0){
+              
+              myData <- diff(myRawData, difference = input$d_n)
+              
+            }else{
+              myData <- diff(diff(myRawData, input$DS_n * ns), difference = input$d_n)
+              
+            }
+            
+          }
+          
+        }
+      }
+      
+      ggtsdisplay(myData, plot.type = input$plot_type , main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y)
+      
+    })
+    
+    
+    output$teststationarited2St <- renderPrint({
+      myRawData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
+      
+      if (input$islog == "Yes"){
+        if (input$d_n==0 && input$DS_n==0 ){
+          myData <- log(myRawData)
+        }else{
+          
+          if (input$d_n==0 && input$DS_n>0 ){
+            myData <- diff(log(myRawData), input$DS_n * ns)
+          }else{
+            
+            if (input$d_n>0 && input$DS_n==0){
+              
+              myData <- diff(log(myRawData), difference = input$d_n)
+              
+            }else{
+              myData <- diff(diff(log(myRawData), input$DS_n * ns), difference = input$d_n)
+              
+            }
+            
+          }
+          
+        }
+        
+      }else{
+        if (input$d_n==0 && input$DS_n==0 ){
+          myData <- myRawData
+        }else{
+          
+          if (input$d_n==0 && input$DS_n>0 ){
+            myData <- diff(myRawData, input$DS_n * ns)
+          }else{
+            
+            if (input$d_n>0 && input$DS_n==0){
+              
+              myData <- diff(myRawData, difference = input$d_n)
+              
+            }else{
+              myData <- diff(diff(myRawData, input$DS_n * ns), difference = input$d_n)
+              
+            }
+            
+          }
+          
+        }
+      }
+      
+      
+      adf.test(myData, alternative =input$alternd2St, k=input$LagOrderADFd2St)
       
     })
     
@@ -625,13 +973,13 @@ shinyServer(function(input, output, session) {
    
      output$tsDisplay <- renderPlot({
        myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-       ggtsdisplay(myData)
+       ggtsdisplay(myData, main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y)
       
     })
     
     output$boxP <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      boxplot(myData~cycle(myData),xlab=tsXlabelmd, ylab=tsYlabel)
+      boxplot(myData~cycle(myData), main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y)
       
     })
     
@@ -639,29 +987,35 @@ shinyServer(function(input, output, session) {
     output$SubSeriesPlot <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       ggsubseriesplot(myData)+
-        ylab("y label") +
-        ggtitle("Title")
+        xlab(input$lab_x)+
+        ylab(input$lab_y) +
+        ggtitle(input$Main_title)
       
     })
     
     output$SeasonPlot <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       ggseasonplot(myData, year.labels=TRUE, year.labels.left=TRUE) +
-        ylab("y label") +
-        ggtitle("Title SeasonPlot")
+        xlab(input$lab_x)+
+        ylab(input$lab_y) +
+        ggtitle(input$Main_title)
     })
     
     
     output$SeasonPlotPolar <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       ggseasonplot(myData, polar=TRUE) +
-        ylab("y label") +
-        ggtitle("Title SeasonPlotPolar")
+        xlab(input$lab_x)+
+        ylab(input$lab_y) +
+        ggtitle(input$Main_title)
     }) 
     
     output$lagPlot <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      gglagplot(myData)
+      gglagplot(myData)+
+        xlab(input$lab_x)+
+        ylab(input$lab_y) +
+        ggtitle(input$Main_title)
     })
     
     
@@ -888,7 +1242,7 @@ shinyServer(function(input, output, session) {
       
       #sarima.for(myData, n.ahead = input$length, p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq, P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs, S = nsais, lwd = 2)
       sarima.for(myData, n.ahead = input$length, arimaorder(fit),S = nsais, lwd = 2)
-      +xlab(tsXlabel) + ylab(tsYlabel)
+     
       
     })  
     
@@ -911,7 +1265,7 @@ shinyServer(function(input, output, session) {
       
       nsais <- loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
-      sarima.for(myData, n.ahead = input$length, p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq, P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs, S = nsais, no.constant=nodriftConsideration, lwd = 2)
+      sarima.for(myData, n.ahead = input$length, p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq, P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs, S = nsais, no.constant=nodriftConsideration, lwd = 2, main=input$Main_title, xlab=input$lab_x)
       
        })
     
@@ -928,6 +1282,9 @@ shinyServer(function(input, output, session) {
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
       ggtsdiag(fit)
+        # xlab(input$lab_x)+
+        # ylab(input$lab_y) +
+        # ggtitle(input$Main_title)
     })
     
     
@@ -947,6 +1304,21 @@ shinyServer(function(input, output, session) {
    
     })
 
+    
+    output$ShapiroTest <- renderPrint({
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
+      ResudialData = resid(fit)
+      shapiro.test(ResudialData)
+    })
+    
     
     output$FARIMApdq <- renderTable({
       
@@ -1130,7 +1502,7 @@ shinyServer(function(input, output, session) {
         input$year,
         as.numeric(input$month),
         input$length
-      )[[2]]
+      )[[2]] 
     })
   
 
@@ -1765,5 +2137,23 @@ shinyServer(function(input, output, session) {
   }
   
   
+  output$Plot_Type_Help <- renderPrint({
+    print(".......................................................................") 
+    print("                            Plot_Type_Help                             ")
+    print(".......................................................................") 
+    print("                                                                       ")
+    print("  Plots a time series along with its acf and either its                ")
+    print("  pacf, histogram, lagged scatterplot or spectrum.                     ")
+    print("                                                                       ")
+    print("                                                                       ")
+    print("                                                                       ")
+    print("                                                                       ")
+    print("                                                                       ")
+    print("                                                                       ")
+    print("                                                                       ")
+    print(".......................................................................")
+    print("                                                                       ")
+    print(".......................................................................")
+  })
 
 })

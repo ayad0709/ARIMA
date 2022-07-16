@@ -62,10 +62,26 @@ shinyUI(pageWithSidebar (
     #                 downloadButton('downloadPlot2', 'Plot4K'))
     
     # selectInput("model1",label = "Additive or Multiplicative model ?", choices=c("additive","multiplicative"),selected="additive"),
+   
+    br(),
+      submitButton("Submit ==>"),
+    br(),
+    checkboxInput(inputId = "labels",
+                  label = "Change labels",
+                  value = FALSE),
+    conditionalPanel(
+      condition = "input.labels == true",
+      textInput("Main_title", "Title:", value = ""),
+      textInput("lab_x", "X-axis:", value = ""),
+      textInput("lab_y", "Y-axis:", value = "")
+      
+    ),
     
-    br(),
-    submitButton("Submit ==>"),
-    br(),
+  
+     
+    # br(),
+    # 
+    # br(),
   ),
   
   
@@ -93,6 +109,37 @@ shinyUI(pageWithSidebar (
                                  tabPanel("PACF", plotOutput("StPACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("StACFPACF",width=620,height = 570)),
                                  
+                                 
+                                 tabPanel("Ts Display", plotOutput("tsDisplay2",width=900,height = 630 )),
+                                 
+
+                                 # tabPanel("Ts Display", 
+                                 #          fluidPage(
+                                 #            tabsetPanel(
+                                 #              tabPanel("Plot Type SetUp", 
+                                 #              
+                                 #                sidebarLayout(
+                                 #                  sidebarPanel(width=3,
+                                 #                               selectInput("plot_type", label = "Type", choices=c("partial", "histogram", "scatter", "spectrum"),selected="partial"),
+                                 #                               submitButton("Submit ==>"),
+                                 #                  ),
+                                 #                  tabPanel("Plot Type SetUp", verbatimTextOutput("Plot_Type_Help")),
+                                 #                )),
+                                 #            tabPanel("Ts Display", plotOutput("tsDisplay2",width=900,height = 630 )),
+                                 #          ))),
+                                 
+                                 
+                                 # tabPanel("Ts Display",
+                                 #          sidebarLayout(
+                                 #            sidebarPanel(width=3,
+                                 #                         selectInput("plot_type", label = "Type", choices=c("partial", "histogram", "scatter", "spectrum"),selected="partial"),
+                                 #                         submitButton("Submit ==>"),
+                                 #            ),
+                                 #            tabPanel("Ts Display", plotOutput("tsDisplay2",width=900,height = 630 )),
+                                 #          )),
+
+
+                                 
                                  tabPanel("stationary [ADF]", 
                                           sidebarLayout(
                                             sidebarPanel(width=3,
@@ -111,7 +158,18 @@ shinyUI(pageWithSidebar (
                                  tabPanel("ACF", plotOutput("logStACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("logStPACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("logStACFPACF",width=620,height = 570)),
-
+                                 tabPanel("Ts Display", plotOutput("log_ts_Display",width=900,height = 630 )),
+                                 
+                                 # tabPanel("Ts Display", 
+                                 #          sidebarLayout(
+                                 #            sidebarPanel(width=3,
+                                 #                         selectInput("plot_type2", label = "Type", choices=c("partial", "histogram", "scatter", "spectrum"),selected="partial"),
+                                 #                         submitButton("Submit ==>"),
+                                 #            ),
+                                 #            tabPanel("Ts Display", plotOutput("log_ts_Display",width=900,height = 630 )),
+                                 #          )),
+                                 
+                                 
                                  tabPanel("stationary [ADF]", 
                                           sidebarLayout(
                                             sidebarPanel(width=3,
@@ -130,7 +188,7 @@ shinyUI(pageWithSidebar (
                                  tabPanel("ACF", plotOutput("d1StACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("d1StPACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("d1StACFPACF",width=620,height = 570)),
-                                 
+                                 tabPanel("Ts Display", plotOutput("d1_ts_Display",width=900,height = 630 )),
                                  tabPanel("stationary [ADF]", 
                                           sidebarLayout(
                                             sidebarPanel(width=3,
@@ -149,7 +207,7 @@ shinyUI(pageWithSidebar (
                                  tabPanel("ACF", plotOutput("DS1StACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("DS1StPACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("DS1StACFPACF",width=620,height = 570)),
-                                 
+                                 tabPanel("Ts Display", plotOutput("Ds1_ts_Display",width=900,height = 630 )),
                                  tabPanel("stationary [ADF]", 
                                           sidebarLayout(
                                             sidebarPanel(width=3,
@@ -162,13 +220,13 @@ shinyUI(pageWithSidebar (
                                )), 
                               
 
-                      tabPanel("d1(D1(St))", 
+                      tabPanel("d1D1(St)", 
                                tabsetPanel(
                                  tabPanel("d[1](D[1](St))",plotOutput("ddsplot",width=900,height = 630)),
                                  tabPanel("ACF", plotOutput("ddsplotACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("ddsplotPACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("ddsplotACFPACF",width=620,height = 570)),
-                              
+                                 tabPanel("Ts Display", plotOutput("d1_D1_ts_Display",width=900,height = 630 )),
                                  tabPanel("stationary [ADF]", 
                                           sidebarLayout(
                                             sidebarPanel(width=3,
@@ -187,6 +245,7 @@ shinyUI(pageWithSidebar (
                                  tabPanel("ACF", plotOutput("d1LogStACFa",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("d1LogStPACFa",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("d1LogStACFPACFa",width=620,height = 570)),
+                                 tabPanel("Ts Display", plotOutput("d1_log_ts_Display",width=900,height = 630 )),
                                  
                                  tabPanel("stationary [ADF]", 
                                           sidebarLayout(
@@ -206,6 +265,7 @@ shinyUI(pageWithSidebar (
                                  tabPanel("ACF", plotOutput("DlogplotACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("DlogplotPACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("DlogplotACFPACF",width=620,height = 570)),
+                                 tabPanel("Ts Display", plotOutput("Ds1_log_ts_Display",width=900,height = 630 )),
                                  
                                  tabPanel("stationary [ADF]", 
                                           sidebarLayout(
@@ -219,12 +279,13 @@ shinyUI(pageWithSidebar (
                                )),  
                       
                       
-                      tabPanel("d1(D1(log(St)))", 
+                      tabPanel("d1D1(log(St))", 
                                tabsetPanel(
                                  tabPanel("d[1](D[1](log(St)))",plotOutput("dDlogplot",width=900,height = 630)),
                                  tabPanel("ACF", plotOutput("dDlogplotACF",width=800,height = 500)),
                                  tabPanel("PACF", plotOutput("dDlogplotPACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("dDlogplotACFPACF",width=620,height = 570)),
+                                 tabPanel("Ts Display", plotOutput("d1_Ds1_log_ts_Display",width=900,height = 630 )),
                                  
                                  tabPanel("stationary [ADF]", 
                                           sidebarLayout(
@@ -238,23 +299,61 @@ shinyUI(pageWithSidebar (
                                )),  
                       
                       
-                      tabPanel("d2(St)", 
-                               tabsetPanel(
-                                 tabPanel("d[2](St)",plotOutput("difference2",width=900,height = 630)),
-                                 tabPanel("ACF", plotOutput("difference2ACF",width=800,height = 500)),
-                                 tabPanel("PACF", plotOutput("difference2PACF",width=800,height = 500)),
-                                 tabPanel("ACF + PACF", plotOutput("difference2ACFPACF",width=620,height = 570)),
-                                 
-                                 tabPanel("stationary [ADF]", 
-                                          sidebarLayout(
-                                            sidebarPanel(width=3,
-                                                         selectInput("alternd2St", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                         numericInput("LagOrderADFd2St", label = "Lag",  min=0, value=12),
-                                                         submitButton("Submit ==>"),
-                                            ),
-                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited2St")),
-                                          )),
-                               )), 
+                      tabPanel("???(St)",
+                               fluidPage(
+                                 tabsetPanel(
+                                   
+                                   tabPanel("d?D?(log?(St)", br(),
+                                            sidebarLayout(
+                                              sidebarPanel(width=2,
+                                                           numericInput("d_n", label = "d(n)", min=0, value=0),
+                                                           numericInput("DS_n", label = "D(n)",min=0,  value=0),
+                                                           selectInput("islog", label = "log", choices=c("Yes","No"),selected="No"),
+                                                           
+                                                           submitButton("Submit"),
+                                              ),
+                                              
+                                              mainPanel(width=10,
+                                                        
+                                                        tabsetPanel(
+                                                          tabPanel("d?D?(log?(St)",plotOutput("difference2",width=750,height = 500)),
+                                                          tabPanel("ACF", plotOutput("difference2ACF",width=750,height = 500)),
+                                                          tabPanel("PACF", plotOutput("difference2PACF",width=750,height = 500)),
+                                                          tabPanel("ACF + PACF", plotOutput("difference2ACFPACF",width=620,height = 500)),
+                                                          tabPanel("Ts Display", plotOutput("d2_ts_Display",width=750,height = 500 )),
+                                                          
+                                                          tabPanel("stationary [ADF]", 
+                                                                   sidebarLayout(
+                                                                     sidebarPanel(width=3,
+                                                                                  selectInput("alternd2St", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
+                                                                                  numericInput("LagOrderADFd2St", label = "Lag",  min=0, value=12),
+                                                                                  submitButton("Submit ==>"),
+                                                                     ),
+                                                                     tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited2St")),
+                                                                   )),
+                                                        )
+                                              )
+                                            )),
+                                 ))), 
+                      
+                      
+                      tabPanel("PT",
+                               fluidPage(
+                                 tabsetPanel(
+                                   tabPanel("Plot Type SetUp",
+
+                                     sidebarLayout(
+                                       sidebarPanel(width=3,
+                                                    selectInput("plot_type", label = "Type", choices=c("partial", "histogram", "scatter", "spectrum"),selected="partial"),
+                                                    submitButton("Submit ==>"),
+                                       ),
+                                       tabPanel("Plot Type SetUp", verbatimTextOutput("Plot_Type_Help")),
+                                     )),
+                               ))),
+                      
+                      
+                      
+                      
                 ))),
         
         
@@ -476,6 +575,7 @@ shinyUI(pageWithSidebar (
                                 tabPanel("Res.", plotOutput("chkResARIMApdq",width=830,height = 600)),
                                 tabPanel("Diag.", plotOutput("tsdiagARIMApdq",width=700,height = 600)),
                                 tabPanel("Diag 2.", plotOutput("tsdiag2",width=700,height = 600)),
+                                tabPanel("Shapiro-Wilk", verbatimTextOutput("ShapiroTest")),
                               )),  
                      
                      
