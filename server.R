@@ -646,20 +646,27 @@ shinyServer(function(input, output, session) {
       myRawData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       ns <-  loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       
-      if (input$islog == "Yes"){
+      if (input$islog == "Yes")
+        {
         if (input$d_n==0 && input$DS_n==0 ){
            myData <- log(myRawData)
-        }else{
+        }
+        else
+          {
           
           if (input$d_n==0 && input$DS_n>0 ){
              myData <- diff(log(myRawData), input$DS_n * ns)
-          }else{
+          }
+            else
+              {
             
             if (input$d_n>0 && input$DS_n==0){
               
               myData <- diff(log(myRawData), difference = input$d_n)
               
-            }else{
+            }
+                else
+                  {
                myData <- diff(diff(log(myRawData), input$DS_n * ns), difference = input$d_n)
 
             }
@@ -668,20 +675,28 @@ shinyServer(function(input, output, session) {
 
         }
         
-      }else{
+      }
+      else
+        {
         if (input$d_n==0 && input$DS_n==0 ){
           myData <- myRawData
-        }else{
+        }
+          else
+            {
           
           if (input$d_n==0 && input$DS_n>0 ){
             myData <- diff(myRawData, input$DS_n * ns)
-          }else{
+          }
+              else
+                {
             
             if (input$d_n>0 && input$DS_n==0){
               
               myData <- diff(myRawData, difference = input$d_n)
               
-            }else{
+            }
+                  else
+                    {
               myData <- diff(diff(myRawData, input$DS_n * ns), difference = input$d_n)
               
             }

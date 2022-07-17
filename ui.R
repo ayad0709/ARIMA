@@ -299,7 +299,7 @@ shinyUI(pageWithSidebar (
                                )),  
                       
                       
-                      tabPanel("???(St)",
+                      tabPanel("d?D?(log?(St)",
                                fluidPage(
                                  tabsetPanel(
                                    
@@ -309,6 +309,7 @@ shinyUI(pageWithSidebar (
                                                            numericInput("d_n", label = "d(n)", min=0, value=0),
                                                            numericInput("DS_n", label = "D(n)",min=0,  value=0),
                                                            selectInput("islog", label = "log", choices=c("Yes","No"),selected="No"),
+                                                           selectInput("plot_type", label = "Type", choices=c("partial", "histogram", "scatter", "spectrum"),selected="partial"),
                                                            
                                                            submitButton("Submit"),
                                               ),
@@ -316,11 +317,12 @@ shinyUI(pageWithSidebar (
                                               mainPanel(width=10,
                                                         
                                                         tabsetPanel(
+                                                          tabPanel("Ts Display", plotOutput("d2_ts_Display",width=750,height = 500 )),
+                                                          
                                                           tabPanel("d?D?(log?(St)",plotOutput("difference2",width=750,height = 500)),
                                                           tabPanel("ACF", plotOutput("difference2ACF",width=750,height = 500)),
                                                           tabPanel("PACF", plotOutput("difference2PACF",width=750,height = 500)),
                                                           tabPanel("ACF + PACF", plotOutput("difference2ACFPACF",width=620,height = 500)),
-                                                          tabPanel("Ts Display", plotOutput("d2_ts_Display",width=750,height = 500 )),
                                                           
                                                           tabPanel("stationary [ADF]", 
                                                                    sidebarLayout(
@@ -337,19 +339,19 @@ shinyUI(pageWithSidebar (
                                  ))), 
                       
                       
-                      tabPanel("PT",
-                               fluidPage(
-                                 tabsetPanel(
-                                   tabPanel("Plot Type SetUp",
-
-                                     sidebarLayout(
-                                       sidebarPanel(width=3,
-                                                    selectInput("plot_type", label = "Type", choices=c("partial", "histogram", "scatter", "spectrum"),selected="partial"),
-                                                    submitButton("Submit ==>"),
-                                       ),
-                                       tabPanel("Plot Type SetUp", verbatimTextOutput("Plot_Type_Help")),
-                                     )),
-                               ))),
+                      # tabPanel("PT",
+                      #          fluidPage(
+                      #            tabsetPanel(
+                      #              tabPanel("Plot Type SetUp",
+                      # 
+                      #                sidebarLayout(
+                      #                  sidebarPanel(width=3,
+                      #                               selectInput("plot_type", label = "Type", choices=c("partial", "histogram", "scatter", "spectrum"),selected="partial"),
+                      #                               submitButton("Submit ==>"),
+                      #                  ),
+                      #                  tabPanel("Plot Type SetUp", verbatimTextOutput("Plot_Type_Help")),
+                      #                )),
+                      #          ))),
                       
                       
                       
