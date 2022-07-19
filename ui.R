@@ -307,7 +307,7 @@ shinyUI(pageWithSidebar (
                                             sidebarLayout(
                                               sidebarPanel(width=2,
                                                            numericInput("d_n", label = "d(n)", min=0, value=0),
-                                                           numericInput("DS_n", label = "D(n)",min=0,  value=0),
+                                                           numericInput("DS_n", label = "D(m)",min=0,  value=0),
                                                            selectInput("islog", label = "log", choices=c("Yes","No"),selected="No"),
                                                            selectInput("plot_type", label = "Type", choices=c("partial", "histogram", "scatter", "spectrum"),selected="partial"),
                                                            
