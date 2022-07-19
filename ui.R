@@ -67,7 +67,7 @@ shinyUI(pageWithSidebar (
       submitButton("Submit ==>"),
     br(),
     checkboxInput(inputId = "labels",
-                  label = "Change labels",
+                  label = "Change labels (click Submit)",
                   value = FALSE),
     conditionalPanel(
       condition = "input.labels == true",
@@ -299,11 +299,11 @@ shinyUI(pageWithSidebar (
                                )),  
                       
                       
-                      tabPanel("d?D?(log?(St)",
+                      tabPanel("d?D?(log?(St))",
                                fluidPage(
                                  tabsetPanel(
                                    
-                                   tabPanel("d?D?(log?(St)", br(),
+                                   tabPanel("d?D?(log?(St))", br(),
                                             sidebarLayout(
                                               sidebarPanel(width=2,
                                                            numericInput("d_n", label = "d(n)", min=0, value=0),
@@ -317,9 +317,9 @@ shinyUI(pageWithSidebar (
                                               mainPanel(width=10,
                                                         
                                                         tabsetPanel(
-                                                          tabPanel("Ts Display", plotOutput("d2_ts_Display",width=750,height = 500 )),
+                                                          tabPanel("d?D?(log?(St)", plotOutput("d2_ts_Display",width=750,height = 500 )),
                                                           
-                                                          tabPanel("d?D?(log?(St)",plotOutput("difference2",width=750,height = 500)),
+                                                          tabPanel("Ts Display",plotOutput("difference2",width=750,height = 500)),
                                                           tabPanel("ACF", plotOutput("difference2ACF",width=750,height = 500)),
                                                           tabPanel("PACF", plotOutput("difference2PACF",width=750,height = 500)),
                                                           tabPanel("ACF + PACF", plotOutput("difference2ACFPACF",width=620,height = 500)),
