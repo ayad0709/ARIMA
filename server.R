@@ -1218,7 +1218,6 @@ shinyServer(function(input, output, session) {
     
     
     
-    
     output$SARIMAplot <- renderPlot({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       
@@ -1335,6 +1334,53 @@ shinyServer(function(input, output, session) {
     })
     
     
+    ###########-----------------   
+    
+    output$sarima_Model <- renderPrint({
+      # https://cran.r-project.org/web/packages/equatiomatic/vignettes/forecast-arima.html 
+
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      simple_ts_mod<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
+      
+      texmodel <- extract_eq(simple_ts_mod)
+      
+      TeX(texmodel)
+       
+      #plot(TeX(texmodel), cex=2, main="")
+      
+    })  
+    
+    
+    output$sarima_Model_Plot <- renderPlot({
+      # https://cran.r-project.org/web/packages/equatiomatic/vignettes/forecast-arima.html 
+      
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      simple_ts_mod<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
+      
+      texmodel <- extract_eq(simple_ts_mod)
+      
+      
+      plot(TeX(texmodel))
+      
+    }) 
+    
+    ###########-----------------   
+    
+    
     output$FARIMApdq <- renderTable({
       
       if (input$driftYN == "TRUE") {
@@ -1353,8 +1399,7 @@ shinyServer(function(input, output, session) {
     })
     
     
-     
-     
+
     
     
     output$testTrendMK2 <- renderPrint({
@@ -1704,6 +1749,7 @@ shinyServer(function(input, output, session) {
       )
     }
   )
+  
 
   output$downloadPlot <- downloadHandler(
     filename = paste("forecast", Sys.Date(), ".png", sep = ""),
@@ -1726,6 +1772,7 @@ shinyServer(function(input, output, session) {
       dev.off()
     }
   )
+  
 
   output$downloadPlot2 <- downloadHandler(
     filename = paste("forecast", Sys.Date(), ".png", sep = ""),
@@ -1750,6 +1797,9 @@ shinyServer(function(input, output, session) {
   )
 
  
+  
+  
+
   
   
   #########################################################################

@@ -9,7 +9,7 @@
 packages = c("shiny", "shinythemes","data.table", "ggplot2","lubridate","urca",
              "dplyr","fpp2","forecast","stats", "Kendall",
              "tseries","seasonal", "xts", "astsa","ggfortify",
-             "tsibble", "feasts", "readxl","TSstudio")
+             "tsibble", "feasts", "readxl","TSstudio","equatiomatic","latex2exp")
 
 
 
@@ -77,11 +77,7 @@ shinyUI(pageWithSidebar (
       
     ),
     
-  
-     
-    # br(),
-    # 
-    # br(),
+
   ),
   
   
@@ -306,12 +302,14 @@ shinyUI(pageWithSidebar (
                                    tabPanel("d?D?(log?(St))", br(),
                                             sidebarLayout(
                                               sidebarPanel(width=2,
-                                                           numericInput("d_n", label = "d(n)", min=0, value=0),
-                                                           numericInput("DS_n", label = "D(m)",min=0,  value=0),
+                                                           br(),br(),
+                                                           numericInput("d_n", label = "d :", min=0, value=0),
+                                                           numericInput("DS_n", label = "D :",min=0,  value=0),
                                                            selectInput("islog", label = "log", choices=c("Yes","No"),selected="No"),
                                                            selectInput("plot_type", label = "Type", choices=c("partial", "histogram", "scatter", "spectrum"),selected="partial"),
-                                                           
+                                                           br(),
                                                            submitButton("Submit"),
+                                                           br(),br(),
                                               ),
                                               
                                               mainPanel(width=10,
@@ -352,8 +350,6 @@ shinyUI(pageWithSidebar (
                       #                  tabPanel("Plot Type SetUp", verbatimTextOutput("Plot_Type_Help")),
                       #                )),
                       #          ))),
-                      
-                      
                       
                       
                 ))),
@@ -507,7 +503,6 @@ shinyUI(pageWithSidebar (
                                              numericInput("ARIMAds", label = "D:",min=0,  value=0),
                                              numericInput("ARIMAqs", label = "Q:", min=0, value=0),
                                              selectInput("driftYN", label = "drift", choices=c("TRUE","FALSE"),selected="TRUE"),
-                                             
                                              submitButton("Submit"),
                                 ),
                                
@@ -585,6 +580,10 @@ shinyUI(pageWithSidebar (
                      
                      
                      tabPanel("Forecast Plot", plotOutput("SARIMAforcastplot", width=830, height = 600)),
+                     
+                     tabPanel("LaTeX Model", verbatimTextOutput("sarima_Model")),
+                     # ("LaTeX Model Print", plotOutput("sarima_Model_Plot", width=830, height = 600)),
+                     
                      
                      # tabPanel("SARIMA", 
                      #         tabsetPanel(
