@@ -50,7 +50,7 @@ shinyUI(pageWithSidebar (
               accept = c('.txt', '.csv', '.tsv', ".xlsx" )),
     
     numericInput("col", label = "My Data is at Column:", value=2,min=1,max=100),
-    numericInput("year", label = "Enter the starting year", value=2000),
+    numericInput("year", label = "Enter the starting year", value=1990),
     selectInput("time", label = "Frequecy of Data [ Seasonality ]", choices=c("Daily","Monthly","1/2 year","Quarterly","Yearly"),selected="Monthly"),
     selectInput("month", label = "Enter the starting day/month/quarter", choices=as.numeric(c(1:366)), selected=as.numeric(1)),
     selectInput("Model",label = "Select the Model", choices=c("ARIMA","Holt-Winters Additive","Holt-Winters Multiplicative","HOLT's Exponential Smoothing"),selected="ARIMA"),
@@ -502,7 +502,7 @@ shinyUI(pageWithSidebar (
                                              numericInput("ARIMAps", label = "P:",min=0,  value=0),
                                              numericInput("ARIMAds", label = "D:",min=0,  value=0),
                                              numericInput("ARIMAqs", label = "Q:", min=0, value=0),
-                                             selectInput("driftYN", label = "drift", choices=c("TRUE","FALSE"),selected="TRUE"),
+                                             selectInput("driftYN", label = "drift", choices=c("TRUE","FALSE"),selected="FALSE"),
                                              submitButton("Submit"),
                                 ),
                                
@@ -513,10 +513,10 @@ shinyUI(pageWithSidebar (
                                     tabPanel("Model", verbatimTextOutput("textARIMApdq")),  
                                     
                                     # without drift
-                                    tabPanel("ACF+PACF Res.no.drift", plotOutput("plotACFPACFRespdqwithoutdrift", width=600, height = 550)),
+                                    tabPanel("ACF+PACF", plotOutput("plot_ACF_PACF_Res_pdq", width=600, height = 550)),
                                     
                                     # with drift
-                                    tabPanel("ACF+PACF Res.with.drift", plotOutput("plotACFPACFRespdq", width=600, height = 550)),
+                                    #tabPanel("ACF+PACF Res.with.drift", plotOutput("plotACFPACFRespdq", width=600, height = 550)),
 
                                     # tabPanel("ACF.R.", plotOutput("plotACFRespdq", width=650, height = 500)),
                                     # tabPanel("PACF.R.", plotOutput("plotPACFRespdq", width=650, height = 500)),

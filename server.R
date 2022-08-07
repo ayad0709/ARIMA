@@ -1182,6 +1182,12 @@ shinyServer(function(input, output, session) {
     })
     
     output$plotACFPACFRespdq <- renderPlot({
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
 
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = TRUE)
@@ -1192,9 +1198,16 @@ shinyServer(function(input, output, session) {
     })
     
     
-    output$plotACFPACFRespdqwithoutdrift <- renderPlot({
+    output$plot_ACF_PACF_Res_pdq <- renderPlot({
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
-      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = FALSE)
+      fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
       nsais <- loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$nSaison
       mainTitle = paste('Residuals ARIMA(',input$ARIMAp,',',input$ARIMAd,',',input$ARIMAq,')','(',input$ARIMAps,',',input$ARIMAds,',',input$ARIMAqs,')','[',nsais,']')
       
