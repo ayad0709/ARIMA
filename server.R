@@ -1366,6 +1366,19 @@ shinyServer(function(input, output, session) {
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
       fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
       ResudialData = resid(fit)
+      print("..........................................................................") 
+      print(" The Shapiro-Wilk test is a statistical test used to check if             ")
+      print(" a continuous variable follows a normal distribution.                     ")
+      print("..........................................................................") 
+      print(" (H0) states that the variable is normally distributed.                   ")
+      print(" (H1) states that the variable is NOT normally distributed.               ")
+      print("..........................................................................") 
+      print(" If p ≤ 0.05: then the null hypothesis can be rejected                    ")
+      print("              (i.e. the variable is NOT normally distributed).            ")
+      print(" If p > 0.05: then the null hypothesis cannot be rejected                 ")
+      print("              (i.e. the variable MAY BE normally distributed).            ")
+      print("..........................................................................") 
+      
       shapiro.test(ResudialData)
     })
     
