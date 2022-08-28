@@ -1136,7 +1136,8 @@ shinyServer(function(input, output, session) {
       
     })
     
-    
+  #       
+      
     output$textARIMApdq <- renderPrint({
       
       if (input$driftYN == "TRUE") {
@@ -1151,6 +1152,28 @@ shinyServer(function(input, output, session) {
       # summary(model_fit)
       model_fit
     })
+    
+    output$textARIMApdq_pvalues <- renderPrint({
+      
+      if (input$driftYN == "TRUE") {
+        driftConsideration =TRUE
+      }
+      else {
+        driftConsideration =FALSE
+      }
+      
+      myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+      model_fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
+      # summary(model_fit)
+      print("............................................................................") 
+      print("                     Testing the coefficients values                        ")
+      print("............................................................................") 
+      print(" H0 : the coefficient = 0                                                   ")
+      print(" Ha : the coefficient is different from 0                                   ")
+      print("............................................................................") 
+      coeftest(model_fit)
+    })
+    
     
     output$plotACFRespdq <- renderPlot({
       
@@ -2197,7 +2220,7 @@ shinyServer(function(input, output, session) {
     print("  A Mann-Kendall trend test is used to determine whether or not there is a trend in the             ") 
     print("  time series data.                                                                                 ") 
     print("  It is a nonparametric test, which means that no underlying assumptions                            ") 
-    print("  are made about the normality of the data.                                                         ") 
+    print("  are made about the normality of the data.  It does require that there is no autocorrelation.      ") 
     print("                                                                                                    ") 
     print("  (H0) : There is no trend in the series                                                            ") 
     print("  (Ha) : There is a trend in the series                                                             ") 
