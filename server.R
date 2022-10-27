@@ -225,9 +225,20 @@ shinyServer(function(input, output, session) {
     # dd <- as.data.frame(myData)
     # ddd <- data.frame(date = row.names(dd), dd)
     #ddd 
-    myData
+    print.Date(myData)
   })
   
+  
+  output$data_StatsticsTable <- renderTable({
+    myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$data
+    describe(myData[ , c(input$col)])
+  })
+  
+  output$data_StatsticsText <- renderPrint({
+    myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$data
+    res <- stat.desc(myData[ , c(input$col)])
+    round(res, 2)
+  })
 
   ####### time series plot + ACF + PACF ###############################################################
 
@@ -355,7 +366,7 @@ shinyServer(function(input, output, session) {
       
     })
     
-    ####################### Diff Sainonniere ###############################################  
+    #######################  Seasonal difference  ###############################################  
     
     output$DS1Stplot <- renderPlot({
       myData <- loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
@@ -639,7 +650,7 @@ shinyServer(function(input, output, session) {
     })
 
     
-    ######################### diff d'ordre 2 #############################################  
+    ######################### Simple difference of order 2 #############################################  
     
     
     output$difference2 <- renderPlot({
@@ -1170,6 +1181,9 @@ shinyServer(function(input, output, session) {
       print("............................................................................") 
       print(" H0 : the coefficient = 0                                                   ")
       print(" Ha : the coefficient is different from 0                                   ")
+      print("............................................................................") 
+      print(" p-value < 0.05 indicate that the corresponding coefficient is              ")
+      print("                significantly different from 0                              ")
       print("............................................................................") 
       coeftest(model_fit)
     })
@@ -2031,7 +2045,7 @@ shinyServer(function(input, output, session) {
     print("                                                                                                       ")
     print("Règle 2 : Si l'autocorrélation de lag-1 est nulle ou négative, ou si les autocorrélations sont toutes  ")
     print("       petites et  sans motif, alors la série n'a pas besoin d'un ordre de différenciation supérieur.  ")
-    print("        - Si l'autocorrélation lag-1 est négative, -0,5 ou plus, la série peut être surdifférente.     ") 
+    print("        - Si l'autocorrélation lag-1 est négative, -0,5 ou plus, la série peut être sur-différencié.   ") 
     print("        ATTENTION AUX DIFFÉRENCES EXCESSIVES.                                                          ")
     print("                                                                                                       ")
     print("Règle 3 : L'ordre de différenciation optimal est souvent l'ordre de différenciation auquel l'écart     ")
@@ -2172,6 +2186,9 @@ shinyServer(function(input, output, session) {
     print(" ‘significant lack of fit’.                                                              ")
     print(".........................................................................................") 
     print("   (H0) The residuals are independently distributed.                                     ") 
+    print("        (i.e. the correlations in the population from which the sample is taken are 0,   ") 
+    print("        so that any observed correlations in the data result from randomness             ") 
+    print("        of the sampling process).                                                        ") 
     print("   (H1) The residuals are not independently distributed; they exhibit serial correlation.")
     print(".........................................................................................") 
     print(" Ideally, we would like to fail to reject the null hypothesis.                           ")
@@ -2205,6 +2222,7 @@ shinyServer(function(input, output, session) {
   
   
   helpKPSS <- function(){  
+    print("....................................................................................................") 
     print("                                                                                                    ")
     print("  One way to determine whether differencing is required is to use a unit root test.                 ")
     print("....................................................................................................") 

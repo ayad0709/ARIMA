@@ -6,14 +6,17 @@
 ### LIBRARIES ####
 ##################
 
-packages = c("shiny", "shinythemes","data.table", "ggplot2","lubridate","urca",
-             "dplyr","fpp2","forecast","stats", "Kendall", "lmtest",
-             "tseries","seasonal", "xts", "astsa","ggfortify",
+packages = c("shiny", "shinythemes","data.table", "ggplot2","lubridate","urca", 
+             "dplyr","fpp2","forecast","stats", "Kendall", "lmtest", "vtable",
+             "tseries","seasonal", "xts", "astsa","ggfortify", "psych", "pastecs",
              "tsibble", "feasts", "readxl","TSstudio","equatiomatic","latex2exp")
 
 
 
-# Now load or install&load LIBRARIES
+########################################
+# Now load or install & load LIBRARIES
+########################################
+
 package.check <- lapply(
   packages,
   FUN = function(x) {
@@ -23,6 +26,10 @@ package.check <- lapply(
     }
   }
 )
+
+########################################
+#        choose the theme
+########################################
 
 #theme_set(theme_classic())
 theme_set(theme_bw())
@@ -34,9 +41,6 @@ theme_set(theme_bw())
 #theme_set(theme_void())
 
 
-
-
-# rm(list=ls())  
 
 ##################
 ### DASHBOARD ####
@@ -74,10 +78,7 @@ shinyUI(pageWithSidebar (
       textInput("Main_title", "Title:", value = ""),
       textInput("lab_x", "X-axis:", value = ""),
       textInput("lab_y", "Y-axis:", value = "")
-      
     ),
-    
-
   ),
   
   
@@ -90,7 +91,9 @@ shinyUI(pageWithSidebar (
        tabPanel("Data",
                 fluidPage(
                   tabsetPanel(
-                    tabPanel("data", tableOutput("dataPrint")), 
+                    tabPanel("data", tableOutput("dataPrint")),
+                    #tabPanel("Statstics table", tableOutput("data_StatsticsTable")),
+                    tabPanel("Statstics", verbatimTextOutput("data_StatsticsText"))
                   ))),       
                
                
@@ -105,9 +108,7 @@ shinyUI(pageWithSidebar (
                                  tabPanel("PACF", plotOutput("StPACF",width=800,height = 500)),
                                  tabPanel("ACF + PACF", plotOutput("StACFPACF",width=620,height = 570)),
                                  
-                                 
                                  tabPanel("Ts Display", plotOutput("tsDisplay2",width=900,height = 630 )),
-                                 
 
                                  # tabPanel("Ts Display", 
                                  #          fluidPage(
