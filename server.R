@@ -236,6 +236,13 @@ shinyServer(function(input, output, session) {
   
   output$data_StatsticsText <- renderPrint({
     myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$data
+    # summarytools::descr(myData)
+    my_Data <- myData[ , c(input$col)]
+    descr(my_Data)
+  })
+  
+  output$data_StatsticsText2 <- renderPrint({
+    myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$data
     res <- stat.desc(myData[ , c(input$col)])
     round(res, 2)
   })
@@ -1182,7 +1189,7 @@ shinyServer(function(input, output, session) {
       print(" H0 : the coefficient = 0                                                   ")
       print(" Ha : the coefficient is different from 0                                   ")
       print("............................................................................") 
-      print(" p-value < 0.05 indicate that the corresponding coefficient is              ")
+      print(" p-value < 0.05 indicates that the corresponding coefficient is              ")
       print("                significantly different from 0                              ")
       print("............................................................................") 
       coeftest(model_fit)

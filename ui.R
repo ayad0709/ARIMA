@@ -6,7 +6,7 @@
 ### LIBRARIES ####
 ##################
 
-packages = c("shiny", "shinythemes","data.table", "ggplot2","lubridate","urca", 
+packages = c("shiny", "shinythemes","data.table", "ggplot2","lubridate","urca", "summarytools",
              "dplyr","fpp2","forecast","stats", "Kendall", "lmtest", "vtable",
              "tseries","seasonal", "xts", "astsa","ggfortify", "psych", "pastecs",
              "tsibble", "feasts", "readxl","TSstudio","equatiomatic","latex2exp")
@@ -92,8 +92,9 @@ shinyUI(pageWithSidebar (
                 fluidPage(
                   tabsetPanel(
                     tabPanel("data", tableOutput("dataPrint")),
-                    #tabPanel("Statstics table", tableOutput("data_StatsticsTable")),
-                    tabPanel("Statstics", verbatimTextOutput("data_StatsticsText"))
+                    # tabPanel("Statstics table", tableOutput("data_StatsticsTable")),
+                    tabPanel("Statstics", verbatimTextOutput("data_StatsticsText")),
+                    tabPanel("Statstics", verbatimTextOutput("data_StatsticsText2"))
                   ))),       
                
                
