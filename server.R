@@ -225,7 +225,7 @@ shinyServer(function(input, output, session) {
     # dd <- as.data.frame(myData)
     # ddd <- data.frame(date = row.names(dd), dd)
     #ddd 
-    print.Date(myData)
+    print(myData)
   })
   
   
@@ -254,6 +254,11 @@ shinyServer(function(input, output, session) {
     plot(myData, main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y, type = 'l',lwd = 2)
   })
     
+  
+  output$tsPlot3 <- renderPlot({
+    myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
+    plot(myData, main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y, type = 'l',lwd = 2)
+  })
     
   output$StACF <- renderPlot({
     myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2
@@ -277,6 +282,7 @@ shinyServer(function(input, output, session) {
       ggtsdisplay(myData, plot.type = input$plot_type , main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y)
       
     })
+
     
     output$teststationariteSt <- renderPrint({
       myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$tsdata2

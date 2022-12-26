@@ -54,9 +54,10 @@ shinyUI(pageWithSidebar (
               accept = c('.txt', '.csv', '.tsv', ".xlsx" )),
     
     numericInput("col", label = "My Data is at Column:", value=2,min=1,max=100),
+    selectInput("month", label = "Enter the starting day/month/quarter", choices=as.numeric(c(1:366)), selected=as.numeric(1)),
+
     numericInput("year", label = "Enter the starting year", value=1980),
     selectInput("time", label = "Frequecy of Data [ Seasonality ]", choices=c("Daily","Monthly","1/2 year","Quarterly","Yearly"),selected="Monthly"),
-    selectInput("month", label = "Enter the starting day/month/quarter", choices=as.numeric(c(1:366)), selected=as.numeric(1)),
     selectInput("Model",label = "Select the Model", choices=c("ARIMA","Holt-Winters Additive","Holt-Winters Multiplicative","HOLT's Exponential Smoothing"),selected="ARIMA"),
     numericInput("length",label="Enter the length of forecast",value=12, min=1, max=200),
 
@@ -319,7 +320,10 @@ shinyUI(pageWithSidebar (
                                                         tabsetPanel(
                                                           tabPanel("d?D?(log?(St))", plotOutput("d2_ts_Display",width=750,height = 500 )),
                                                           
-                                                          tabPanel("Ts Display",plotOutput("difference2",width=750,height = 500)),
+                                                          #tabPanel("Ts Res.",plotOutput("difference2",width=750,height = 500)),
+                                                          tabPanel("Ts Plot",plotOutput("tsPlot3",width=750,height = 500)),
+                                                          
+                                                          
                                                           tabPanel("ACF", plotOutput("difference2ACF",width=750,height = 500)),
                                                           tabPanel("PACF", plotOutput("difference2PACF",width=750,height = 500)),
                                                           tabPanel("ACF + PACF", plotOutput("difference2ACFPACF",width=620,height = 500)),
