@@ -589,6 +589,8 @@ shinyUI(pageWithSidebar (
                      tabPanel("Forecast Plot", plotOutput("SARIMAforcastplot", width=830, height = 600)),
                      
                      tabPanel("LaTeX Model", verbatimTextOutput("sarima_Model")),
+                     
+                     tabPanel("LaTeX Code", verbatimTextOutput("LatexCode")),
                      # ("LaTeX Model Print", plotOutput("sarima_Model_Plot", width=830, height = 600)),
                      
                      
