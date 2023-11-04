@@ -83,6 +83,8 @@ shinyServer(function(input, output, session) {
           "Please select a data set, right now only .txt, .csv and .xlsx data files can be processed, make sure the 1st row of your data contains the variable name."
         )
       )
+      
+      
       if (is.null(inFile))
         return(NULL)
       if (file_ext(inFile()$name) == "xlsx") {
@@ -94,6 +96,8 @@ shinyServer(function(input, output, session) {
       else {
         read.table(inFile()$datapath, header = T)
       }
+      
+      
     })
     output$fileUploaded <- reactive({
       return(!is.null(inFile()))
@@ -175,6 +179,8 @@ shinyServer(function(input, output, session) {
           "Please select a data set, right now only .txt, .csv and .xlsx data files can be processed, make sure the 1st row of your data contains the variable name."
         )
       )
+      
+
       if (is.null(inFile))
         return(NULL)
       if (file_ext(inFile()$name) == "xlsx") {
@@ -186,6 +192,8 @@ shinyServer(function(input, output, session) {
       else {
         read.table(inFile()$datapath, header = T)
       }
+      
+      
     })
     output$fileUploaded <- reactive({
       return(!is.null(inFile()))
@@ -221,11 +229,25 @@ shinyServer(function(input, output, session) {
   ####### data visualisation  ###############################################################
 
   output$dataPrint <- renderTable({
-    myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$data
+    #myData<-loadData(input$Model,input$col,input$time,input$year,as.numeric(input$month),input$length)$data
     # dd <- as.data.frame(myData)
     # ddd <- data.frame(date = row.names(dd), dd)
     #ddd 
-    print(myData)
+    #print(myData)
+    
+      # Ensure the date column is in Date format and then change it to 'day / month / year' format
+    output$dataPrint <- renderTable({
+      myData <- loadData(input$Model, input$col, input$time, input$year, as.numeric(input$month), input$length)$data
+      
+      # Ensure the date column is in Date format and then change it to 'day / month / year' format
+      if("date" %in% colnames(myData)) {
+        myData$date <- as.Date(myData$date, origin="1899-12-30")
+        myData$date <- format(myData$date, "%d / %m / %Y")
+      }
+      
+      print(myData)
+    })
+    
   })
   
   

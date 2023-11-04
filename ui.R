@@ -52,7 +52,7 @@ shinyUI(pageWithSidebar (
   sidebarPanel(width=3,
     fileInput('file1', 'Choose file [.txt, .csv or .xlsx] :',
               accept = c('.txt', '.csv', '.tsv', ".xlsx" )),
-    
+   # numericInput("col_date", label = "date Data is at Column:", value=0,min=1,max=100),
     numericInput("col", label = "My Data is at Column:", value=2,min=1,max=100),
     selectInput("month", label = "Enter the starting day/month/quarter", choices=as.numeric(c(1:366)), selected=as.numeric(1)),
 
