@@ -31,18 +31,7 @@ package.check <- lapply(
 
 shinyUI(
   fluidPage(
-    # useMathJax(), # Uncomment if using useMathJax()
-    # tags$head(tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS_HTML")),
-    
-    # tags$head(
-    #   tags$script(src = "MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML", 
-    #               type = "text/javascript")
-    # ),
-    
-    # tags$head(tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js",
-    #                       type = "text/javascript",
-    #                       config = 'TeX-AMS-MML_HTMLorMML')),
-    
+
     tags$head(
       tags$script(type = "text/javascript", 
                   src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML")
@@ -52,13 +41,17 @@ shinyUI(
 ################################################################################
 #                             Main
 ################################################################################
+#
+#  theme = shinytheme("********"),
+#
+#   Replace " ******* " with your preferred theme. Valid themes are:
+#
+#     cerulean, cosmo, cyborg, darkly, flatly, journal, lumen, paper, 
+#     readable, sandstone, simplex, slate, spacelab, superhero, united, yeti
+#       
+
   theme = shinytheme("spacelab"),  
-  #
-  # Replace " ******* " with your preferred theme. Valid themes are:
-  #
-  #     cerulean, cosmo, cyborg, darkly, flatly, journal, lumen, paper, 
-  #     readable, sandstone, simplex, slate, spacelab, superhero, united, yeti
-  #       
+
   
   #useShinyalert(force = TRUE),
 
@@ -76,7 +69,6 @@ shinyUI(
       uiOutput("dateColUI"),
       uiOutput("colNumUI"),
       uiOutput("monthUI"),
-      # uiOutput("yearInputUI"),
       uiOutput("timeInputUI"),
       uiOutput("modelSelectUI"),
       uiOutput("lengthInputUI"),
@@ -84,9 +76,7 @@ shinyUI(
       uiOutput("graphTypeUI"),
       br(),
       uiOutput("conditionalButtons"),
-      
-      # actionButton("submitBtn", "Submit"),
-      # actionButton("plotSettings", "Plot Settings")
+
     ),
     
     
@@ -100,7 +90,6 @@ shinyUI(
         
         tabPanel("Stats.",
                  tabsetPanel(
-                   # tabPanel("Statistics 1", verbatimTextOutput("data_StatisticsText1")),
                    tabPanel("Statistics 1", tableOutput("data_StatisticsText1_Table")),
                    tabPanel("Statistics 2", verbatimTextOutput("data_StatisticsText2")),
                  )),
@@ -361,7 +350,6 @@ shinyUI(
                                            sidebarPanel(width=3,
                                                         selectInput("altern", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
                                                         numericInput("LagOrderADF", label = "Lag",  min=0, value=12),
-                                                        #submitButton("Submit ==>"),
                                            ),
                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("test_ADF")),
                                          )),
@@ -375,7 +363,6 @@ shinyUI(
                                                         numericInput("lagorder", label = "Lag order for test:", min=0, value=5),
                                                         selectInput("typeBoxTest", label = "type", choices=c("Box-Pierce","Ljung-Box"),selected="Ljung-Box"),
                                                         
-                                                        #submitButton("Submit"),
                                            ),
                                            tabPanel("Ljung-Box lag(n) [Auto-corrélation des Erreurs]", verbatimTextOutput("testLBn")),
                                          )),
@@ -412,15 +399,13 @@ shinyUI(
                                                  numericInput("maxDs", label = "max.D",min=0,  value=1),
                                                  numericInput("maxQs", label = "max.Q", min=0, value=2),
                                                  numericInput("maxorder", label = "max.order[p+q+P+Q]", min=0, value=8),
-                                                 #submitButton("Submit ==>"),
                                     ),
                                     tabPanel("ARIMA Slow Model(Wait)", verbatimTextOutput("Pslow"), class="span7"),
                                   )),
                               
                     )), 
               ))),
-        
-      
+
         
         tabPanel("ARIMA[p,d,q][P,D,Q][s]",
                  fluidPage(
@@ -436,18 +421,14 @@ shinyUI(
                                              numericInput("ARIMAds", label = "D:",min=0,  value=0),
                                              numericInput("ARIMAqs", label = "Q:", min=0, value=0),
                                              selectInput("driftYN", label = "drift", choices=c("TRUE","FALSE"),selected="FALSE"),
-                                             #submitButton("Submit"),
                                 ),
                                 
                                 mainPanel(width=10,
-                                          
                                           tabsetPanel(
                                             tabPanel("ARIMA", plotOutput("Previsions_Plot_pdq", width=750, height = 580)),
                                             tabPanel("Model", verbatimTextOutput("model_ARIMApdq")), 
                                             tabPanel("Model with p-values", verbatimTextOutput("model_ARIMApdq_p_values")), 
-                                            
                                             tabPanel("ACF+PACF", plotOutput("plot_ACF_PACF_Res_pdq", width=600, height = 550)),
-                      
                                             tabPanel("unit Cercle", plotOutput("unit_Circle_pdq", width=750, height = 580)),
                                           ))
                               )),
@@ -455,9 +436,7 @@ shinyUI(
 
                      tabPanel("tests", 
                               tabsetPanel(
-                                
                                 tabPanel("Trend [Mann-Kendall]", verbatimTextOutput("testTrendMK2")),
-
                                 tabPanel("stationary [Augmented Dickey-Fuller]", 
                                          sidebarLayout(
                                            sidebarPanel(width=3,
@@ -468,11 +447,8 @@ shinyUI(
                                            ),
                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteARIMApdq")),
                                          )),
-                                
-                                
                                 tabPanel("KPSS", verbatimTextOutput("kpssTest2")),
                                 tabPanel("DF-GLS", verbatimTextOutput("test_DFGLS")),
-                                
                                 tabPanel("Ljung-Box lag(n)", br(),
                                          sidebarLayout(
                                            sidebarPanel(width=2,
