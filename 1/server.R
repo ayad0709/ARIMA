@@ -298,7 +298,6 @@ server <- function(input, output, session) {
   
   
 
-
 ##########  ##########  ##########  ##########  ##########  ##########  ########
 ########  ########  ########  ########  ########  ########  ########  ##########  
 #
@@ -333,7 +332,6 @@ server <- function(input, output, session) {
   })
   
 
- 
   # Observer to update the selectInput based on the frequency of data
   observe({
     # Ensure that 'input$time' has a value before proceeding
@@ -366,7 +364,6 @@ server <- function(input, output, session) {
   })
   
 
-  
   ########  ########  ########  ########  ########  ########  ########  ########
   #
   #                 For d[?] ( D[?]( log[?] (st) ) )
@@ -412,7 +409,6 @@ server <- function(input, output, session) {
     }
     return(myData)
   }
-  
   
 
   ########  ########  ########  ########  ########  ########  ########  ########
@@ -480,8 +476,7 @@ server <- function(input, output, session) {
     
     # Ensure the selected column data is numeric
     if(is.numeric(colData)) {
-      #stat.desc(colData )
-      
+
       # Compute descriptive statistics
       stats_output <- stat.desc(colData)
       
@@ -506,12 +501,11 @@ server <- function(input, output, session) {
     }
   })
   
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
-
- 
-
   
+  ########  ########  ########  ########  ########  ########  ########  ########
+  ########  ########  ########  ########  ########  ########  ########  ########
+
+
   # Output for the forecasting model based on the user's selection
   output$modelOutput <- renderPrint({
     req(input$Model)  # Ensure 'Select the Model' input is provided
@@ -539,6 +533,7 @@ server <- function(input, output, session) {
   #
   ########  ########  ########  ########  ########  ########  ########  ########
   ########  ########  ########  ########  ########  ########  ########  ########
+  
   
   output$tsPlot <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
@@ -572,7 +567,6 @@ server <- function(input, output, session) {
     req(tsData()) # Ensure tsData is not NULL
     
     ggtsdisplay(tsData(), plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
-    #ggtsdisplay(myData, plot.type = input$plot_type , main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y)
   })
   
   
@@ -638,8 +632,6 @@ server <- function(input, output, session) {
     log_st <- log(tsData())
     
     ggtsdisplay(log_st, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
-    
-    #ggtsdisplay(log_st, plot.type = input$plot_type , main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y)
   })
 
   
@@ -699,8 +691,6 @@ server <- function(input, output, session) {
     d1_St <- diff(tsData())
     
     ggtsdisplay(d1_St, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
-    
-    #ggtsdisplay(diff_st, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
   })
   
   
@@ -711,6 +701,7 @@ server <- function(input, output, session) {
     
     adf.test(d1_St, alternative =input$alternd1St, k=input$LagOrderADFd1St)
   })
+  
   
   ########  ########  ########  ########  ########  ########  ########  ########
   ########  ########  ########  ########  ########  ########  ########  ########
@@ -765,8 +756,6 @@ server <- function(input, output, session) {
     D1_St <- diff(tsData(), frequency)
     
     ggtsdisplay(D1_St, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
-    # add plot type
-    # ggtsdisplay(D1_St, plot.type = input$plot_type , main=input$Main_title, xlab=input$lab_x, ylab=input$lab_y)
   })
 
 
@@ -777,7 +766,6 @@ server <- function(input, output, session) {
     helpADF()
 
     adf.test(D1_St, alternative =input$alternDs1St, k=input$LagOrderADFDs1St)
-
   })
 
 
@@ -832,8 +820,6 @@ server <- function(input, output, session) {
     D1_log_St <- diff(log(tsData()), frequency)
     
     ggtsdisplay(D1_log_St , plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
-    
-    #ggtsdisplay(D1_log_St,plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
   })
   
   
@@ -898,8 +884,6 @@ server <- function(input, output, session) {
     d1_D1_log_St <- diff(diff(log(tsData()), frequency))
     
     ggtsdisplay(d1_D1_log_St, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
-    
-    # ggtsdisplay(d1_D1_log_St, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
   })
   
   output$teststationarited1Ds1LogSt <- renderPrint({
@@ -909,9 +893,7 @@ server <- function(input, output, session) {
     helpADF()
     
     adf.test(d1_D1_log_St, alternative =input$alternd1Ds1LogSt, k=input$LagOrderADFd1Ds1LogSt)
-    
   })
-  
   
   
   
@@ -961,9 +943,6 @@ server <- function(input, output, session) {
     d1_log_st <- diff(log(tsData()))
     
     ggtsdisplay(d1_log_st, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
-    
-    #ggtsdisplay(d1_log_st,plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
-    
   })
   
   
@@ -973,9 +952,7 @@ server <- function(input, output, session) {
     helpADF()
 
     adf.test(d1_log_st, alternative =input$alternd1LogSt, k=input$LagOrderADFd1LogSt)
-    
   })
-  
   
   
   
@@ -1061,7 +1038,6 @@ server <- function(input, output, session) {
     helpADF2()
     
     adf.test(myData, alternative =input$alternd2St, k=input$LagOrderADFd2St)
-    
   })
   
   
@@ -1165,7 +1141,6 @@ server <- function(input, output, session) {
     
     cat("\n")
     cat("\n")
-    
   })
   
   
@@ -1222,9 +1197,7 @@ server <- function(input, output, session) {
     fit
   })   
   
-  
-  
-  
+ 
   
 ########  ########  ########  ########  ########  ########  ########  ##########
 ########  ########  ########  ########  ########  ########  ########  ##########
@@ -1257,7 +1230,6 @@ server <- function(input, output, session) {
   
   
 
-  
   # Reactive expression to compute or fetch the forecast
   results <- reactive({
     key <- createCacheKey(input$file1, input$colNum,  input$Model,  input$frequency)
@@ -1276,6 +1248,7 @@ server <- function(input, output, session) {
 #   modeling , the result is accessed via : results()$modelOutput  
 #
 ####################################################################################
+
   
   modelisation <- function(  modelType,  forecastLength  ) {
     
@@ -1469,11 +1442,9 @@ server <- function(input, output, session) {
   
   # Render the equation from generateSarimaEquation function
   output$sarimaEquation <- renderUI({
-    # ... (your code to obtain AR, MA, seasonal AR, seasonal MA, and period)
     # Generate the equation
     fittedModel <- results()$modelOutput
-    
-    
+
     # Extracting the components
     arimaOrder <- fittedModel$arma
     
@@ -1493,18 +1464,12 @@ server <- function(input, output, session) {
     
     # Drift component
     drift <- ifelse(fittedModel$arma[9] == 1, fittedModel$coef[length(fittedModel$coef)], "No drift")
-    
-    
-    
+
     s_period <- input$frequency
-    
-    
-    
+
     latex_eq <- generateSarimaEquation(arParameters, maParameters, sarParameters, smaParameters, s_period)
     
     formula <- "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}"
-    
-    # HTML(paste0("<p>", formula, "</p>"))
     
     # Use MathJax to render the LaTeX equation in the UI
     
@@ -1524,10 +1489,6 @@ server <- function(input, output, session) {
   ########  ########  ########  ########  ########  ########  ########  ######## 
   
   output$testTrendMK <- renderPrint({
-    # fittedModel <- results()$modelOutput
-    # model_Residuals <- fittedModel$resid
-    # tsData <- tsData()
-    
     myData <- tsData()
     
     helpMK()
@@ -1537,10 +1498,6 @@ server <- function(input, output, session) {
   
   
   output$test_ADF <- renderPrint({
-    # fittedModel <- results()$modelOutput
-    # model_Residuals <- fittedModel$resid
-    # tsData <- tsData()
-    
     myData <- tsData()    
     helpADF()
 
@@ -1549,8 +1506,6 @@ server <- function(input, output, session) {
   
   
   output$test_KPSS <- renderPrint({
-    # fittedModel <- results()$modelOutput
-    # model_Residuals <- fittedModel$resid
     myData <- tsData()
     
     helpKPSS()
@@ -1560,14 +1515,12 @@ server <- function(input, output, session) {
   
   
   output$testLBn <- renderPrint({
-    # tsData <- tsData()
     fittedModel <- results()$modelOutput
     model_Residuals <- fittedModel$resid
     
     helpLjungBox()
 
     Box.test(model_Residuals, lag=input$lagorder, type=input$typeBoxTest)
-
   })
   
   
@@ -1605,9 +1558,7 @@ server <- function(input, output, session) {
     plot(Pacf(model_Residuals), lwd = 2)
   })
   
-  
-  
-  
+
   output$unitCercle <- renderPlot({
     fittedModel <- results()$modelOutput
     
@@ -1646,23 +1597,6 @@ server <- function(input, output, session) {
     })
   
   
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
   ########  ########  ########  ########  ########  ########  ########  ########
   ########  ########  ########  ########  ########  ########  ########  ########
   #
@@ -1671,8 +1605,7 @@ server <- function(input, output, session) {
   ########  ########  ########  ########  ########  ########  ########  ########
   ########  ########  ########  ########  ########  ########  ########  ######## 
   
-  
-  
+ 
   output$Previsions_Plot_pdq <- renderPlot({
     req(tsData())
     if (input$driftYN == "TRUE") {
@@ -1763,10 +1696,7 @@ server <- function(input, output, session) {
     }
     
     sarima_model <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
-    #fcst <- forecast(model_fit,h=input$length)
-    #plot(fcst, lwd = 2)
     plot(sarima_model) 
-    
   })
   
   ########  ########  ########  ########  ########  ########  ########  ########
@@ -1980,8 +1910,7 @@ server <- function(input, output, session) {
                main = userData$mainTitle, xlab = userData$xTitle)
   })
   
-  
-  
+
 
   output$sarima_eq_render_numerical <- renderUI({
     req(tsData())
@@ -2000,18 +1929,6 @@ server <- function(input, output, session) {
     
     withMathJax(helpText(eqs$numerical_one_line))
   })
-  
-  
-  
-  
- 
-  ########  ########  ########  ########  ########  ########  ########  ########
-  #
-  #
-  #
-  ########  ########  ########  ########  ########  ########  ########  ######## 
-  
-  
   
   
   
