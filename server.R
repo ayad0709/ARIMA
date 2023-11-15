@@ -65,7 +65,7 @@ server <- function(input, output, session) {
   extractSARIMAeqLaTeX <- function(model) {
     # Extract coefficients and terms
     coefs <- coef(model)
-    coefs <- round(coefs, 2)
+    coefs <- round(coefs, 3) # number of digits after comma
     p <- model$arma[1]  # AR order
     d <- model$arma[6]  # Degree of differencing
     q <- model$arma[2]  # MA order
@@ -73,6 +73,10 @@ server <- function(input, output, session) {
     D <- model$arma[7]  # Seasonal differencing
     Q <- model$arma[4]  # Seasonal MA order
     s <- model$arma[5]  # Seasonal period
+    
+    # Check for drift and include it in the equation
+    drift <- if ("drift" %in% names(coefs)) paste0(" + ", coefs["drift"], "t") else ""
+    
     
     # Create the symbolic LaTeX strings
     symbolic_ar <- paste0(" - \\phi_", 1:p, "L^", 1:p)
@@ -107,18 +111,32 @@ server <- function(input, output, session) {
     )
     
 
-    numerical_one_line <- paste0( 
-      "(", paste0("1", if (p > 0) paste0(numerical_ar, collapse = ""), collapse = ""), ")",
-      "(", paste0("1", if (P > 0) paste0(numerical_sar, collapse = ""), collapse = ""), ")",
+    
+    # Construct the one-line numerical equation
+    numerical_one_line <- paste0(
+      "(", paste0("1", if (p > 0) paste0(" - ", coefs[names(coefs) %in% paste0("ar", 1:p)], "L^{", 1:p, "}"), collapse = ""), ")",
+      "(", paste0("1", if (P > 0) paste0(" - ", coefs[names(coefs) %in% paste0("sar", 1:P)], "L^{", s * (1:P), "}"), collapse = ""), ")",
       "(1 - L)^{", d, "}",
       "(1 - L^{", s, "})^{", D, "}",
       " Y_t = ",
-      "(", paste0("1", if (q > 0) paste0(numerical_ma, collapse = ""), collapse = ""), ")",
-      "(", paste0("1", if (Q > 0) paste0(numerical_sma, collapse = ""), collapse = ""), ")",
-      " \\varepsilon_t"
+      "(", paste0("1", if (q > 0) paste0(" + ", coefs[names(coefs) %in% paste0("ma", 1:q)], "L^{", 1:q, "}"), collapse = ""), ")",
+      "(", paste0("1", if (Q > 0) paste0(" + ", coefs[names(coefs) %in% paste0("sma", 1:Q)], "L^{", s * (1:Q), "}"), collapse = ""), ")",
+      " \\varepsilon_t", drift
     )
     
+    # numerical_one_line <- paste0( 
+    #   "(", paste0("1", if (p > 0) paste0(numerical_ar, collapse = ""), collapse = ""), ")",
+    #   "(", paste0("1", if (P > 0) paste0(numerical_sar, collapse = ""), collapse = ""), ")",
+    #   "(1 - L)^{", d, "}",
+    #   "(1 - L^{", s, "})^{", D, "}",
+    #   " Y_t = ",
+    #   "(", paste0("1", if (q > 0) paste0(numerical_ma, collapse = ""), collapse = ""), ")",
+    #   "(", paste0("1", if (Q > 0) paste0(numerical_sma, collapse = ""), collapse = ""), ")",
+    #   " \\varepsilon_t"
+    # )
+    
     # Post-processing to handle double negatives and mixed signs
+    
     numerical_one_line <- gsub("- -", "+", numerical_one_line)  # Replace double negatives with a plus
     numerical_one_line <- gsub("\\+ -|\\-\\+", "-", numerical_one_line)  # Replace '+-' or '-+' with a single minus
 
@@ -132,7 +150,8 @@ server <- function(input, output, session) {
       numerical_one_line = numerical_one_line))
   }
   
- 
+  
+  
 ########  ##########  ##########  ##########  ##########  ##########  ##########   
 ########  ##########  ##########  ##########  ##########  ##########  ##########
 #
@@ -1984,8 +2003,10 @@ server <- function(input, output, session) {
   
   
   
+################################################################################ 
 
-  output$sarima_eq_render_numerical <- renderUI({
+  
+  output$sarima_eq_render_numerical_1 <- renderUI({
     req(tsData())
     myData <- tsData()
     
@@ -2004,8 +2025,28 @@ server <- function(input, output, session) {
     withMathJax(helpText(eqs$numerical_one_line))
   })
   
+
   
+################################################################################ 
   
+  output$sarima_eq_render_numerical <- renderUI({
+    req(tsData())
+    myData <- tsData()
+
+    if (input$driftYN == "TRUE") {
+      driftConsideration =TRUE
+    }
+    else {
+      driftConsideration =FALSE
+    }
+
+    sarima_model <-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
+
+    eqs <- extractSARIMAeqLaTeX(sarima_model)
+
+
+    withMathJax(helpText(eqs$numerical_one_line))
+  })
   
  
   ########  ########  ########  ########  ########  ########  ########  ########

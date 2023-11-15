@@ -362,7 +362,6 @@ shinyUI(
                                            sidebarPanel(width=3,
                                                         selectInput("altern", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
                                                         numericInput("LagOrderADF", label = "Lag",  min=0, value=12),
-                                                        #submitButton("Submit ==>"),
                                            ),
                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("test_ADF")),
                                          )),
@@ -375,8 +374,6 @@ shinyUI(
                                            sidebarPanel(width=2,
                                                         numericInput("lagorder", label = "Lag order for test:", min=0, value=5),
                                                         selectInput("typeBoxTest", label = "type", choices=c("Box-Pierce","Ljung-Box"),selected="Ljung-Box"),
-                                                        
-                                                        #submitButton("Submit"),
                                            ),
                                            tabPanel("Ljung-Box lag(n) [Auto-corrélation des Erreurs]", verbatimTextOutput("testLBn")),
                                          )),
@@ -413,7 +410,6 @@ shinyUI(
                                                  numericInput("maxDs", label = "max.D",min=0,  value=1),
                                                  numericInput("maxQs", label = "max.Q", min=0, value=2),
                                                  numericInput("maxorder", label = "max.order[p+q+P+Q]", min=0, value=8),
-                                                 #submitButton("Submit ==>"),
                                     ),
                                     tabPanel("ARIMA Slow Model(Wait)", verbatimTextOutput("Pslow"), class="span7"),
                                   )),
@@ -440,39 +436,31 @@ shinyUI(
                                 ),
                                 
                                 mainPanel(width=10,
-                                          
                                           tabsetPanel(
                                             tabPanel("ARIMA", plotOutput("Previsions_Plot_pdq", width=750, height = 580)),
                                             tabPanel("Model", verbatimTextOutput("model_ARIMApdq")), 
                                             tabPanel("Model with p-values", verbatimTextOutput("model_ARIMApdq_p_values")), 
-                                            
                                             tabPanel("ACF+PACF", plotOutput("plot_ACF_PACF_Res_pdq", width=600, height = 550)),
-                      
                                             tabPanel("unit Cercle", plotOutput("unit_Circle_pdq", width=750, height = 580)),
+                                            tabPanel("Model Equation", uiOutput("sarima_eq_render_numerical_1")),
                                           ))
                               )),
                      
 
                      tabPanel("tests", 
                               tabsetPanel(
-                                
                                 tabPanel("Trend [Mann-Kendall]", verbatimTextOutput("testTrendMK2")),
-
                                 tabPanel("stationary [Augmented Dickey-Fuller]", 
                                          sidebarLayout(
                                            sidebarPanel(width=3,
                                                         selectInput("altern2", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
                                                         
                                                         numericInput("LagOrderADF2", label = "Lag",  min=0, value=12),
-                                                        #submitButton("Submit ==>"),
                                            ),
                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteARIMApdq")),
                                          )),
-                                
-                                
                                 tabPanel("KPSS", verbatimTextOutput("kpssTest2")),
                                 tabPanel("DF-GLS", verbatimTextOutput("test_DFGLS")),
-                                
                                 tabPanel("Ljung-Box lag(n)", br(),
                                          sidebarLayout(
                                            sidebarPanel(width=2,
@@ -483,7 +471,6 @@ shinyUI(
                                          )),                             
                               )), 
                      
-
                      tabPanel("Residuals", 
                               tabsetPanel(
                                 tabPanel("Res.", plotOutput("chkResARIMApdq",width=830,height = 600)),
