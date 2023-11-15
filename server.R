@@ -118,6 +118,10 @@ server <- function(input, output, session) {
       " \\varepsilon_t"
     )
     
+    # Post-processing to handle double negatives and mixed signs
+    numerical_one_line <- gsub("- -", "+", numerical_one_line)  # Replace double negatives with a plus
+    numerical_one_line <- gsub("\\+ -|\\-\\+", "-", numerical_one_line)  # Replace '+-' or '-+' with a single minus
+
 
     # Add LaTeX delimiters for MathJax
     numerical_one_line <- paste0("$$ ", numerical_one_line, " $$")
@@ -1075,20 +1079,9 @@ server <- function(input, output, session) {
     
     # myData
     
-    model <- auto.arima(myData, trace = FALSE, allowdrift = TRUE)
+    model_dDLog <- auto.arima(myData, trace = FALSE, allowdrift = TRUE)
     
-    summary(model)
-
-    # # Print the ARIMA model order
-    # cat("Series: ", deparse(substitute(your_time_series_data)), "\n")
-    # cat(model$method, "\n\n")
-    # 
-    # cat("Coefficients:\n")
-    # print(model$coef)
-    # 
-    # cat("\nsigma^2 =", model$sigma2, ":  log likelihood =", logLik(model), "\n")
-    # cat("AIC=", AIC(model), "  AICc=", AICc(model), "  BIC=", BIC(model), "\n")
-    
+    summary(model_dDLog)
   }) 
   ########  ########  ########  ########  ########  ########  ########  ########
   ########  ########  ########  ########  ########  ########  ########  ########
