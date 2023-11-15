@@ -255,7 +255,7 @@ shinyUI(
                                            mainPanel(width=10,
                                                      
                                                      tabsetPanel(
-                                                       tabPanel("d?D?(log?(St))", plotOutput("d_D_Log_ts_Choice",width=750,height = 500 )),
+                                                       tabPanel("d?D?log?(St)", plotOutput("d_D_Log_ts_Choice",width=750,height = 500 )),
                                                        
                                                        #tabPanel("Ts Res.",plotOutput("difference2",width=750,height = 500)),
                                                        tabPanel("Plot",plotOutput("tsPlot_Choice",width=750,height = 500)),
@@ -263,9 +263,9 @@ shinyUI(
                                                        
                                                        tabPanel("ACF", plotOutput("difference2ACF",width=750,height = 500)),
                                                        tabPanel("PACF", plotOutput("difference2PACF",width=750,height = 500)),
-                                                       tabPanel("ACF + PACF", plotOutput("difference2ACFPACF",width=620,height = 500)),
+                                                       tabPanel("ACF+PACF", plotOutput("difference2ACFPACF",width=620,height = 500)),
                                                        
-                                                       tabPanel("stationary [ADF]", 
+                                                       tabPanel("stationary[ADF]", 
                                                                 sidebarLayout(
                                                                   sidebarPanel(width=3,
                                                                                selectInput("alternd2St", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
@@ -274,6 +274,7 @@ shinyUI(
                                                                   ),
                                                                   tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited2St")),
                                                                 )),
+                                                       tabPanel("ARIMA d?D?log?(St)", verbatimTextOutput("ARIMA_d_D_log" )),
                                                      )
                                            )
                                          )),
@@ -436,7 +437,6 @@ shinyUI(
                                              numericInput("ARIMAds", label = "D:",min=0,  value=0),
                                              numericInput("ARIMAqs", label = "Q:", min=0, value=0),
                                              selectInput("driftYN", label = "drift", choices=c("TRUE","FALSE"),selected="FALSE"),
-                                             #submitButton("Submit"),
                                 ),
                                 
                                 mainPanel(width=10,
@@ -478,8 +478,6 @@ shinyUI(
                                            sidebarPanel(width=2,
                                                         numericInput("lagorder1", label = "Lag order for test:", min=0, value=5),
                                                         selectInput("typeBoxTest1", label = "type", choices=c("Box-Pierce","Ljung-Box"),selected="Ljung-Box"),
-                                                        
-                                                        #submitButton("Submit"),
                                            ),
                                            tabPanel("Ljung-Box lag(n)", verbatimTextOutput("testLBnARIMApdq")),
                                          )),                             

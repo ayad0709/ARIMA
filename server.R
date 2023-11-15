@@ -1065,7 +1065,31 @@ server <- function(input, output, session) {
   })
   
   
-  
+  output$ARIMA_d_D_log <- renderPrint({
+    # expression to get myData
+    myData <- getMyData(tsData(),
+                        input$frequency,
+                        input$islog,
+                        input$d_n,
+                        input$DS_n)
+    
+    # myData
+    
+    model <- auto.arima(myData, trace = FALSE, allowdrift = TRUE)
+    
+    summary(model)
+
+    # # Print the ARIMA model order
+    # cat("Series: ", deparse(substitute(your_time_series_data)), "\n")
+    # cat(model$method, "\n\n")
+    # 
+    # cat("Coefficients:\n")
+    # print(model$coef)
+    # 
+    # cat("\nsigma^2 =", model$sigma2, ":  log likelihood =", logLik(model), "\n")
+    # cat("AIC=", AIC(model), "  AICc=", AICc(model), "  BIC=", BIC(model), "\n")
+    
+  }) 
   ########  ########  ########  ########  ########  ########  ########  ########
   ########  ########  ########  ########  ########  ########  ########  ########
   #
@@ -1647,21 +1671,6 @@ server <- function(input, output, session) {
   
   
 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
   
   ########  ########  ########  ########  ########  ########  ########  ########
   ########  ########  ########  ########  ########  ########  ########  ########
