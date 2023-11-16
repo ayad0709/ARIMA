@@ -78,6 +78,11 @@ server <- function(input, output, session) {
     drift <- if ("drift" %in% names(coefs)) paste0(" + ", coefs["drift"], "t") else ""
     
     
+    
+    ########  ##########  ##########  ##########  ##########  ##########  ##########   
+    
+    
+    
     # Create the symbolic LaTeX strings
     symbolic_ar <- paste0(" - \\phi_", 1:p, "L^", 1:p)
     symbolic_ma <- paste0(" + \\theta_", 1:q, "L^", 1:q)
@@ -94,6 +99,12 @@ server <- function(input, output, session) {
       "\\Theta_Q(L^S) = 1", if (Q > 0) paste0(symbolic_sma, collapse = "")
     )
     
+    
+    
+    ########  ##########  ##########  ##########  ##########  ##########  ##########   
+    
+    
+    
     numerical_ar <- paste0(" - ", coefs[names(coefs) %in% paste0("ar", 1:p)], "L^{", 1:p, "}")
     numerical_ma <- paste0(" + ", coefs[names(coefs) %in% paste0("ma", 1:q)], "L^{", 1:q, "}")
     numerical_sar <- paste0(" - ", coefs[names(coefs) %in% paste0("sar", 1:P)], "L^{", s * (1:P), "}")
@@ -109,8 +120,12 @@ server <- function(input, output, session) {
       "\\theta_q(L) = 1", if (q > 0) paste0(numerical_ma, collapse = ""), " \\\\ ",
       "\\Theta_Q(L^S) = 1", if (Q > 0) paste0(numerical_sma, collapse = "")
     )
-    
 
+    
+    
+    ########  ##########  ##########  ##########  ##########  ##########  ##########  
+    
+    
     
     # Construct the one-line numerical equation
     numerical_one_line <- paste0(
@@ -124,32 +139,221 @@ server <- function(input, output, session) {
       " \\varepsilon_t", drift
     )
     
-    # numerical_one_line <- paste0( 
-    #   "(", paste0("1", if (p > 0) paste0(numerical_ar, collapse = ""), collapse = ""), ")",
-    #   "(", paste0("1", if (P > 0) paste0(numerical_sar, collapse = ""), collapse = ""), ")",
-    #   "(1 - L)^{", d, "}",
-    #   "(1 - L^{", s, "})^{", D, "}",
-    #   " Y_t = ",
-    #   "(", paste0("1", if (q > 0) paste0(numerical_ma, collapse = ""), collapse = ""), ")",
-    #   "(", paste0("1", if (Q > 0) paste0(numerical_sma, collapse = ""), collapse = ""), ")",
-    #   " \\varepsilon_t"
-    # )
-    
     # Post-processing to handle double negatives and mixed signs
     
     numerical_one_line <- gsub("- -", "+", numerical_one_line)  # Replace double negatives with a plus
     numerical_one_line <- gsub("\\+ -|\\-\\+", "-", numerical_one_line)  # Replace '+-' or '-+' with a single minus
-
-
+    numerical_one_line <- gsub("\\(1)", "", numerical_one_line)  # Replace '+-' or '-+' with a single minus
+    
     # Add LaTeX delimiters for MathJax
     numerical_one_line <- paste0("$$ ", numerical_one_line, " $$")
+    
+    
+    
+    ########  ##########  ##########  ##########  ##########  ##########  ##########   
+    
+    
+    
+    # Create the complete numerical LaTeX string formatted with Y_t on the left side
+    numerical_one_line_Y_t <- paste0(
+      "Y_t = ", drift,
+      if (p > 0) paste0(" + ", paste0(coefs[names(coefs) %in% paste0("ar", 1:p)], "Y_{t-", 1:p, "}"), collapse = ""),
+      if (d > 0) paste0(" + (1-L)^{", d, "}Y_t"),
+      if (P > 0) paste0(" + ", paste0(coefs[names(coefs) %in% paste0("sar", 1:P)], "Y_{t-", s * (1:P), "}"), collapse = ""),
+      if (D > 0) paste0(" + (1-L^{", s, "})^{", D, "}Y_t"),
+      if (q > 0) paste0(" + ", paste0(coefs[names(coefs) %in% paste0("ma", 1:q)], "\\varepsilon_{t-", 1:q, "}"), collapse = ""),
+      if (Q > 0) paste0(" + ", paste0(coefs[names(coefs) %in% paste0("sma", 1:Q)], "\\varepsilon_{t-", s * (1:Q), "}"), collapse = ""),
+      " + \\varepsilon_t"
+    )
+    
+    numerical_one_line_Y_t <- gsub("- -", "+", numerical_one_line_Y_t)  # Replace double negatives with a plus
+    numerical_one_line_Y_t <- gsub("\\+ -|\\-\\+", "-", numerical_one_line_Y_t)  # Replace '+-' or '-+' with a single minus
+    # numerical_one_line_Y_t <- gsub("(1)", "", numerical_one_line_Y_t)  # Replace double negatives with a plus
+    
+    # Add LaTeX delimiters for MathJax
+    numerical_one_line_Y_t <- paste0("$$ ", numerical_one_line_Y_t, " $$")
+    
+    
+    ########  ##########  ##########  ##########  ##########  ##########  ##########   
+    
+    
+    
+    # Start building the right side of the equation
+    equation_right_side <- ""
+    
+    # Include AR, differencing, and seasonal AR terms
+    for (i in 1:p) {
+      equation_right_side <- paste(equation_right_side, ifelse(coefs[paste0("ar", i)] < 0, "-", "+"),
+                                   abs(coefs[paste0("ar", i)]), "y(t-", i, ") ", sep = "")
+    }
+    for (i in 1:d) {
+      equation_right_side <- paste(equation_right_side, "- \\Delta y(t-", i, ") ", sep = "")
+    }
+    for (i in 1:P) {
+      equation_right_side <- paste(equation_right_side, ifelse(coefs[paste0("sar", i)] < 0, "-", "+"),
+                                   abs(coefs[paste0("sar", i)]), "y(t-", i * s, ") ", sep = "")
+    }
+    
+    # Include MA and seasonal MA terms
+    for (i in 1:q) {
+      equation_right_side <- paste(equation_right_side, ifelse(coefs[paste0("ma", i)] < 0, "-", "+"),
+                                   abs(coefs[paste0("ma", i)]), "\\varepsilon(t-", i, ") ", sep = "")
+    }
+    for (i in 1:Q) {
+      equation_right_side <- paste(equation_right_side, ifelse(coefs[paste0("sma", i)] < 0, "-", "+"),
+                                   abs(coefs[paste0("sma", i)]), "\\varepsilon(t-", i * s, ") ", sep = "")
+    }
+    
+    # Combine left and right sides for the final equation
+    numerical_one_line_Y_t_2 <- paste0("y(t) = ", drift, " ", equation_right_side, "+ \\varepsilon(t)")
+    
+    # Correct the signs and remove leading plus
+    numerical_one_line_Y_t_2 <- gsub("\\+ -", "-", numerical_one_line_Y_t_2)
+    numerical_one_line_Y_t_2 <- gsub("--", "+", numerical_one_line_Y_t_2)
+    numerical_one_line_Y_t_2 <- gsub("^\\+ ", "", numerical_one_line_Y_t_2)       #  Arevoir
+    # numerical_one_line_Y_t_2 <- gsub("(1)", "*", numerical_one_line_Y_t_2)
+    
+    # Add LaTeX delimiters for MathJax
+    numerical_one_line_Y_t_2 <- paste0("$$ ", numerical_one_line_Y_t_2, " $$")
+    
+    
+    ########  ##########  ##########  ##########  ##########  ##########  ##########   
+    
+    
+    # Start building the right side of the equation
+    equation_right_side_full <- ""
+    
+    # Include AR terms
+    for (i in 1:p) {
+      equation_right_side_full <- paste(equation_right_side_full, ifelse(coefs[paste0("ar", i)] < 0, "-", "+"),
+                                        abs(coefs[paste0("ar", i)]), "y(t-", i, ") ", sep = "")
+    }
+    
+    # Include MA terms
+    for (i in 1:q) {
+      equation_right_side_full <- paste(equation_right_side_full, ifelse(coefs[paste0("ma", i)] < 0, "-", "+"),
+                                        abs(coefs[paste0("ma", i)]), "\\varepsilon(t-", i, ") ", sep = "")
+    }
+    
+    # Include Seasonal AR terms
+    for (i in 1:P) {
+      equation_right_side_full <- paste(equation_right_side_full, ifelse(coefs[paste0("sar", i)] < 0, "-", "+"),
+                                        abs(coefs[paste0("sar", i)]), "y(t-", i * s, ") ", sep = "")
+    }
+    
+    # Include Seasonal MA terms
+    for (i in 1:Q) {
+      equation_right_side_full <- paste(equation_right_side_full, ifelse(coefs[paste0("sma", i)] < 0, "-", "+"),
+                                        abs(coefs[paste0("sma", i)]), "\\varepsilon(t-", i * s, ") ", sep = "")
+    }
+    
+    # Combine left and right sides for the final equation
+    numerical_one_line_Y_t_full <- paste0("y(t) = ", equation_right_side_full, drift, " + \\varepsilon(t)")
+    
+    # Correct the signs and remove leading plus
+    numerical_one_line_Y_t_full <- gsub("\\+ -", "-", numerical_one_line_Y_t_full)
+    numerical_one_line_Y_t_full <- gsub("--", "+", numerical_one_line_Y_t_full)
+    numerical_one_line_Y_t_full <- gsub("^\\+ ", "", numerical_one_line_Y_t_full)
+    # numerical_one_line_Y_t_full <- gsub("(1)", "*", numerical_one_line_Y_t_full)
+    
+    # Add LaTeX delimiters for MathJax
+    numerical_one_line_Y_t_full <- paste0("$$ ", numerical_one_line_Y_t_full, " $$")
+    
+    
+    ########  ##########  ##########  ##########  ##########  ##########  ##########   
+    
+
     
     return(list(
       symbolic = symbolic_eq, 
       numerical = numerical_eq,
-      numerical_one_line = numerical_one_line))
+      numerical_one_line = numerical_one_line,
+      numerical_one_line_Y_t = numerical_one_line_Y_t,
+      numerical_one_line_Y_t_full = numerical_one_line_Y_t_full
+      ))
   }
   
+  
+  
+  
+  ########  ##########  ##########  ##########  ##########  ##########  ##########   
+  ########  ##########  ##########  ##########  ##########  ##########  ##########
+  
+  
+  
+  
+  
+  
+  
+  numerical_one_line_Y_t_2 <- function(model) {
+    # Extract coefficients and terms
+    coefs <- coef(model)
+    coefs <- round(coefs, 2)  # Round coefficients to 2 decimal places
+    p <- model$arma[1]  # AR order
+    d <- model$arma[6]  # Degree of differencing
+    q <- model$arma[2]  # MA order
+    P <- model$arma[3]  # Seasonal AR order
+    D <- model$arma[7]  # Seasonal differencing
+    Q <- model$arma[4]  # Seasonal MA order
+    s <- model$arma[5]  # Seasonal period
+    include_drift <- "drift" %in% names(coefs)
+    drift <- if (include_drift) paste0(" + ", coefs["drift"], "t") else ""
+    
+    # Start building the equation string
+    equation <- "Y_t = "
+    
+    # Add the AR terms
+    if (p > 0) {
+      ar_coefs <- coefs[names(coefs) %in% paste0("ar", 1:p)]
+      equation <- paste(equation, paste0(" + ", ar_coefs, "Y_{t-", 1:p, "}"), collapse = "")
+    }
+    
+    # Add differencing
+    if (d > 0) {
+      equation <- paste(equation, " - ", "(1 - L)^", d, "Y_t")
+    }
+    
+    # Add seasonal differencing
+    if (D > 0) {
+      equation <- paste(equation, " - ", "(1 - L^{", s, "})^", D, "Y_t")
+    }
+    
+    # Add the MA terms
+    if (q > 0) {
+      ma_coefs <- coefs[names(coefs) %in% paste0("ma", 1:q)]
+      equation <- paste(equation, paste0(" + ", ma_coefs, "\\varepsilon_{t-", 1:q, "}"), collapse = "")
+    }
+    
+    # Add the seasonal AR terms
+    if (P > 0) {
+      sar_coefs <- coefs[names(coefs) %in% paste0("sar", 1:P)]
+      equation <- paste(equation, paste0(" + ", sar_coefs, "Y_{t-", s * (1:P), "}"), collapse = "")
+    }
+    
+    # Add the seasonal MA terms
+    if (Q > 0) {
+      sma_coefs <- coefs[names(coefs) %in% paste0("sma", 1:Q)]
+      equation <- paste(equation, paste0(" + ", sma_coefs, "\\varepsilon_{t-", s * (1:Q), "}"), collapse = "")
+    }
+    
+    # Add the drift term if present
+    if (include_drift) {
+      equation <- paste(equation, drift)
+    }
+    
+    
+    # Add the error term
+    equation <- paste(equation, "+ \\varepsilon_t")
+    
+    # Add LaTeX delimiters for MathJax
+    equation <- paste0("$$ ", equation, " $$")
+    
+    return(equation)
+  }
+  
+  
+  ########  ##########  ##########  ##########  ##########  ##########  ##########   
+  ########  ##########  ##########  ##########  ##########  ##########  ##########
   
   
 ########  ##########  ##########  ##########  ##########  ##########  ##########   
@@ -2044,10 +2248,33 @@ server <- function(input, output, session) {
 
     eqs <- extractSARIMAeqLaTeX(sarima_model)
 
-
     withMathJax(helpText(eqs$numerical_one_line))
   })
   
+  
+  # render the equiation y(t) = ? y(t-1) + ? y(t-2) +...
+  output$sarima_eq_render_Y_t <- renderUI({
+    req(tsData())
+    myData <- tsData()
+    
+    if (input$driftYN == "TRUE") {
+      driftConsideration =TRUE
+    }
+    else {
+      driftConsideration =FALSE
+    }
+    
+    sarima_model <-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
+    
+    eqs <- extractSARIMAeqLaTeX(sarima_model)
+    
+    
+    
+    withMathJax(helpText(eqs$numerical_one_line_Y_t_full ))
+    
+    
+    #withMathJax(helpText(eqs$numerical_one_line_Y_t ))
+  })
  
   ########  ########  ########  ########  ########  ########  ########  ########
   #
