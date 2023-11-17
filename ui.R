@@ -31,18 +31,7 @@ package.check <- lapply(
 
 shinyUI(
   fluidPage(
-    # useMathJax(), # Uncomment if using useMathJax()
-    # tags$head(tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS_HTML")),
-    
-    # tags$head(
-    #   tags$script(src = "MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML", 
-    #               type = "text/javascript")
-    # ),
-    
-    # tags$head(tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js",
-    #                       type = "text/javascript",
-    #                       config = 'TeX-AMS-MML_HTMLorMML')),
-    
+
     tags$head(
       tags$script(type = "text/javascript", 
                   src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML")
@@ -76,7 +65,6 @@ shinyUI(
       uiOutput("dateColUI"),
       uiOutput("colNumUI"),
       uiOutput("monthUI"),
-      # uiOutput("yearInputUI"),
       uiOutput("timeInputUI"),
       uiOutput("modelSelectUI"),
       uiOutput("lengthInputUI"),
@@ -84,9 +72,6 @@ shinyUI(
       uiOutput("graphTypeUI"),
       br(),
       uiOutput("conditionalButtons"),
-      
-      # actionButton("submitBtn", "Submit"),
-      # actionButton("plotSettings", "Plot Settings")
     ),
     
     
@@ -186,7 +171,6 @@ shinyUI(
                               tabPanel("PACF", plotOutput("d1LogStPACFa",width=800,height = 500)),
                               tabPanel("ACF + PACF", plotOutput("d1LogStACFPACFa",width=620,height = 570)),
                               tabPanel("Ts Display", plotOutput("d1_log_ts_Display",width=900,height = 630 )),
-                              
                               tabPanel("stationary [ADF]", 
                                        sidebarLayout(
                                          sidebarPanel(width=3,
@@ -205,7 +189,6 @@ shinyUI(
                               tabPanel("PACF", plotOutput("DlogplotPACF",width=800,height = 500)),
                               tabPanel("ACF + PACF", plotOutput("DlogplotACFPACF",width=620,height = 570)),
                               tabPanel("Ts Display", plotOutput("Ds1_log_ts_Display",width=900,height = 630 )),
-                              
                               tabPanel("stationary [ADF]", 
                                        sidebarLayout(
                                          sidebarPanel(width=3,
@@ -224,7 +207,6 @@ shinyUI(
                               tabPanel("PACF", plotOutput("dDlogplotPACF",width=800,height = 500)),
                               tabPanel("ACF + PACF", plotOutput("dDlogplotACFPACF",width=620,height = 570)),
                               tabPanel("Ts Display", plotOutput("d1_Ds1_log_ts_Display",width=900,height = 630 )),
-                              
                               tabPanel("stationary [ADF]", 
                                        sidebarLayout(
                                          sidebarPanel(width=3,
@@ -247,24 +229,16 @@ shinyUI(
                                                         numericInput("d_n", label = "d :", min=0, value=0),
                                                         numericInput("DS_n", label = "D :",min=0,  value=0),
                                                         selectInput("islog", label = "log", choices=c("Yes","No"),selected="No"),
-                                                        #selectInput("plot_type", label = "Type", choices=c("partial", "histogram", "scatter", "spectrum"),selected="partial"),
                                                         br(),
-                                                        #submitButton("Submit"),
                                            ),
                                            
                                            mainPanel(width=10,
-                                                     
                                                      tabsetPanel(
                                                        tabPanel("d?D?log?(St)", plotOutput("d_D_Log_ts_Choice",width=750,height = 500 )),
-                                                       
-                                                       #tabPanel("Ts Res.",plotOutput("difference2",width=750,height = 500)),
                                                        tabPanel("Plot",plotOutput("tsPlot_Choice",width=750,height = 500)),
-                                                       
-                                                       
                                                        tabPanel("ACF", plotOutput("difference2ACF",width=750,height = 500)),
                                                        tabPanel("PACF", plotOutput("difference2PACF",width=750,height = 500)),
                                                        tabPanel("ACF+PACF", plotOutput("difference2ACFPACF",width=620,height = 500)),
-                                                       
                                                        tabPanel("stationary[ADF]", 
                                                                 sidebarLayout(
                                                                   sidebarPanel(width=3,
@@ -279,10 +253,6 @@ shinyUI(
                                            )
                                          )),
                               ))), 
-                   
-
-                   
-                   
                  )),
         
         
@@ -345,6 +315,8 @@ shinyUI(
                    tabsetPanel(
 
                    tabPanel("Model", verbatimTextOutput("autoForcast"), class="span7"),
+                   
+                   tabPanel("Model Equation", uiOutput("auto_SARIMA_eq_render_numerical")),
 
                    tabPanel("Forcaste", 
                             tabsetPanel(
@@ -353,39 +325,40 @@ shinyUI(
                             )), 
                    
 
-                     tabPanel("Tests", 
-                              tabsetPanel(
-                                tabPanel("Trend [Mann-Kendall]", verbatimTextOutput("testTrendMK")),
-                                
-                                tabPanel("stationary [Augmented Dickey-Fuller]", 
-                                         sidebarLayout(
-                                           sidebarPanel(width=3,
-                                                        selectInput("altern", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                        numericInput("LagOrderADF", label = "Lag",  min=0, value=12),
-                                           ),
-                                           tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("test_ADF")),
-                                         )),
-                                
-                                
-                                tabPanel("KPSS", verbatimTextOutput("test_KPSS")),
-                                
-                                tabPanel("Ljung-Box lag(n)", br(),
-                                         sidebarLayout(
-                                           sidebarPanel(width=2,
-                                                        numericInput("lagorder", label = "Lag order for test:", min=0, value=5),
-                                                        selectInput("typeBoxTest", label = "type", choices=c("Box-Pierce","Ljung-Box"),selected="Ljung-Box"),
-                                           ),
-                                           tabPanel("Ljung-Box lag(n) [Auto-corrélation des Erreurs]", verbatimTextOutput("testLBn")),
-                                         )),
-                              )), 
+                   
+                   tabPanel("Tests", 
+                            tabsetPanel(
+                              tabPanel("Trend [Mann-Kendall]", verbatimTextOutput("testTrendMK")),
+                              
+                              tabPanel("stationary [Augmented Dickey-Fuller]", 
+                                       sidebarLayout(
+                                         sidebarPanel(width=3,
+                                                      selectInput("altern", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
+                                                      numericInput("LagOrderADF", label = "Lag",  min=0, value=12),
+                                         ),
+                                         tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("test_ADF")),
+                                       )),
+                              
+                              
+                              tabPanel("KPSS", verbatimTextOutput("test_KPSS")),
+                              
+                              tabPanel("Ljung-Box lag(n)", br(),
+                                       sidebarLayout(
+                                         sidebarPanel(width=2,
+                                                      numericInput("lagorder", label = "Lag order for test:", min=0, value=5),
+                                                      selectInput("typeBoxTest", label = "type", choices=c("Box-Pierce","Ljung-Box"),selected="Ljung-Box"),
+                                         ),
+                                         tabPanel("Ljung-Box lag(n) [Auto-corrélation des Erreurs]", verbatimTextOutput("testLBn")),
+                                       )),
+                            )), 
                      
 
                      
-                     tabPanel("Residuals", 
-                              tabsetPanel(
-                                tabPanel("Res.", plotOutput("chkRes",width=830,height = 600)),
-                                tabPanel("Diag.", plotOutput("tsdiag",width=700,height = 600)),
-                              )), 
+                   tabPanel("Residuals", 
+                            tabsetPanel(
+                              tabPanel("Res.", plotOutput("chkRes",width=830,height = 600)),
+                              tabPanel("Diag.", plotOutput("tsdiag",width=700,height = 600)),
+                            )), 
                      
                      
                    tabPanel("ACF & PACF Res.", 
@@ -438,11 +411,20 @@ shinyUI(
                                 mainPanel(width=10,
                                           tabsetPanel(
                                             tabPanel("ARIMA", plotOutput("Previsions_Plot_pdq", width=750, height = 580)),
-                                            tabPanel("Model", verbatimTextOutput("model_ARIMApdq")), 
+                                            
+                                            tabPanel("Model & Equation", 
+                                                     tabsetPanel(
+                                                       tabPanel("Model", verbatimTextOutput("model_ARIMApdq")),
+                                                       tabPanel("Model Equation", uiOutput("sarima_eq_render_numerical_1")),
+                                                       # tabPanel("Model Equation", uiOutput("sarima_eq_render_Y_t")),
+                                                     )), 
+                                            
                                             tabPanel("Model with p-values", verbatimTextOutput("model_ARIMApdq_p_values")), 
                                             tabPanel("ACF+PACF", plotOutput("plot_ACF_PACF_Res_pdq", width=600, height = 550)),
                                             tabPanel("unit Cercle", plotOutput("unit_Circle_pdq", width=750, height = 580)),
-                                            tabPanel("Model Equation", uiOutput("sarima_eq_render_numerical_1")),
+                                            
+                                            
+                                            
                                           ))
                               )),
                      
@@ -478,13 +460,20 @@ shinyUI(
                                 tabPanel("Diag 2.", plotOutput("tsdiag2",width=700,height = 600)),
                                 tabPanel("Shapiro-Wilk", verbatimTextOutput("ShapiroTest")),
                               )),  
-                     
-                     
+
                      tabPanel("Forecasted", tableOutput("forecast_ARIMA_pdq")),
                      
                      tabPanel("Forecasted Plot", plotOutput("SARIMAforcastplot", width=830, height = 600)),
                   
                      tabPanel("Model Equation", uiOutput("sarima_eq_render_numerical")),
+                     
+                     # tabPanel("Model Equation", 
+                     #          tabsetPanel(
+                     #            tabPanel("Model Equation", uiOutput("sarima_eq_render_numerical")),
+                     #            tabPanel("Model Equation", uiOutput("sarima_eq_render_Y_t")),
+                     #          )), 
+                     
+                     
 
                    ))),  
         
