@@ -78,6 +78,11 @@ server <- function(input, output, session) {
     drift <- if ("drift" %in% names(coefs)) paste0(" + ", coefs["drift"], "t") else ""
     
     
+    # Define colors for different parts of the equation
+    color_ar = "red"
+    color_ma = "blue"
+    color_sar = "green"
+    color_sma = "orange"
     
     ########  ##########  ##########  ##########  ##########  ##########  ##########   
     
@@ -100,8 +105,99 @@ server <- function(input, output, session) {
     )
     
     
+    symbolic_eq <- paste0("$$ ", symbolic_eq, " $$")
     
-    ########  ##########  ##########  ##########  ##########  ##########  ##########   
+    
+    ########  ##########  ##########  ##########  ##########  ##########  ########## 
+    
+    # Create the symbolic LaTeX strings for AR, MA, SAR, and SMA components
+    symbolic_ar <- paste0(" - \\phi_", 1:p, "L^{", 1:p, "}")
+    symbolic_ma <- paste0(" + \\theta_", 1:q, "L^{", 1:q, "}")
+    symbolic_sar <- paste0(" - \\Phi_", 1:P, "L^{", s * (1:P), "}")
+    symbolic_sma <- paste0(" + \\Theta_", 1:Q, "L^{", s * (1:Q), "}")
+    
+    # Substitute the AR, MA, SAR, and SMA strings into the main equation
+    symbolic_eq2 <- paste0(
+      "\\phi_p(L)\\Phi_P(L^{", s, "})(1-L)^{", d, "}(1-L^{", s, "})^{", D, "} Y_t = ",
+      "\\theta_q(L)\\Theta_Q(L^{", s, "})\\varepsilon_t",
+      " \\\\ \\text{where} \\\\ ",
+      "\\phi_p(L) = 1", if (p > 0) paste0(symbolic_ar, collapse = ""), " \\\\ ",
+      "\\Phi_P(L^{", s, "}) = 1", if (P > 0) paste0(symbolic_sar, collapse = ""), " \\\\ ",
+      "\\theta_q(L) = 1", if (q > 0) paste0(symbolic_ma, collapse = ""), " \\\\ ",
+      "\\Theta_Q(L^{", s, "}) = 1", if (Q > 0) paste0(symbolic_sma, collapse = "")
+    )
+    
+    # Add LaTeX delimiters for MathJax
+    symbolic_eq2 <- paste0("$$ ", symbolic_eq2, " $$")
+    
+    ########  ##########  ##########  ##########  ##########  ##########  ########## 
+    
+
+    
+    
+    # Create the symbolic LaTeX strings for AR, MA, SAR, and SMA components
+    symbolic_ar <- paste0(" - \\phi_", 1:p, "L^{", 1:p, "}")
+    symbolic_ma <- paste0(" + \\theta_", 1:q, "L^{", 1:q, "}")
+    symbolic_sar <- paste0(" - \\Phi_", 1:P, "L^{", s * (1:P), "}")
+    symbolic_sma <- paste0(" + \\Theta_", 1:Q, "L^{", s * (1:Q), "}")
+    
+    # Combine the AR, MA, SAR, and SMA strings into the main equation
+    symbolic_eq3 <- paste0(
+      " \\\\ \\text{ } \\\\ ",
+      "\\phi_p(L)\\Phi_P(L^S)(1-L)^d(1-L^S)^D Y_t = ",
+      "\\theta_q(L)\\Theta_Q(L^S)\\varepsilon_t",
+      " \\\\ \\text{ } \\\\ ", 
+      " \\\\ \\text{-------------------------} \\\\ ",
+      " \\\\ \\text{ } \\\\ ", 
+      "\\phi_p(L)\\Phi_P(L^{", s, "})(1-L)^{", d, "}(1-L^{", s, "})^{", D, "} Y_t = ",
+      "\\theta_q(L)\\Theta_Q(L^{", s, "})\\varepsilon_t",
+      " \\\\ \\text{ } \\\\ ", 
+      " \\\\ \\text{-------------------------} \\\\ ",
+      " \\\\ \\text{ } \\\\ ", 
+      
+     
+      "(1", if (p > 0) paste0(symbolic_ar, collapse = ""), ")",
+      "(1", if (P > 0) paste0(symbolic_sar, collapse = ""), ")",
+      "(1 - L)^{", d, "}",
+      "(1 - L^{", s, "})^{", D, "}",
+      " Y_t = ",
+      "(1", if (q > 0) paste0(symbolic_ma, collapse = ""), ")",
+      "(1", if (Q > 0) paste0(symbolic_sma, collapse = ""), ")",
+      
+      
+      
+      " \\varepsilon_t",
+      " \\\\ \\text{ } \\\\ ", 
+      " \\\\ \\text{-------------------------} \\\\ ",
+      " \\\\ \\text{ } \\\\ ", " \\\\ \\text{ } \\\\ ",
+      "(", paste0("1", if (p > 0) paste0(" - ", coefs[names(coefs) %in% paste0("ar", 1:p)], "L^{", 1:p, "}"), collapse = ""), ")",
+      "(", paste0("1", if (P > 0) paste0(" - ", coefs[names(coefs) %in% paste0("sar", 1:P)], "L^{", s * (1:P), "}"), collapse = ""), ")",
+      "(1 - L)^{", d, "}",
+      "(1 - L^{", s, "})^{", D, "}",
+      " Y_t = ",
+      "(", paste0("1", if (q > 0) paste0(" + ", coefs[names(coefs) %in% paste0("ma", 1:q)], "L^{", 1:q, "}"), collapse = ""), ")",
+      "(", paste0("1", if (Q > 0) paste0(" + ", coefs[names(coefs) %in% paste0("sma", 1:Q)], "L^{", s * (1:Q), "}"), collapse = ""), ")",
+      " \\varepsilon_t", drift
+    )
+    
+    
+    # Post-processing to handle double negatives and mixed signs and other
+    
+    symbolic_eq3 <- gsub("- -", "+", symbolic_eq3)  # Replace double negatives with a plus
+    symbolic_eq3 <- gsub("\\+ -|\\-\\+", "-", symbolic_eq3)  # Replace '+-' or '-+' with a single minus
+    symbolic_eq3 <- gsub("\\(1)", "", symbolic_eq3)  # Delete '(1)' 
+    symbolic_eq3 <- gsub("\\}1", "\\}", symbolic_eq3)  #    L1 --->  L
+    symbolic_eq3 <- gsub("\\(1 - L)\\^\\{0}", "", symbolic_eq3)  #    (1 - L)^{0}   ---> empty
+    symbolic_eq3 <- gsub("\\(1 - L\\^\\{12})\\^\\{0}", "", symbolic_eq3)  #    (1 - L^{12})^{0}   ---> empty
+    
+    
+    symbolic_eq3 <- paste0("$$ ", symbolic_eq3, " $$")
+    
+    
+    
+    ########  ##########  ##########  ##########  ##########  ##########  ########## 
+    
+    
     
     
     # Create the numerical LaTeX strings
@@ -122,6 +218,8 @@ server <- function(input, output, session) {
     )
 
     
+    numerical_eq <- paste0("$$ ", numerical_eq, " $$")
+    
     ########  ##########  ##########  ##########  ##########  ##########  ##########  
     ########  ##########  ##########  ##########  ##########  ##########  ##########  
 
@@ -130,6 +228,9 @@ server <- function(input, output, session) {
     
     # Construct the one-line numerical equation
     numerical_one_line <- paste0(
+      " \\\\ \\text{ } \\\\ ",
+      " \\\\ \\text{ } \\\\ ",
+      " \\\\ \\text{ } \\\\ ",
       "(", paste0("1", if (p > 0) paste0(" - ", coefs[names(coefs) %in% paste0("ar", 1:p)], "L^{", 1:p, "}"), collapse = ""), ")",
       "(", paste0("1", if (P > 0) paste0(" - ", coefs[names(coefs) %in% paste0("sar", 1:P)], "L^{", s * (1:P), "}"), collapse = ""), ")",
       "(1 - L)^{", d, "}",
@@ -183,8 +284,12 @@ server <- function(input, output, session) {
     ########  ##########  ##########  ##########  ##########  ##########  ##########   
 
     
+
+    ########  ##########  ##########  ##########  ##########  ##########  ##########   
+
+    
     return(list(
-      symbolic = symbolic_eq, 
+      symbolic = symbolic_eq3, 
       numerical = numerical_eq,
       numerical_one_line = numerical_one_line,
       numerical_one_line_Y_t = numerical_one_line_Y_t
@@ -196,8 +301,80 @@ server <- function(input, output, session) {
   
   ########  ##########  ##########  ##########  ##########  ##########  ##########   
   ########  ##########  ##########  ##########  ##########  ##########  ##########
-
+  ########  ##########  ##########  ##########  ##########  ##########  ##########  
+  ########  ##########  ##########  ##########  ##########  ##########  ##########  
+  ########  ##########  ##########  ##########  ##########  ##########  ##########  
   
+  
+  
+  numerical_one_line_Y_t_2 <- function(model) {
+    # Extract coefficients and terms
+    coefs <- coef(model)
+    coefs <- round(coefs, 2)  # Round coefficients to 2 decimal places
+    p <- model$arma[1]  # AR order
+    d <- model$arma[6]  # Degree of differencing
+    q <- model$arma[2]  # MA order
+    P <- model$arma[3]  # Seasonal AR order
+    D <- model$arma[7]  # Seasonal differencing
+    Q <- model$arma[4]  # Seasonal MA order
+    s <- model$arma[5]  # Seasonal period
+    include_drift <- "drift" %in% names(coefs)
+    drift <- if (include_drift) paste0(" + ", coefs["drift"], "t") else ""
+    
+    # Start building the equation string
+    equation <- "Y_t = "
+    
+    # Add the AR terms
+    if (p > 0) {
+      ar_coefs <- coefs[names(coefs) %in% paste0("ar", 1:p)]
+      equation <- paste(equation, paste0(" + ", ar_coefs, "Y_{t-", 1:p, "}"), collapse = "")
+    }
+    
+    # Add differencing
+    if (d > 0) {
+      equation <- paste(equation, " - ", "(1 - L)^", d, "Y_t")
+    }
+    
+    # Add seasonal differencing
+    if (D > 0) {
+      equation <- paste(equation, " - ", "(1 - L^{", s, "})^", D, "Y_t")
+    }
+    
+    # Add the MA terms
+    if (q > 0) {
+      ma_coefs <- coefs[names(coefs) %in% paste0("ma", 1:q)]
+      equation <- paste(equation, paste0(" + ", ma_coefs, "\\varepsilon_{t-", 1:q, "}"), collapse = "")
+    }
+    
+    # Add the seasonal AR terms
+    if (P > 0) {
+      sar_coefs <- coefs[names(coefs) %in% paste0("sar", 1:P)]
+      equation <- paste(equation, paste0(" + ", sar_coefs, "Y_{t-", s * (1:P), "}"), collapse = "")
+    }
+    
+    # Add the seasonal MA terms
+    if (Q > 0) {
+      sma_coefs <- coefs[names(coefs) %in% paste0("sma", 1:Q)]
+      equation <- paste(equation, paste0(" + ", sma_coefs, "\\varepsilon_{t-", s * (1:Q), "}"), collapse = "")
+    }
+    
+    # Add the drift term if present
+    if (include_drift) {
+      equation <- paste(equation, drift)
+    }
+    
+    
+    # Add the error term
+    equation <- paste(equation, "+ \\varepsilon_t")
+    
+    # Add LaTeX delimiters for MathJax
+    equation <- paste0("$$ ", equation, " $$")
+    
+    return(equation)
+  }
+  
+  
+
   
 ########  ##########  ##########  ##########  ##########  ##########  ##########   
 ########  ##########  ##########  ##########  ##########  ##########  ##########
@@ -1131,8 +1308,6 @@ server <- function(input, output, session) {
     
     summary(model_dDLog)
   }) 
-  
-  
   ########  ########  ########  ########  ########  ########  ########  ########
   ########  ########  ########  ########  ########  ########  ########  ########
   #
@@ -1629,7 +1804,7 @@ server <- function(input, output, session) {
   forecastCache_autoARIMA <- reactiveValues()
   
   # Function to create a unique key based on input parameters
-  createCacheKey_autoARIMA <- function(file, freq, model, col,  v_p, v_d, v_q, vP, vD, VQ ) {
+  createCacheKey_autoARIMA <- function(file, freq, model, col,  v_p, v_d, v_q, vP, vD, VQ, drift ) {
     # Check if the file input is valid
     if (is.null(file) || !is.data.frame(file) || nrow(file) == 0  ) {
       return(NULL)
@@ -1641,16 +1816,17 @@ server <- function(input, output, session) {
     if (is.null(col) || is.null(model)) {
       return(NULL)
     }
+    
  paste0(fileName, "_", fileModTime, "_", 
         as.character(col), "_", as.character(model), 
         "_", as.character(freq), "_", as.character(v_p), 
         as.character(v_d), as.character(v_q), as.character(vP), 
-        as.character(vD), as.character(VQ))  }
+        as.character(vD), as.character(VQ), as.character(drift))  }
   
   
   # Reactive expression to compute or fetch the forecast
-  results_autoARIMA <- reactive({
-    key <- createCacheKey_autoARIMA(input$file1, input$frequency , input$Model,  input$colNum, input$ARIMAp, input$ARIMAd, input$ARIMAq, input$ARIMAps, input$ARIMAds, input$ARIMAqs )
+  results_ARIMA_pdPD_drifr <- reactive({
+    key <- createCacheKey_autoARIMA(input$file1, input$frequency , input$Model,  input$colNum, input$ARIMAp, input$ARIMAd, input$ARIMAq, input$ARIMAps, input$ARIMAds, input$ARIMAqs, input$driftYN )
     if (!is.null(forecastCache_autoARIMA[[key]])) {
       forecastCache_autoARIMA[[key]]
     } else {
@@ -1691,8 +1867,17 @@ server <- function(input, output, session) {
   
   
   
+  
+  
+  
+  
   ####################################################################################
-
+  ####################################################################################
+  ####################################################################################
+  ####################################################################################
+  ####################################################################################
+  ####################################################################################
+  
   
   output$Previsions_Plot_pdq <- renderPlot({
     req(tsData())
@@ -1705,7 +1890,7 @@ server <- function(input, output, session) {
     
     myData <- tsData()    
     
-    sarima_model <- results_autoARIMA()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
     # sarima_model<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
    
      fcst <- forecast(sarima_model,h=input$length)
@@ -1725,7 +1910,7 @@ server <- function(input, output, session) {
     
     myData <- tsData()    
     
-    sarima_model <- results_autoARIMA()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
     # sarima_model <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
 
     sarima_model
@@ -1743,7 +1928,7 @@ server <- function(input, output, session) {
     
     myData <- tsData()    
 
-    sarima_model <- results_autoARIMA()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
     # sarima_model <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
     
     cat("............................................................................\n") 
@@ -1770,7 +1955,7 @@ server <- function(input, output, session) {
       driftConsideration =FALSE
     }
     
-    sarima_model <- results_autoARIMA()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
     # sarima_model <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
 
     acf2(sarima_model$residuals, lwd = 3 , main = userData$mainTitle) 
@@ -1788,7 +1973,7 @@ server <- function(input, output, session) {
       driftConsideration =FALSE
     }
     
-    sarima_model <- results_autoARIMA()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
     # sarima_model <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
 
     plot(sarima_model) 
@@ -1855,7 +2040,7 @@ server <- function(input, output, session) {
       driftConsideration =FALSE
     }
     
-    sarima_model <- results_autoARIMA()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
     # sarima_model <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
     
     helpLjungBox()
@@ -1885,7 +2070,7 @@ server <- function(input, output, session) {
       driftConsideration =FALSE
     }
     
-    sarima_model <- results_autoARIMA()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
     # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
     
     checkresiduals(sarima_model)
@@ -1904,7 +2089,7 @@ server <- function(input, output, session) {
       driftConsideration =FALSE
     }
     
-    sarima_model <- results_autoARIMA()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
     # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
     
     ggtsdiag(sarima_model) 
@@ -1925,7 +2110,7 @@ server <- function(input, output, session) {
       driftConsideration =FALSE
     }
     
-    sarima_model <- results_autoARIMA()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
     # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
    
      qqnorm(resid(sarima_model), main = "Normal Q-Q Plot, Residual", col = "darkgrey")
@@ -1946,7 +2131,7 @@ server <- function(input, output, session) {
     }
     
     
-    sarima_model <- results_autoARIMA()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
     # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
     
     ResudialData = resid(sarima_model)
@@ -1957,11 +2142,13 @@ server <- function(input, output, session) {
     cat(" (H0) states that the variable is normally distributed.                   \n")
     cat(" (H1) states that the variable is NOT normally distributed.               \n")
     cat("..........................................................................\n") 
-    cat(" If p ≤ 0.05: then the null hypothesis can be rejected                    \n")
-    cat("              (i.e. the variable is NOT normally distributed).            \n")
-    cat(" If p > 0.05: then the null hypothesis cannot be rejected                 \n")
-    cat("              (i.e. the variable MAY BE normally distributed).            \n")
+    csr("Decision Rule:                                                             ")
+    cat(" If p ≤ 0.05: Reject the null hypothesis.                                \n")
+    cat("              (i.e. the data is NOT normally distributed).               \n")
+    cat(" If p > 0.05: Fail to reject the null hypothesis.                         \n")
+    cat("              (i.e. the data MAY BE normally distributed).                \n")
     cat("..........................................................................\n") 
+    
     
     shapiro.test(ResudialData)
   })
@@ -1985,7 +2172,7 @@ server <- function(input, output, session) {
     }
     
     
-    sarima_model <- results_autoARIMA()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
     # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
     
     pred <- forecast(sarima_model, h=input$length)
@@ -2010,7 +2197,7 @@ server <- function(input, output, session) {
       nodriftConsideration =TRUE
     }
     
-    # Keep as it is , I didnt use "sarima_model <- results_autoARIMA()$modelOutput" because the function is different , its not auto.arima
+    # Keep as it is , I didnt use "sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput" because the function is different , its not auto.arima
     forecast <- sarima.for(myData, n.ahead = input$length,
                p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq,
                P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs,
@@ -2035,12 +2222,12 @@ server <- function(input, output, session) {
       driftConsideration =FALSE
     }
     
-    sarima_model <- results_autoARIMA()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
     # sarima_model <-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
     
     eqs <- extractSARIMAeqLaTeX(sarima_model)
     
-    withMathJax(helpText(eqs$numerical_one_line))
+    withMathJax(helpText(eqs$symbolic))
   })  
   
   
@@ -2058,12 +2245,12 @@ server <- function(input, output, session) {
       driftConsideration =FALSE
     }
     
-    sarima_model <- results_autoARIMA()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
     # sarima_model <-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
 
     eqs <- extractSARIMAeqLaTeX(sarima_model)
 
-    withMathJax(helpText(eqs$numerical_one_line))
+    withMathJax(helpText(eqs$symbolic))
   })
   
 
@@ -2083,7 +2270,18 @@ server <- function(input, output, session) {
     withMathJax(helpText(eqs$numerical_one_line))
   })
   
-
+  
+  # Output the symbolic model equation in autoARIMA
+  
+  output$auto_SARIMA_symbolic <- renderUI({
+    req(tsData())
+    # get the model
+    fittedModel <- results()$modelOutput
+    
+    eqs <- extractSARIMAeqLaTeX(fittedModel)
+    
+    withMathJax(helpText(eqs$symbolic))
+  })
   
   
   ################################################################################ 
@@ -2103,7 +2301,7 @@ server <- function(input, output, session) {
       driftConsideration =FALSE
     }
     
-    sarima_model <- results_autoARIMA()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
     # sarima_model <-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
     
     eqs <- extractSARIMAeqLaTeX(sarima_model)
@@ -2112,6 +2310,90 @@ server <- function(input, output, session) {
     #withMathJax(helpText(eqs$numerical_one_line_Y_t ))
   })
  
+  
+  
+
+  
+  
+  
+  
+  
+  
+  ########  ########  ########  ########  ########  ########  ########  ########
+  #
+  #
+  #
+  ########  ########  ########  ########  ########  ########  ########  ######## 
+  
+
+
+  
+  output$testoutput1 <- renderPrint({
+    cat(".......................................................................\n")
+    cat("                            test                                       \n")
+    cat(".......................................................................\n")
+    
+    fittedModel <- results()$modelOutput
+    
+    # Extracting the components
+    arimaOrder <- fittedModel$arma
+    
+    # AR components
+    arOrder <- arimaOrder[1]
+    arParameters <- fittedModel$coef[1:arOrder]
+    
+    # MA components
+    maOrder <- arimaOrder[6]
+    maParameters <- fittedModel$coef[(arOrder + 1):(arOrder + maOrder)]
+    
+    # Seasonal components
+    sarOrder <- arimaOrder[2]
+    sarParameters <- fittedModel$coef[(arOrder + maOrder + 1):(arOrder + maOrder + sarOrder)]
+    smaOrder <- arimaOrder[7]
+    smaParameters <- fittedModel$coef[(arOrder + maOrder + sarOrder + 1):(arOrder + maOrder + sarOrder + smaOrder)]
+    
+    # Drift component
+    drift <- ifelse(fittedModel$arma[9] == 1, fittedModel$coef[length(fittedModel$coef)], "No drift")
+    
+    
+    
+    sarParameters
+    
+    
+    
+    # req(input$file1)
+    # req(input$colNum)
+    # req(input$frequency)
+    # req(input$dateCol)
+    # req(input$Model)
+    # 
+    # 
+    # df <- read_excel(input$file1$datapath)
+    # date_col <- as.Date(df[[input$dateCol]])
+    # starting_date <- min(date_col, na.rm = TRUE)
+    # 
+    # df <- data()
+    # 
+    # df[[input$dateCol]] <- as.Date(df[[input$dateCol]])
+    # #df[[input$dateCol]] <- format(as.Date(df[[input$dateCol]]), "%d/%m/%Y")
+    # 
+    # date_col <- df[[input$dateCol]]
+    # 
+    # starting_date <- min(date_col, na.rm = TRUE)
+    # 
+    # start_day <- day(starting_date)
+    # start_month <- month(starting_date)
+    # start_year <- year(starting_date)
+    # 
+    # model <- input$Model
+    
+    # tsData()
+    
+    # cat(model)
+    
+
+  })
+  
   
   
 
