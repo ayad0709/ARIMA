@@ -1825,7 +1825,7 @@ server <- function(input, output, session) {
   
   
   # Reactive expression to compute or fetch the forecast
-  results_ARIMA_pdPD_drifr <- reactive({
+  results_ARIMA_pdPD_drift <- reactive({
     key <- createCacheKey_autoARIMA(input$file1, input$frequency , input$Model,  input$colNum, input$ARIMAp, input$ARIMAd, input$ARIMAq, input$ARIMAps, input$ARIMAds, input$ARIMAqs, input$driftYN )
     if (!is.null(forecastCache_autoARIMA[[key]])) {
       forecastCache_autoARIMA[[key]]
@@ -1890,7 +1890,7 @@ server <- function(input, output, session) {
     
     myData <- tsData()    
     
-    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
     # sarima_model<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
    
      fcst <- forecast(sarima_model,h=input$length)
@@ -1910,7 +1910,7 @@ server <- function(input, output, session) {
     
     myData <- tsData()    
     
-    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
     # sarima_model <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
 
     sarima_model
@@ -1928,7 +1928,7 @@ server <- function(input, output, session) {
     
     myData <- tsData()    
 
-    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
     # sarima_model <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
     
     cat("............................................................................\n") 
@@ -1955,7 +1955,7 @@ server <- function(input, output, session) {
       driftConsideration =FALSE
     }
     
-    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
     # sarima_model <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
 
     acf2(sarima_model$residuals, lwd = 3 , main = userData$mainTitle) 
@@ -1973,7 +1973,7 @@ server <- function(input, output, session) {
       driftConsideration =FALSE
     }
     
-    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
     # sarima_model <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
 
     plot(sarima_model) 
@@ -2031,16 +2031,9 @@ server <- function(input, output, session) {
   
   output$testLBnARIMApdq <- renderPrint({
     req(tsData())
-    myData <- tsData()
+
     
-    if (input$driftYN == "TRUE") {
-      driftConsideration =TRUE
-    }
-    else {
-      driftConsideration =FALSE
-    }
-    
-    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
     # sarima_model <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
     
     helpLjungBox()
@@ -2061,16 +2054,9 @@ server <- function(input, output, session) {
 
   output$chkResARIMApdq <- renderPlot({
     req(tsData())
-    myData <- tsData()
+
     
-    if (input$driftYN == "TRUE") {
-      driftConsideration =TRUE
-    }
-    else {
-      driftConsideration =FALSE
-    }
-    
-    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
     # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
     
     checkresiduals(sarima_model)
@@ -2080,16 +2066,9 @@ server <- function(input, output, session) {
   
   output$tsdiagARIMApdq <- renderPlot({
     req(tsData())
-    myData <- tsData()
+
     
-    if (input$driftYN == "TRUE") {
-      driftConsideration =TRUE
-    }
-    else {
-      driftConsideration =FALSE
-    }
-    
-    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
     # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
     
     ggtsdiag(sarima_model) 
@@ -2101,16 +2080,8 @@ server <- function(input, output, session) {
   
   output$tsdiag2 <- renderPlot({
     req(tsData())
-    myData <- tsData()
     
-    if (input$driftYN == "TRUE") {
-      driftConsideration =TRUE
-    }
-    else {
-      driftConsideration =FALSE
-    }
-    
-    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
     # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
    
      qqnorm(resid(sarima_model), main = "Normal Q-Q Plot, Residual", col = "darkgrey")
@@ -2130,11 +2101,10 @@ server <- function(input, output, session) {
       driftConsideration =FALSE
     }
     
-    
-    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
     # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
     
-    ResudialData = resid(sarima_model)
+    
     cat("..........................................................................\n") 
     cat(" The Shapiro-Wilk test is a statistical test used to check if             \n")
     cat(" a continuous variable follows a normal distribution.                     \n")
@@ -2142,14 +2112,14 @@ server <- function(input, output, session) {
     cat(" (H0) states that the variable is normally distributed.                   \n")
     cat(" (H1) states that the variable is NOT normally distributed.               \n")
     cat("..........................................................................\n") 
-    csr("Decision Rule:                                                             ")
+    cat("Decision Rule:                                                             ")
     cat(" If p ≤ 0.05: Reject the null hypothesis.                                \n")
     cat("              (i.e. the data is NOT normally distributed).               \n")
     cat(" If p > 0.05: Fail to reject the null hypothesis.                         \n")
     cat("              (i.e. the data MAY BE normally distributed).                \n")
     cat("..........................................................................\n") 
     
-    
+    ResudialData = resid(sarima_model)
     shapiro.test(ResudialData)
   })
   
@@ -2162,17 +2132,9 @@ server <- function(input, output, session) {
   
   output$forecast_ARIMA_pdq <- renderTable({
     req(tsData())
-    myData <- tsData()
+
     
-    if (input$driftYN == "TRUE") {
-      driftConsideration =TRUE
-    }
-    else {
-      driftConsideration =FALSE
-    }
-    
-    
-    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
     # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
     
     pred <- forecast(sarima_model, h=input$length)
@@ -2197,7 +2159,7 @@ server <- function(input, output, session) {
       nodriftConsideration =TRUE
     }
     
-    # Keep as it is , I didnt use "sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput" because the function is different , its not auto.arima
+    # Keep as it is , I didnt use "sarima_model <- results_ARIMA_pdPD_drift()$modelOutput" because the function is different , its not auto.arima
     forecast <- sarima.for(myData, n.ahead = input$length,
                p = input$ARIMAp, d = input$ARIMAd, q = input$ARIMAq,
                P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs,
@@ -2213,16 +2175,8 @@ server <- function(input, output, session) {
   
   output$sarima_eq_render_numerical <- renderUI({
     req(tsData())
-    myData <- tsData()
-    
-    if (input$driftYN == "TRUE") {
-      driftConsideration =TRUE
-    }
-    else {
-      driftConsideration =FALSE
-    }
-    
-    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
+
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
     # sarima_model <-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
     
     eqs <- extractSARIMAeqLaTeX(sarima_model)
@@ -2236,16 +2190,8 @@ server <- function(input, output, session) {
   
   output$sarima_eq_render_numerical_1 <- renderUI({
     req(tsData())
-    myData <- tsData()
-    
-    if (input$driftYN == "TRUE") {
-      driftConsideration =TRUE
-    }
-    else {
-      driftConsideration =FALSE
-    }
-    
-    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
+
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
     # sarima_model <-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
 
     eqs <- extractSARIMAeqLaTeX(sarima_model)
@@ -2301,7 +2247,7 @@ server <- function(input, output, session) {
       driftConsideration =FALSE
     }
     
-    sarima_model <- results_ARIMA_pdPD_drifr()$modelOutput
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
     # sarima_model <-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
     
     eqs <- extractSARIMAeqLaTeX(sarima_model)
