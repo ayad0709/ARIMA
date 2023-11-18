@@ -423,7 +423,7 @@ shinyUI(
                                                      tabsetPanel(
                                                        tabPanel("Model", verbatimTextOutput("model_ARIMApdq")),
                                                        tabPanel("Model Equation", uiOutput("sarima_eq_render_numerical_1")),
-                                                       tabPanel("Model Equation", uiOutput("sarima_eq_render_Y_t")),
+                                                       # tabPanel("Model Equation", uiOutput("sarima_eq_render_Y_t")),
                                                      )), 
                                             
                                             tabPanel("Model with p-values", verbatimTextOutput("model_ARIMApdq_p_values")), 
