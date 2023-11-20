@@ -8,8 +8,8 @@ server <- function(input, output, session) {
   
   # Reactive expression to read data from the file
   data <- reactive({
-    req(input$file1)
-    inFile <- input$file1
+    req(input$fileData)
+    inFile <- input$fileData
     
     if (is.null(inFile)) {
       return(NULL)
@@ -41,7 +41,7 @@ server <- function(input, output, session) {
   
   # Reactive expression to extract the selected column
   selected_column_data <- reactive({
-    req(input$file1, input$colNum)
+    req(input$fileData, input$colNum)
     df <- data()
     colData <- df[[as.numeric(input$colNum)]]
     if (!is.numeric(colData)) {
@@ -131,31 +131,42 @@ server <- function(input, output, session) {
     symbolic_eq2 <- paste0("$$ ", symbolic_eq2, " $$")
     
     ########  ##########  ##########  ##########  ##########  ##########  ########## 
+    # model_Help <- paste0("
+    #                      
+    #                    &(1 - \sum_{i=1}^{p} \phi_i L^i) & \text{ represents the non-seasonal AR component.} \\\\
+    #                   &(1 - \sum_{j=1}^{P} \Phi_j L^{jS}) & \text{ represents the seasonal AR component.} \\\\
+    #                   &(1 - L)^d & \text{ represents the non-seasonal differencing.} \\\\
+    #                   &(1 - L^S)^D & \text{ represents the seasonal differencing.} \\\\
+    #                   &Y_t & \text{ is the time series.} \\\\
+    #                   &c & \text{ is a constant.} \\\\
+    #                   &(1 + \sum_{i=1}^{q} \theta_i L^i) & \text{ represents the non-seasonal MA component.} \\\\
+    #                   &(1 + \sum_{j=1}^{Q} \Theta_j L^{jS}) & \text{ represents the seasonal MA component.} \\\\
+    #                   &\varepsilon_t & \text{ is the error term.} \\\\
+    #                   &\delta t & \text{ represents the drift component.}
+    #                      
+    #                      ")
+    # 
+    # model_Help <- paste0("$$ ", model_Help, " $$")
+    
+    
+    ########  ##########  ##########  ##########  ##########  ##########  ########## 
     
 
-    
-    
-    # Create the symbolic LaTeX strings for AR, MA, SAR, and SMA components
-    symbolic_ar <- paste0(" - \\phi_", 1:p, "L^{", 1:p, "}")
-    symbolic_ma <- paste0(" + \\theta_", 1:q, "L^{", 1:q, "}")
-    symbolic_sar <- paste0(" - \\Phi_", 1:P, "L^{", s * (1:P), "}")
-    symbolic_sma <- paste0(" + \\Theta_", 1:Q, "L^{", s * (1:Q), "}")
-    
     # Combine the AR, MA, SAR, and SMA strings into the main equation
     symbolic_eq3 <- paste0(
-      " \\\\ \\text{ } \\\\ ",
-      "\\phi_p(L)\\Phi_P(L^S)(1-L)^d(1-L^S)^D Y_t = ",
-      "\\theta_q(L)\\Theta_Q(L^S)\\varepsilon_t",
-      " \\\\ \\text{ } \\\\ ", 
-      " \\\\ \\text{-------------------------} \\\\ ",
-      " \\\\ \\text{ } \\\\ ", 
-      "\\phi_p(L)\\Phi_P(L^{", s, "})(1-L)^{", d, "}(1-L^{", s, "})^{", D, "} Y_t = ",
-      "\\theta_q(L)\\Theta_Q(L^{", s, "})\\varepsilon_t",
-      " \\\\ \\text{ } \\\\ ", 
-      " \\\\ \\text{-------------------------} \\\\ ",
-      " \\\\ \\text{ } \\\\ ", 
+ 
+      "\\phi_p(L)\\Phi_P(L^S)(1-L)^d(1-L^S)^D Y_t = ","\\theta_q(L)\\Theta_Q(L^S)\\varepsilon_t", "+ \\delta t",
       
-     
+      " \\\\ \\text{------------} \\\\ ",
+
+       "(1 - \\sum_{i=1}^{p} \\phi_i L^i)(1 - \\sum_{j=1}^{P} \\Phi_j L^{jS}) (1 - L)^d (1 - L^S)^D Y_t = (1 + \\sum_{i=1}^{q} \\theta_i L^i)(1 + \\sum_{j=1}^{Q} \\Theta_j L^{jS}) \\varepsilon_t + \\delta t",
+      
+      # " \\\\ \\text{------------} \\\\ ",
+      # 
+      # "\\phi_p(L)\\Phi_P(L^{", s, "})(1-L)^{", d, "}(1-L^{", s, "})^{", D, "} Y_t = ","\\theta_q(L)\\Theta_Q(L^{", s, "})\\varepsilon_t", drift,
+      
+      " \\\\ \\text{------------} \\\\ ",
+
       "(1", if (p > 0) paste0(symbolic_ar, collapse = ""), ")",
       "(1", if (P > 0) paste0(symbolic_sar, collapse = ""), ")",
       "(1 - L)^{", d, "}",
@@ -163,13 +174,9 @@ server <- function(input, output, session) {
       " Y_t = ",
       "(1", if (q > 0) paste0(symbolic_ma, collapse = ""), ")",
       "(1", if (Q > 0) paste0(symbolic_sma, collapse = ""), ")",
+      " \\varepsilon_t",drift,
       
-      
-      
-      " \\varepsilon_t",
-      " \\\\ \\text{ } \\\\ ", 
-      " \\\\ \\text{-------------------------} \\\\ ",
-      " \\\\ \\text{ } \\\\ ", " \\\\ \\text{ } \\\\ ",
+      " \\\\ \\text{------------} \\\\ ",
       "(", paste0("1", if (p > 0) paste0(" - ", coefs[names(coefs) %in% paste0("ar", 1:p)], "L^{", 1:p, "}"), collapse = ""), ")",
       "(", paste0("1", if (P > 0) paste0(" - ", coefs[names(coefs) %in% paste0("sar", 1:P)], "L^{", s * (1:P), "}"), collapse = ""), ")",
       "(1 - L)^{", d, "}",
@@ -187,6 +194,7 @@ server <- function(input, output, session) {
     symbolic_eq3 <- gsub("\\+ -|\\-\\+", "-", symbolic_eq3)  # Replace '+-' or '-+' with a single minus
     symbolic_eq3 <- gsub("\\(1)", "", symbolic_eq3)  # Delete '(1)' 
     symbolic_eq3 <- gsub("\\}1", "\\}", symbolic_eq3)  #    L1 --->  L
+    symbolic_eq3 <- gsub("\\)\\^\\{1}", "\\)", symbolic_eq3)  #   (1-L)^{1}  --->  (1-L)
     symbolic_eq3 <- gsub("\\(1 - L)\\^\\{0}", "", symbolic_eq3)  #    (1 - L)^{0}   ---> empty
     symbolic_eq3 <- gsub("\\(1 - L\\^\\{12})\\^\\{0}", "", symbolic_eq3)  #    (1 - L^{12})^{0}   ---> empty
     
@@ -229,8 +237,6 @@ server <- function(input, output, session) {
     # Construct the one-line numerical equation
     numerical_one_line <- paste0(
       " \\\\ \\text{ } \\\\ ",
-      " \\\\ \\text{ } \\\\ ",
-      " \\\\ \\text{ } \\\\ ",
       "(", paste0("1", if (p > 0) paste0(" - ", coefs[names(coefs) %in% paste0("ar", 1:p)], "L^{", 1:p, "}"), collapse = ""), ")",
       "(", paste0("1", if (P > 0) paste0(" - ", coefs[names(coefs) %in% paste0("sar", 1:P)], "L^{", s * (1:P), "}"), collapse = ""), ")",
       "(1 - L)^{", d, "}",
@@ -238,7 +244,8 @@ server <- function(input, output, session) {
       " Y_t = ",
       "(", paste0("1", if (q > 0) paste0(" + ", coefs[names(coefs) %in% paste0("ma", 1:q)], "L^{", 1:q, "}"), collapse = ""), ")",
       "(", paste0("1", if (Q > 0) paste0(" + ", coefs[names(coefs) %in% paste0("sma", 1:Q)], "L^{", s * (1:Q), "}"), collapse = ""), ")",
-      " \\varepsilon_t", drift
+      " \\varepsilon_t", drift,
+      " \\\\ \\text{ } \\\\ "
     )
     
     # Post-processing to handle double negatives and mixed signs and other
@@ -248,6 +255,9 @@ server <- function(input, output, session) {
     numerical_one_line <- gsub("\\(1)", "", numerical_one_line)  # Delete '(1)' 
     numerical_one_line <- gsub("\\}1", "\\}", numerical_one_line)  #    L1 --->  L
     numerical_one_line <- gsub("\\(1 - L)\\^\\{0}", "", numerical_one_line)  #    (1 - L)^{0}   ---> empty
+    
+    numerical_one_line <- gsub("\\)\\^\\{1}", "\\)", numerical_one_line)  #   (1-L)^{1}  --->  (1-L)
+    
     numerical_one_line <- gsub("\\(1 - L\\^\\{12})\\^\\{0}", "", numerical_one_line)  #    (1 - L^{12})^{0}   ---> empty
     
     # Add LaTeX delimiters for MathJax
@@ -292,7 +302,7 @@ server <- function(input, output, session) {
       symbolic = symbolic_eq3, 
       numerical = numerical_eq,
       numerical_one_line = numerical_one_line,
-      numerical_one_line_Y_t = numerical_one_line_Y_t
+      numerical_one_line_Y_t = numerical_one_line_Y_t      
       ))
   }
   
@@ -385,31 +395,63 @@ server <- function(input, output, session) {
 ########  ##########  ##########  ##########  ##########  ##########  ########## 
   
   
-  # Render the UI for selecting the frequency of data
-  output$timeInputUI <- renderUI({
-    req(input$file1) # Ensure that a file is uploaded before showing the input
-    
-    # Specifiyin the frequency of the seasonal pattern 
-    selectInput("frequency", "Frequency [Seasonality]", 
-                choices = c("Annual      P[1]"   = 1,      
-                            "Quarterly   P[4]"   = 4,      
+  
+  # Reactive value to store the current frequency
+  currentFrequency <- reactiveVal()
+  
+  # Observe changes in the dropdown selection
+  observe({
+    # Check if input$frequency is not NULL
+    if(!is.null(input$frequency)) {
+      if(input$frequency == "other") {
+        # Do nothing, wait for custom input
+      } else {
+        # Update the reactive value with the selected frequency
+        currentFrequency(input$frequency)
+      }
+    }
+  })
+  
+  # Observe changes in the custom frequency input
+  observeEvent(input$customFrequency, {
+    # Check if input$customFrequency is not NULL
+    if(!is.null(input$customFrequency)) {
+      # Update the reactive value with the custom frequency
+      currentFrequency(input$customFrequency)
+    }
+  })
+  
+  
+  
+  # Render the selectInput dynamically
+  output$frequencyInputUI <- renderUI({
+    req(input$fileData) # Ensure that a file is uploaded before showing the input
+    selectInput("frequency", "Choose Frequency :",
+                choices = c("Quarterly   P[4]"   = 4,      
                             "Monthly     P[12]"  = 12,     
                             "Weekly      P[52]"  = 52,     
-                            "Daily       P[365]" = 6, 
-                            "Hourly      P[24]"  = 24,
+                            "Daily       P[365]" = 365, 
                             "7 days      P[7]"   = 7,
-                            "Biweekly    P[26]"  = 26, 
-                            "Semi-annual P[6]"   = 2,
-                            "Bi-monthly  P[365]" = 365,
-                            "Hourly      P[24]"  = 3),
+                            "Other (Specify)" = "other"),
                 selected = 12)
+  })
+  
+  
+  
+  # Render the numeric input when "Other" is selected
+  output$customInput <- renderUI({
+    if(!is.null(input$frequency) && input$frequency == "other") {
+      numericInput("customFrequency", 
+                   span(class = "custom-label", "Enter Frequency :"), 
+                   value = NULL)
+    }
   })
   
   
   
   # choose the forcast period
   output$lengthInputUI <- renderUI({
-    req(input$file1) # Ensure that a file is uploaded before showing the input
+    req(input$fileData) # Ensure that a file is uploaded before showing the input
     # Here we create the numericInput dynamically
     numericInput("length", 
                  label = "Enter the length of forecast", 
@@ -438,7 +480,7 @@ server <- function(input, output, session) {
   
   # choose the Model for analyzing the data :  ARIMA  or H.W.
   output$modelSelectUI <- renderUI({
-    req(input$file1) # Ensure that a file is uploaded before showing the input
+    req(input$fileData) # Ensure that a file is uploaded before showing the input
     # Create the selectInput with default options. The options will be updated by the observer
     selectInput("Model", 
                 label = "Select the Model", 
@@ -453,7 +495,7 @@ server <- function(input, output, session) {
   
   # choose the type of Plot for the Panel "Ts Display" that is using the function "ggtsdisplay"
   output$graphTypeUI <- renderUI({
-    req(input$file1) # Ensure that a file is uploaded before showing the input
+    req(input$fileData) # Ensure that a file is uploaded before showing the input
     # Create the selectInput with default options. The options will be updated by the observer
     selectInput("plot_type", 
                 label = "Plot Type [for Ts Display]", 
@@ -490,7 +532,7 @@ server <- function(input, output, session) {
   # for asking to input The : Title label of the graph , X label , and Y label
   output$conditionalButtons <- renderUI({
     # Only show buttons if a file has been loaded
-    req(input$file1) # Ensure that a file is uploaded before showing the input
+    req(input$fileData) # Ensure that a file is uploaded before showing the input
     tagList(
       #actionButton("submitBtn", "Submit"),
       actionButton("plotSettings", "Plot Labels")
@@ -510,9 +552,9 @@ server <- function(input, output, session) {
   # Reactive expression for the time series data
   tsData <- reactive({
     # Ensure that the file and column are selected and frequency is chosen
-    req(input$file1)
+    req(input$fileData)
     req(input$colNum)
-    req(input$frequency)
+    req(currentFrequency())
     req(input$dateCol)
     
     df <- data()
@@ -539,7 +581,7 @@ server <- function(input, output, session) {
     numeric_data <- as.numeric(colData)
 
     # Create the ts object
-    ts(numeric_data, frequency = as.numeric(input$frequency) ,start = c(start_year, start_month), end = c(last_year, last_month))
+    ts(numeric_data, frequency = as.numeric(currentFrequency()) ,start = c(start_year, start_month), end = c(last_year, last_month))
     
   })
   
@@ -584,9 +626,9 @@ server <- function(input, output, session) {
   # Observer to update the selectInput based on the frequency of data
   observe({
     # Ensure that 'input$time' has a value before proceeding
-    req(input$frequency)
+    req(currentFrequency())
     
-    vall <- input$frequency
+    vall <- currentFrequency()
     
     if (vall == "Yearly") {
       updateSelectInput(
@@ -673,7 +715,7 @@ server <- function(input, output, session) {
   
     #  descr()  stats Row format
     output$data_StatisticsText1 <- renderPrint({
-    req(input$file1)
+    req(input$fileData)
     req(input$colNum)
     
     df <- data()
@@ -689,7 +731,7 @@ server <- function(input, output, session) {
   
   #  descr()  stats in a table format
   output$data_StatisticsText1_Table <- renderTable({
-    req(input$file1)
+    req(input$fileData)
     req(input$colNum)
     
     df <- data()
@@ -721,7 +763,7 @@ server <- function(input, output, session) {
   
   
   output$data_StatisticsText2 <- renderPrint({
-    req(input$file1)
+    req(input$fileData)
     req(input$colNum)
     
     df <- data()
@@ -970,7 +1012,7 @@ server <- function(input, output, session) {
 
   output$DS1Stplot <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     D1_St <- diff(tsData(), frequency)
     
     plot(D1_St, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle, type = 'l', lwd = 2)
@@ -979,7 +1021,7 @@ server <- function(input, output, session) {
   
   output$DS1StACF <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     D1_St <- diff(tsData(), frequency)
 
     plot(Acf(D1_St), lwd = 2, main = userData$mainTitle)
@@ -988,7 +1030,7 @@ server <- function(input, output, session) {
   
   output$DS1StPACF <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     D1_St <- diff(tsData(), frequency)
     
     plot(Pacf(D1_St), lwd = 2, main = userData$mainTitle)
@@ -997,7 +1039,7 @@ server <- function(input, output, session) {
 
   output$DS1StACFPACF <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     D1_St <- diff(tsData(), frequency)
     
     acf2(D1_St, lwd = 3, main = userData$mainTitle)
@@ -1006,7 +1048,7 @@ server <- function(input, output, session) {
 
   output$Ds1_ts_Display <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     D1_St <- diff(tsData(), frequency)
     
     ggtsdisplay(D1_St, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
@@ -1015,7 +1057,7 @@ server <- function(input, output, session) {
 
   output$teststationariteDs1St <- renderPrint({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     D1_St <- diff(tsData(), frequency)
     helpADF()
 
@@ -1035,7 +1077,7 @@ server <- function(input, output, session) {
   
   output$Dlogplot <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     D1_log_St <- diff(log(tsData()), frequency)
     
     plot(D1_log_St, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle, type = 'l', lwd = 2)
@@ -1044,7 +1086,7 @@ server <- function(input, output, session) {
   
   output$DlogplotACF <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     D1_log_St <- diff(log(tsData()), frequency)
     
     plot(Acf(D1_log_St), lwd = 2, main = userData$mainTitle)
@@ -1052,7 +1094,7 @@ server <- function(input, output, session) {
   
   output$DlogplotPACF <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     D1_log_St <- diff(log(tsData()), frequency)
     
     plot(Pacf(D1_log_St), lwd = 2, main = userData$mainTitle)
@@ -1061,7 +1103,7 @@ server <- function(input, output, session) {
   
   output$DlogplotACFPACF <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     D1_log_St <- diff(log(tsData()), frequency)
     
     acf2(D1_log_St , lwd = 3, main = userData$mainTitle) 
@@ -1070,7 +1112,7 @@ server <- function(input, output, session) {
   
   output$Ds1_log_ts_Display <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     D1_log_St <- diff(log(tsData()), frequency)
     
     ggtsdisplay(D1_log_St , plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
@@ -1079,7 +1121,7 @@ server <- function(input, output, session) {
   
   output$teststationariteDs1LogSt <- renderPrint({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     D1_log_St <- diff(log(tsData()), frequency)
     helpADF()
     
@@ -1100,7 +1142,7 @@ server <- function(input, output, session) {
   
   output$dDlogplot <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     d1_D1_log_St <- diff(diff(log(tsData()), frequency))
     
     plot(d1_D1_log_St, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle, lwd = 2)
@@ -1108,7 +1150,7 @@ server <- function(input, output, session) {
   
   output$dDlogplotACF <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     d1_D1_log_St <- diff(diff(log(tsData()), frequency))
     
     plot(Acf(d1_D1_log_St), lwd = 2, main = userData$mainTitle)
@@ -1116,7 +1158,7 @@ server <- function(input, output, session) {
   
   output$dDlogplotPACF <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     d1_D1_log_St <- diff(diff(log(tsData()), frequency))
     
     plot(Pacf(d1_D1_log_St), lwd = 2, main = userData$mainTitle)
@@ -1125,7 +1167,7 @@ server <- function(input, output, session) {
   
   output$dDlogplotACFPACF <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     d1_D1_log_St <- diff(diff(log(tsData()), frequency))
     
     acf2(d1_D1_log_St , lwd = 3, main = userData$mainTitle) 
@@ -1134,7 +1176,7 @@ server <- function(input, output, session) {
   
   output$d1_Ds1_log_ts_Display <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     d1_D1_log_St <- diff(diff(log(tsData()), frequency))
     
     ggtsdisplay(d1_D1_log_St, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
@@ -1142,7 +1184,7 @@ server <- function(input, output, session) {
   
   output$teststationarited1Ds1LogSt <- renderPrint({
     req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     d1_D1_log_St <- diff(diff(log(tsData()), frequency))
     helpADF()
     
@@ -1226,7 +1268,7 @@ server <- function(input, output, session) {
   output$d_D_Log_ts_Choice <- renderPlot({
     # expression to get myData
     myData <- getMyData(tsData(),
-                        input$frequency,
+                        currentFrequency(),
                         input$islog,
                         input$d_n,
                         input$DS_n)
@@ -1238,7 +1280,7 @@ server <- function(input, output, session) {
   output$tsPlot_Choice <- renderPlot({
     # expression to get myData
     myData <- getMyData(tsData(),
-                input$frequency,
+                currentFrequency(),
                 input$islog,
                 input$d_n,
                 input$DS_n)
@@ -1249,7 +1291,7 @@ server <- function(input, output, session) {
   output$difference2ACF <- renderPlot({
     # expression to get myData
     myData <- getMyData(tsData(),
-                        input$frequency,
+                        currentFrequency(),
                         input$islog,
                         input$d_n,
                         input$DS_n)
@@ -1261,7 +1303,7 @@ server <- function(input, output, session) {
   output$difference2PACF <- renderPlot({
     # expression to get myData
     myData <- getMyData(tsData(),
-                        input$frequency,
+                        currentFrequency(),
                         input$islog,
                         input$d_n,
                         input$DS_n)
@@ -1273,7 +1315,7 @@ server <- function(input, output, session) {
   output$difference2ACFPACF <- renderPlot({
     # expression to get myData
     myData <- getMyData(tsData(),
-                        input$frequency,
+                        currentFrequency(),
                         input$islog,
                         input$d_n,
                         input$DS_n)
@@ -1285,7 +1327,7 @@ server <- function(input, output, session) {
   output$teststationarited2St <- renderPrint({
     # expression to get myData
     myData <- getMyData(tsData(),
-                        input$frequency,
+                        currentFrequency(),
                         input$islog,
                         input$d_n,
                         input$DS_n)
@@ -1299,7 +1341,7 @@ server <- function(input, output, session) {
   output$ARIMA_d_D_log <- renderPrint({
     # expression to get myData
     myData <- getMyData(tsData(),
-                        input$frequency,
+                        currentFrequency(),
                         input$islog,
                         input$d_n,
                         input$DS_n)
@@ -1505,7 +1547,7 @@ server <- function(input, output, session) {
   
   # Reactive expression to compute or fetch the forecast
   results <- reactive({
-    key <- createCacheKey(input$file1, input$colNum,  input$Model,  input$frequency)
+    key <- createCacheKey(input$fileData, input$colNum,  input$Model,  currentFrequency())
     if (!is.null(forecastCache[[key]])) {
       forecastCache[[key]]
     } else {
@@ -1826,7 +1868,7 @@ server <- function(input, output, session) {
   
   # Reactive expression to compute or fetch the forecast
   results_ARIMA_pdPD_drift <- reactive({
-    key <- createCacheKey_autoARIMA(input$file1, input$frequency , input$Model,  input$colNum, input$ARIMAp, input$ARIMAd, input$ARIMAq, input$ARIMAps, input$ARIMAds, input$ARIMAqs, input$driftYN )
+    key <- createCacheKey_autoARIMA(input$fileData, currentFrequency() , input$Model,  input$colNum, input$ARIMAp, input$ARIMAd, input$ARIMAq, input$ARIMAps, input$ARIMAds, input$ARIMAqs, input$driftYN )
     if (!is.null(forecastCache_autoARIMA[[key]])) {
       forecastCache_autoARIMA[[key]]
     } else {
@@ -2147,10 +2189,10 @@ server <- function(input, output, session) {
   
   output$SARIMAforcastplot <- renderPlot({
     req(tsData())
-    req(input$frequency)
+    req(currentFrequency())
     
     myData <- tsData()
-    frequency = as.numeric(input$frequency)
+    frequency = as.numeric(currentFrequency())
     
     if (input$driftYN == "TRUE") {
       nodriftConsideration =FALSE
@@ -2183,6 +2225,20 @@ server <- function(input, output, session) {
     
     withMathJax(helpText(eqs$symbolic))
   })  
+  
+  
+  
+  
+  output$sarima_eq_render_numerical_one <- renderUI({
+    req(tsData())
+    
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
+    # sarima_model <-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
+    
+    eqs <- extractSARIMAeqLaTeX(sarima_model)
+    
+    withMathJax(helpText(eqs$numerical_one_line))
+  }) 
   
   
 ################################################################################ 
@@ -2307,14 +2363,14 @@ server <- function(input, output, session) {
     
     
     
-    # req(input$file1)
+    # req(input$fileData)
     # req(input$colNum)
-    # req(input$frequency)
+    # req(currentFrequency())
     # req(input$dateCol)
     # req(input$Model)
     # 
     # 
-    # df <- read_excel(input$file1$datapath)
+    # df <- read_excel(input$fileData$datapath)
     # date_col <- as.Date(df[[input$dateCol]])
     # starting_date <- min(date_col, na.rm = TRUE)
     # 
@@ -2370,9 +2426,6 @@ server <- function(input, output, session) {
     cat("                                                                                                       \n")
     cat("        D[1] (St) : seasonal difference of order 1                                                     \n")
     cat("                    change seasonality value                                                           \n")
-    cat("                                                                                                       \n")
-    cat("                                                                                                       \n")
-    cat("                                                                                                       \n")
     cat("                                                                                                       \n")
     cat(".......................................................................................................\n") 
     cat("                                                                                                       \n")
@@ -2493,7 +2546,6 @@ server <- function(input, output, session) {
   
   
   output$AboutFr <- renderPrint({
-    
     cat(".......................................................................................................\n") 
     cat("                                                                                                       \n") 
     cat("                                                                                                       \n")
@@ -2509,9 +2561,6 @@ server <- function(input, output, session) {
     cat("                                                                                                       \n")
     cat("        D[1] (St) : difference saisonnière d'ordre 1                                                   \n")
     cat("                    changer la valeur de la saisonnalité                                               \n")
-    cat("                                                                                                       \n")
-    cat("                                                                                                       \n")
-    cat("                                                                                                       \n")
     cat("                                                                                                       \n")
     cat(".......................................................................................................\n") 
     cat("                                                                                                       \n")

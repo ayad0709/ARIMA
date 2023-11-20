@@ -51,6 +51,21 @@ shinyUI(
   
   #useShinyalert(force = TRUE),
 
+
+  ##############################################################################
+
+  # Include custom CSS
+  tags$head(
+    tags$style(HTML("
+              .custom-label {
+                  color: red; /* Change this to your desired color */
+              }
+          "))
+  ),
+
+
+  ##############################################################################
+
   titlePanel("SARIMA & H.W."),
   
   
@@ -61,11 +76,12 @@ shinyUI(
   ############################################################################## 
     
     sidebarPanel(width=3,
-      fileInput("file1", "Choose File (xlsx, csv, txt ,sav)", accept = c(".xlsx", ".csv", ".txt", ".sav")),
+      fileInput("fileData", "Choose File (xlsx, csv, txt ,sav)", accept = c(".xlsx", ".csv", ".txt", ".sav")),
       uiOutput("dateColUI"),
       uiOutput("colNumUI"),
       uiOutput("monthUI"),
-      uiOutput("timeInputUI"),
+      uiOutput("frequencyInputUI"),
+      uiOutput("customInput"),
       uiOutput("modelSelectUI"),
       uiOutput("lengthInputUI"),
       textOutput("forecastModel"),
@@ -472,7 +488,13 @@ shinyUI(
                      
                      tabPanel("Forecasted Plot", plotOutput("SARIMAforcastplot", width=830, height = 600)),
                   
-                     tabPanel("Model Equation", uiOutput("sarima_eq_render_numerical")),
+                     tabPanel("Model Equation", 
+                              tabsetPanel(
+                                tabPanel("Model Equation", uiOutput("sarima_eq_render_numerical")),
+                                tabPanel("Model Equation (1)", uiOutput("sarima_eq_render_numerical_one")),
+                              )),  
+                     
+                     
                      
                      # tabPanel("Model Equation", 
                      #          tabsetPanel(
