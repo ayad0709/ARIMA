@@ -77,6 +77,16 @@ server <- function(input, output, session) {
     # Check for drift and include it in the equation
     drift <- if ("drift" %in% names(coefs)) paste0(" + ", coefs["drift"], "t") else ""
     
+    # AIC is directly available from the model
+    aic_value <- AIC(model)
+    
+    # Calculate AICc
+    n <- length(model$residuals)  # Number of observations
+    k <- length(model$coef) + 1  # Number of parameters + 1 for the variance
+    aicc_value <- aic_value + (2 * k * (k + 1)) / (n - k - 1)
+    
+    # BIC is also directly available
+    bic_value <- BIC(model)
     
     # Define colors for different parts of the equation
     color_ar = "red"
@@ -184,7 +194,11 @@ server <- function(input, output, session) {
       " Y_t = ",
       "(", paste0("1", if (q > 0) paste0(" + ", coefs[names(coefs) %in% paste0("ma", 1:q)], "L^{", 1:q, "}"), collapse = ""), ")",
       "(", paste0("1", if (Q > 0) paste0(" + ", coefs[names(coefs) %in% paste0("sma", 1:Q)], "L^{", s * (1:Q), "}"), collapse = ""), ")",
-      " \\varepsilon_t", drift
+      " \\varepsilon_t", drift,
+      " \\\\ \\text{------------} \\\\ ",
+      "\\\\ \\text{AIC: ", sprintf("%.2f", aic_value),
+      " -- AICc: ", sprintf("%.2f", aicc_value),
+      " -- BIC: ", sprintf("%.2f", bic_value) ,"}"
     )
     
     
@@ -449,7 +463,7 @@ server <- function(input, output, session) {
   
   
   
-  # choose the forcast period
+  # choose the forecast period
   output$lengthInputUI <- renderUI({
     req(input$fileData) # Ensure that a file is uploaded before showing the input
     # Here we create the numericInput dynamically
@@ -490,6 +504,12 @@ server <- function(input, output, session) {
                             "HOLT's Exponential Smoothing"),
                 selected = "ARIMA")
   })
+  
+  
+  # choices = c("HoltWinters" = "hw",
+  #             "HoltWinters Multiplicative" = "hwm",
+  #             "HoltWinters Additive" = "hwa",
+  #             "Holt's Exponential Smoothing" = "hes"))
   
   
   
@@ -597,6 +617,19 @@ server <- function(input, output, session) {
 ##########  ##########  ##########  ##########  ##########  ##########  ########  
   
   
+  # Define a reactive value
+  values <- reactiveValues(islog = "No")
+  
+  # Observe any changes in the checkbox and update the reactive value
+  observe({
+    if (input$check_box) {
+      values$islog <- "Yes"
+    } else {
+      values$islog <- "No"
+    }
+  })
+  
+  
   #    observer , when "Plot Labels" is clicked, will ask for : 
   #    Title, X-Label and Y-Label
   observeEvent(input$plotSettings, {
@@ -623,36 +656,36 @@ server <- function(input, output, session) {
   
 
  
-  # Observer to update the selectInput based on the frequency of data
-  observe({
-    # Ensure that 'input$time' has a value before proceeding
-    req(currentFrequency())
-    
-    vall <- currentFrequency()
-    
-    if (vall == "Yearly") {
-      updateSelectInput(
-        session,
-        "Model",
-        label = "Select the Model:",
-        selected = "ARIMA",
-        choices = c("ARIMA", "HOLT's Exponential Smoothing")
-      )
-    } else {
-      updateSelectInput(
-        session,
-        "Model",
-        label = "Select the Model:",
-        selected = "ARIMA",
-        choices = c(
-          "ARIMA",
-          "HOLT's Exponential Smoothing",
-          "Holt-Winters Additive",
-          "Holt-Winters Multiplicative"
-        )
-      )
-    }
-  })
+  # # Observer to update the selectInput based on the frequency of data
+  # observe({
+  #   # Ensure that 'input$time' has a value before proceeding
+  #   req(currentFrequency())
+  #   
+  #   vall <- currentFrequency()
+  #   
+  #   if (vall == "Yearly") {
+  #     updateSelectInput(
+  #       session,
+  #       "Model",
+  #       label = "Select the Model:",
+  #       selected = "ARIMA",
+  #       choices = c("ARIMA", "HOLT's Exponential Smoothing")
+  #     )
+  #   } else {
+  #     updateSelectInput(
+  #       session,
+  #       "Model",
+  #       label = "Select the Model:",
+  #       selected = "ARIMA",
+  #       choices = c(
+  #         "ARIMA",
+  #         "HOLT's Exponential Smoothing",
+  #         "Holt-Winters Additive",
+  #         "Holt-Winters Multiplicative"
+  #       )
+  #     )
+  #   }
+  # })
   
 
   
@@ -1269,7 +1302,7 @@ server <- function(input, output, session) {
     # expression to get myData
     myData <- getMyData(tsData(),
                         currentFrequency(),
-                        input$islog,
+                        values$islog,
                         input$d_n,
                         input$DS_n)
     
@@ -1281,7 +1314,7 @@ server <- function(input, output, session) {
     # expression to get myData
     myData <- getMyData(tsData(),
                 currentFrequency(),
-                input$islog,
+                values$islog,
                 input$d_n,
                 input$DS_n)
 
@@ -1292,7 +1325,7 @@ server <- function(input, output, session) {
     # expression to get myData
     myData <- getMyData(tsData(),
                         currentFrequency(),
-                        input$islog,
+                        values$islog,
                         input$d_n,
                         input$DS_n)
     
@@ -1304,7 +1337,7 @@ server <- function(input, output, session) {
     # expression to get myData
     myData <- getMyData(tsData(),
                         currentFrequency(),
-                        input$islog,
+                        values$islog,
                         input$d_n,
                         input$DS_n)
     
@@ -1316,7 +1349,7 @@ server <- function(input, output, session) {
     # expression to get myData
     myData <- getMyData(tsData(),
                         currentFrequency(),
-                        input$islog,
+                        values$islog,
                         input$d_n,
                         input$DS_n)
     
@@ -1328,7 +1361,7 @@ server <- function(input, output, session) {
     # expression to get myData
     myData <- getMyData(tsData(),
                         currentFrequency(),
-                        input$islog,
+                        values$islog,
                         input$d_n,
                         input$DS_n)
     
@@ -1342,7 +1375,7 @@ server <- function(input, output, session) {
     # expression to get myData
     myData <- getMyData(tsData(),
                         currentFrequency(),
-                        input$islog,
+                        values$islog,
                         input$d_n,
                         input$DS_n)
 
@@ -1606,12 +1639,12 @@ server <- function(input, output, session) {
 
   
   # Render function to display ARIMA model summary
-  output$autoForcast <- renderPrint({
+  output$autoForecast <- renderPrint({
     results()$modelOutput
     })
   
   
-  output$autoForcast_plot <- renderPlot({
+  output$autoForecast_plot <- renderPlot({
     forecastedValues <- forecast(results()$modelOutput, level = c(80, 95), h = input$length)
     plot(forecastedValues, lwd = 2)
   })
@@ -1784,6 +1817,11 @@ server <- function(input, output, session) {
   })
   
   
+  output$plot_ACF_PACF_Res <- renderPlot({
+    fittedModel <- results()$modelOutput
+    model_Residuals <- fittedModel$resid
+    acf2(model_Residuals, lwd = 3,main = userData$mainTitle)
+  })
   
   
   output$unitCercle <- renderPlot({
@@ -2187,7 +2225,7 @@ server <- function(input, output, session) {
   
   
   
-  output$SARIMAforcastplot <- renderPlot({
+  output$SARIMAforecastplot <- renderPlot({
     req(tsData())
     req(currentFrequency())
     

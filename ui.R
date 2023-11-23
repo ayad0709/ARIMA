@@ -244,7 +244,9 @@ shinyUI(
                                                         br(),br(),
                                                         numericInput("d_n", label = "d :", min=0, value=0),
                                                         numericInput("DS_n", label = "D :",min=0,  value=0),
-                                                        selectInput("islog", label = "log", choices=c("Yes","No"),selected="No"),
+                                                        # selectInput("islog", label = "log", choices=c("Yes","No"),selected="No"),
+                                                        br(),
+                                                        checkboxInput("check_box", HTML("<b>log(S(t))</b>"), value = FALSE),
                                                         br(),
                                            ),
                                            
@@ -330,21 +332,23 @@ shinyUI(
                  fluidPage(
                    tabsetPanel(
 
-                   tabPanel("Model", verbatimTextOutput("autoForcast"), class="span7"),
+                   tabPanel("Model", verbatimTextOutput("autoForecast"), class="span7"),
                    
                    
-                   tabPanel("Model Equation", uiOutput("auto_SARIMA_symbolic")),
                    
                    
-                   # tabPanel("Model Equation", 
-                   #          tabsetPanel(
-                   #            tabPanel("Model Equation", uiOutput("auto_SARIMA_eq_render_numerical")),
-                   #          )), 
+                   tabPanel("Model Equation",
+                            tabsetPanel(
+                              tabPanel("Model SARIMA", uiOutput("auto_SARIMA_symbolic")),
+                              tabPanel("Model HW"),
+                              
+                              # tabPanel("Model Equation", uiOutput("auto_SARIMA_eq_render_numerical")),
+                            )),
 
-                   tabPanel("Forcaste", 
+                   tabPanel("Forecaste", 
                             tabsetPanel(
                               tabPanel("Forecasted Values", tableOutput("results_forecastTable")),
-                              tabPanel("Forecasted Plot", plotOutput("autoForcast_plot",width=900,height = 630)),
+                              tabPanel("Forecasted Plot", plotOutput("autoForecast_plot",width=900,height = 630)),
                             )), 
                    
 
@@ -388,6 +392,7 @@ shinyUI(
                             tabsetPanel(
                                 tabPanel("ACF Residuals", plotOutput("plotACFRes",width=700,height = 500)),
                                 tabPanel("PACF Residuals", plotOutput("plotPACFRes",width=700,height = 500)),
+                                tabPanel("ACF & PACF Residuals", plotOutput("plot_ACF_PACF_Res",width=700,height = 600)),
                             )), 
                    
                      
@@ -486,7 +491,7 @@ shinyUI(
 
                      tabPanel("Forecasted", tableOutput("forecast_ARIMA_pdq")),
                      
-                     tabPanel("Forecasted Plot", plotOutput("SARIMAforcastplot", width=830, height = 600)),
+                     tabPanel("Forecasted Plot", plotOutput("SARIMAforecastplot", width=830, height = 600)),
                   
                      tabPanel("Model Equation", 
                               tabsetPanel(
