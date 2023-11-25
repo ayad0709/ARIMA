@@ -7,7 +7,7 @@ packages = c("shiny", "shinythemes", "data.table", "ggplot2", "lubridate",
              "Kendall", "lmtest", "vtable","shinyalert", "mathjaxr", "psych",
              "tseries", "seasonal", "xts", "astsa", "ggfortify",  "pastecs",
              "tsibble", "feasts", "readxl", "TSstudio", "latex2exp", "Hmisc", 
-             "foreign")
+             "foreign","shinyWidgets","hrbrthemes")
 
 ################################################################################
 # Now load or install & load LIBRARIES
@@ -75,7 +75,7 @@ shinyUI(
   #        Side Panel
   ############################################################################## 
     
-    sidebarPanel(width=3,
+    sidebarPanel(width=2,
       fileInput("fileData", "Choose File (xlsx, csv, txt ,sav)", accept = c(".xlsx", ".csv", ".txt", ".sav")),
       uiOutput("dateColUI"),
       uiOutput("colNumUI"),
@@ -340,7 +340,8 @@ shinyUI(
                    tabPanel("Model Equation",
                             tabsetPanel(
                               tabPanel("Model SARIMA", uiOutput("auto_SARIMA_symbolic")),
-                              tabPanel("Model HW"),
+                              # tabPanel("Model HW Summary", verbatimTextOutput("modelOutput_HW")),
+                              tabPanel("Model HW Equation", uiOutput("equationOutput_HW"))
                               
                               # tabPanel("Model Equation", uiOutput("auto_SARIMA_eq_render_numerical")),
                             )),
@@ -434,11 +435,14 @@ shinyUI(
                                              numericInput("ARIMAds", label = "D:",min=0,  value=0),
                                              numericInput("ARIMAqs", label = "Q:", min=0, value=0),
                                              selectInput("driftYN", label = "drift", choices=c("TRUE","FALSE"),selected="FALSE"),
+                                             # numericInput("lineWidth", label = "Thick:", min=1, value=3),
                                 ),
                                 
                                 mainPanel(width=10,
                                           tabsetPanel(
-                                            tabPanel("ARIMA", plotOutput("Previsions_Plot_pdq", width=750, height = 580)),
+                                            # tabPanel("ARIMA", plotOutput("Previsions_Plot_pdq", width=750, height = 580)),
+                                            tabPanel("ARIMA (*)", uiOutput("Previsions_Plot_pdq_UI")),  
+                                            
                                             
                                             tabPanel("Model & Equation", 
                                                      tabsetPanel(
@@ -450,9 +454,7 @@ shinyUI(
                                             tabPanel("Model with p-values", verbatimTextOutput("model_ARIMApdq_p_values")), 
                                             tabPanel("ACF+PACF", plotOutput("plot_ACF_PACF_Res_pdq", width=600, height = 550)),
                                             tabPanel("unit Cercle", plotOutput("unit_Circle_pdq", width=750, height = 580)),
-                                            
-                                            
-                                            
+                                            tabPanel("Plot", plotOutput("timeSeriesPlot_SARIMA", width=750, height = 580)),
                                           ))
                               )),
                      
@@ -491,15 +493,90 @@ shinyUI(
 
                      tabPanel("Forecasted", tableOutput("forecast_ARIMA_pdq")),
                      
-                     tabPanel("Forecasted Plot", plotOutput("SARIMAforecastplot", width=830, height = 600)),
-                  
+                     # tabPanel("Forecasted Plot", plotOutput("SARIMAforecastplot", width=830, height = 600)),
+                     tabPanel("Forecasted Plot (*)", uiOutput("ForecastedPlotUI")),  
+                     
                      tabPanel("Model Equation", 
                               tabsetPanel(
                                 tabPanel("Model Equation", uiOutput("sarima_eq_render_numerical")),
                                 tabPanel("Model Equation (1)", uiOutput("sarima_eq_render_numerical_one")),
                               )),  
                      
+
                      
+                     tabPanel("Plot S(t) & model (*)", br(),
+                              sidebarLayout(
+                                sidebarPanel(width=12,
+                                             # Single row with all controls
+                                             fluidRow(
+                                               # style = "height: 50px; line-height: 50px;",  # Custom style
+                                               column(2, sliderInput("tsLineWidth", "tsWidth", min = 0, max = 5, value = 1)),
+                                               column(2, selectInput("tsLineColor", "tsColor", colors(), selected = "deepskyblue3")),
+                                               column(2, selectInput("tsLineType", "tsType", choices = c("solid" = 1, "dashed" = 2, "dotted" = 3, "dotdash" = 4, "longdash" = 5, "twodash" = 6), selected = "l")),
+                                               column(2, sliderInput("sarimaLineWidth", "SARIMA.Width", min = 0, max = 5, value = 1)),
+                                               column(2, selectInput("sarimaLineColor", "SARIMA.Color", colors(), selected = "red2")),
+                                               column(2, selectInput("sarimaLineType", "SARIMA.Type", choices = c("solid" = 1, "dashed" = 2, "dotted" = 3, "dotdash" = 4, "longdash" = 5, "twodash" = 6), selected = "3")),
+
+                                             )
+                                ),
+                                mainPanel(
+                                           uiOutput("plotUI"),
+                                            # plotOutput("timeSeriesPlot_and_SARIMA", width = 900, height = 650),
+                                )
+                              )
+                     )
+                     
+                     
+                     # tabPanel("Plot ts & model", br(),
+                     #          sidebarLayout(
+                     #            sidebarPanel(width=10,
+                     #                         # First row with controls for the time series data line
+                     #                         fluidRow(
+                     #                           column(4, sliderInput("tsLineWidth", "tsWidth", min = 1, max = 6, value = 2)),
+                     #                           column(4, selectInput("tsLineColor", "tsColor", colors(), selected = "black")),
+                     #                           column(4, selectInput("tsLineType", "tsType", c("solid" = 1, "dashed" = 2, "dotted" = 3, "dotdash" = 4, "longdash" = 5, "twodash" = 6), selected = "l"))
+                     #                         ),
+                     #                         # Second row with controls for the SARIMA model line
+                     #                         fluidRow(
+                     #                           column(4, sliderInput("sarimaLineWidth", "m.Width", min = 1, max = 6, value = 2)),
+                     #                           column(4, selectInput("sarimaLineColor", "m.Color", colors(), selected = "red")),
+                     #                           column(4, selectInput("sarimaLineType", "m.Type", c("solid" = 1, "dashed" = 2, "dotted" = 3, "dotdash" = 4, "longdash" = 5, "twodash" = 6), selected = "l"))
+                     #                         )
+                     #            ),
+                     #            mainPanel(
+                     #                      tabsetPanel(
+                     #                        tabPanel("Plot", plotOutput("timeSeriesPlot_and_SARIMA", width = 830, height = 600))
+                     #                      )
+                     #            )
+                     #          )
+                     # )
+                     
+                     
+                     # tabPanel("Plot ts & model", br(),
+                     #          sidebarLayout(
+                     #            sidebarPanel(width=3,
+                     #                         # Controls for the time series data line
+                     #                         sliderInput("tsLineWidth", "tsWidth", min = 1, max = 6, value = 2),
+                     #                         selectInput("tsLineColor", "tsColor", colors(),  selected = "black"),
+                     #                         # selectInput("tsLineType", "tsType", choices = c("Line" = "l", "Dots" = "p", "Dash" = "dashed"), selected = "l"),
+                     #                         selectInput("tsLineType", "tsLine", choices = c("solid" = 1, "dashed" = 2, "dotted" = 3, "dotdash" = 4, "longdash" = 5, "twodash" = 6), selected = 1),
+                     # 
+                     #                         
+                     #                         # Controls for the SARIMA model line
+                     #                         sliderInput("sarimaLineWidth", "m.Width", min = 1, max = 6, value = 2),
+                     #                         selectInput("sarimaLineColor", "m.Color", colors(), selected = "red"),
+                     #                         # selectInput("sarimaLineType", "m.Type", choices = c("Line" = "l", "Dots" = "p", "Dash" = "dashed"), selected = "l"),
+                     #                         selectInput("sarimaLineType", "m.Type", choices = c("solid" = 1, "dashed" = 2, "dotted" = 3, "dotdash" = 4, "longdash" = 5, "twodash" = 6), selected = 1)
+                     #                         
+                     #            ),
+                     # 
+                     #            mainPanel(
+                     #                      tabsetPanel(
+                     #                        tabPanel("Plot", plotOutput("timeSeriesPlot_and_SARIMA", width=830, height = 600)),
+                     #                      ))
+                     # 
+                     # 
+                     #          ))
                      
                      # tabPanel("Model Equation", 
                      #          tabsetPanel(

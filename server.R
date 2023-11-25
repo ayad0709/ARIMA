@@ -1,11 +1,7 @@
 # Define server logic for Shiny app
 server <- function(input, output, session) {
   
-  userData <- reactiveValues(data = NULL, 
-                             mainTitle = "Title", 
-                             xTitle = "X-axix", 
-                             yTitle = "Y-axix")
-  
+
   # Reactive expression to read data from the file
   data <- reactive({
     req(input$fileData)
@@ -63,6 +59,9 @@ server <- function(input, output, session) {
   
   
   extractSARIMAeqLaTeX <- function(model) {
+    
+    # if (is.null(model)) return("Model not fitted yet")
+    
     # Extract coefficients and terms
     coefs <- coef(model)
     coefs <- round(coefs, 3) # number of digits after comma
@@ -88,15 +87,10 @@ server <- function(input, output, session) {
     # BIC is also directly available
     bic_value <- BIC(model)
     
-    # Define colors for different parts of the equation
-    color_ar = "red"
-    color_ma = "blue"
-    color_sar = "green"
-    color_sma = "orange"
+
     
     ########  ##########  ##########  ##########  ##########  ##########  ##########   
-    
-    
+
     
     # Create the symbolic LaTeX strings
     symbolic_ar <- paste0(" - \\phi_", 1:p, "L^", 1:p)
@@ -166,9 +160,7 @@ server <- function(input, output, session) {
     symbolic_eq3 <- paste0(
  
       "\\phi_p(L)\\Phi_P(L^S)(1-L)^d(1-L^S)^D Y_t = ","\\theta_q(L)\\Theta_Q(L^S)\\varepsilon_t", "+ \\delta t",
-      
       " \\\\ \\text{------------} \\\\ ",
-
        "(1 - \\sum_{i=1}^{p} \\phi_i L^i)(1 - \\sum_{j=1}^{P} \\Phi_j L^{jS}) (1 - L)^d (1 - L^S)^D Y_t = (1 + \\sum_{i=1}^{q} \\theta_i L^i)(1 + \\sum_{j=1}^{Q} \\Theta_j L^{jS}) \\varepsilon_t + \\delta t",
       
       # " \\\\ \\text{------------} \\\\ ",
@@ -194,11 +186,11 @@ server <- function(input, output, session) {
       " Y_t = ",
       "(", paste0("1", if (q > 0) paste0(" + ", coefs[names(coefs) %in% paste0("ma", 1:q)], "L^{", 1:q, "}"), collapse = ""), ")",
       "(", paste0("1", if (Q > 0) paste0(" + ", coefs[names(coefs) %in% paste0("sma", 1:Q)], "L^{", s * (1:Q), "}"), collapse = ""), ")",
-      " \\varepsilon_t", drift,
-      " \\\\ \\text{------------} \\\\ ",
-      "\\\\ \\text{AIC: ", sprintf("%.2f", aic_value),
-      " -- AICc: ", sprintf("%.2f", aicc_value),
-      " -- BIC: ", sprintf("%.2f", bic_value) ,"}"
+      " \\varepsilon_t", drift
+      # " \\\\ \\text{------------} \\\\ ",
+      # "\\\\ \\text{AIC: ", sprintf("%.2f", aic_value),
+      # " -- AICc: ", sprintf("%.2f", aicc_value),
+      # " -- BIC: ", sprintf("%.2f", bic_value) ,"}"
     )
     
     
@@ -269,9 +261,7 @@ server <- function(input, output, session) {
     numerical_one_line <- gsub("\\(1)", "", numerical_one_line)  # Delete '(1)' 
     numerical_one_line <- gsub("\\}1", "\\}", numerical_one_line)  #    L1 --->  L
     numerical_one_line <- gsub("\\(1 - L)\\^\\{0}", "", numerical_one_line)  #    (1 - L)^{0}   ---> empty
-    
     numerical_one_line <- gsub("\\)\\^\\{1}", "\\)", numerical_one_line)  #   (1-L)^{1}  --->  (1-L)
-    
     numerical_one_line <- gsub("\\(1 - L\\^\\{12})\\^\\{0}", "", numerical_one_line)  #    (1 - L^{12})^{0}   ---> empty
     
     # Add LaTeX delimiters for MathJax
@@ -325,12 +315,108 @@ server <- function(input, output, session) {
   
   ########  ##########  ##########  ##########  ##########  ##########  ##########   
   ########  ##########  ##########  ##########  ##########  ##########  ##########
+  
+  
+    # Function to generate equation text with parameters
+    generateEquationText_HW <- function(model, type) {
+      if (is.null(model)) return("Model not fitted yet")
+      
+      alpha <- round(model$alpha, 4)
+      beta <- round(model$beta, 4)
+      gamma <- ifelse(!is.null(model$gamma), round(model$gamma, 4), NA)
+      # s <- ifelse(!is.null(model$seasonal.periods), model$seasonal.periods, NA)
+      s <- input$frequency
+      
+      switch(type,
+             "Holt-Winters Multiplicative" = paste(
+               
+               "Holt-Winters..Multiplicative..Model..Equations:",
+               " \\\\ \\text{ } \\\\ ",
+               
+               "Level: ( L_t = \\alpha \\frac{Y_t}{S_{t-s}} + (1 - \\alpha) (L_{t-1} + T_{t-1}) )",
+               " \\\\ \\text{ } \\\\ ",
+               
+               "Trend: ( T_t = \\beta (L_t - L_{t-1}) + (1 - \\beta) T_{t-1} )",
+               " \\\\ \\text{ } \\\\ ",
+               
+               "Seasonal: ( S_t = \\gamma \\frac{Y_t}{L_t} + (1 - \\gamma) S_{t-s} )",
+               " \\\\ \\text{ } \\\\ ",
+               
+               
+               "Level: L_t = ", alpha, " * Y_t / S_{t-", s, "} + (1 - ", alpha, ") * (L_{t-1} + T_{t-1})",
+               " \\\\ \\text{ } \\\\ ",
+               "Trend: T_t = ", beta, " * (L_t - L_{t-1}) + (1 - ", beta, ") * T_{t-1}",
+               " \\\\ \\text{ } \\\\ ",
+               "Seasonal: S_t = ", gamma, " * Y_t / L_t + (1 - ", gamma, ") * S_{t-", s, "}"
+             ),
+             "Holt-Winters Additive" = paste(
+               
+               "Holt-Winters.. Additive.. Model.. Equations:",
+               " \\\\ \\text{ } \\\\ ",
+               "Level: ( L_t = \\alpha (Y_t - S_{t-s}) + (1 - \\alpha) (L_{t-1} + T_{t-1}) )",
+               " \\\\ \\text{ } \\\\ ",
+               "Trend: ( T_t = \\beta (L_t - L_{t-1}) + (1 - \\beta) T_{t-1} )",
+               " \\\\ \\text{ } \\\\ ",
+               "Seasonal: ( S_t = \\gamma (Y_t - L_t) + (1 - \\gamma) S_{t-s} )",
+               " \\\\ \\text{ } \\\\ ",
+                 
+               "Level: L_t = ", alpha, " * (Y_t - S_{t-", s, "}) + (1 - ", alpha, ") * (L_{t-1} + T_{t-1})",
+               " \\\\ \\text{ } \\\\ ",
+               "Trend: T_t = ", beta, " * (L_t - L_{t-1}) + (1 - ", beta, ") * T_{t-1}",
+               " \\\\ \\text{ } \\\\ ",
+               "Seasonal: S_t = ", gamma, " * (Y_t - L_t) + (1 - ", gamma, ") * S_{t-", s, "}"
+             ),
+             "HOLT's Exponential Smoothing" = paste(
+               "Level: L_t = ", alpha, " * Y_t + (1 - ", alpha, ") * (L_{t-1} + T_{t-1})",
+               " \\\\ \\text{ } \\\\ ",
+               "Trend: T_t = ", beta, " * (L_t - L_{t-1}) + (1 - ", beta, ") * T_{t-1}"
+             ),
+             "ARIMA" = "SARIMA(p,d,q)(P,D,Q)[s]: Use Seasonal ARIMA model Panel to get the results."
+      )
+    }
+    
+    model_HW <- reactive({
+      if (input$Model == "Holt-Winters Multiplicative") {
+        HoltWinters(tsData()) # Replace 'ts_data' with your actual time series data
+      } else if (input$Model == "Holt-Winters Additive") {
+        HoltWinters(tsData(), seasonal = "additive") # Replace 'ts_data'
+      } else if (input$Model == "HOLT's Exponential Smoothing") {
+        holt(tsData()) # Replace 'ts_data'
+      } else if (input$Model == "ARIMA") {
+        # auto.arima(tsData()) # Replace 'ts_data' with your time series data
+        NULL
+      } 
+      else {
+        NULL
+      }
+    })
+    
+    output$modelOutput_HW <- renderText({
+      if (is.null(model_HW())) {
+        "Please select a model type"
+      } else {
+        summary(model_HW())
+      }
+    })
+    
+    output$equationOutput_HW <- renderUI({
+      if (is.null(model_HW())) {
+        withMathJax(helpText("No model selected"))
+      } else {
+        equationText_HW <- generateEquationText_HW(model_HW(), input$Model)
+        equationText_HW <- paste0("$$ ", equationText_HW, " $$")
+        withMathJax(helpText(HTML(equationText_HW)))
+      }
+    })
+
+  
   ########  ##########  ##########  ##########  ##########  ##########  ##########  
   ########  ##########  ##########  ##########  ##########  ##########  ##########  
   ########  ##########  ##########  ##########  ##########  ##########  ##########  
   
   
   
+  # not used in the program
   numerical_one_line_Y_t_2 <- function(model) {
     # Extract coefficients and terms
     coefs <- coef(model)
@@ -386,8 +472,7 @@ server <- function(input, output, session) {
     if (include_drift) {
       equation <- paste(equation, drift)
     }
-    
-    
+
     # Add the error term
     equation <- paste(equation, "+ \\varepsilon_t")
     
@@ -480,7 +565,6 @@ server <- function(input, output, session) {
   output$colNumUI <- renderUI({
     req(data())
     df <- data()
-    
     column_names <- names(df)
     
     # Ensure there are at least two columns
@@ -554,8 +638,8 @@ server <- function(input, output, session) {
     # Only show buttons if a file has been loaded
     req(input$fileData) # Ensure that a file is uploaded before showing the input
     tagList(
-      #actionButton("submitBtn", "Submit"),
-      actionButton("plotSettings", "Plot Labels")
+      actionButton("plotSettings", "Labels"),
+      actionButton("dimBtn", "Dim. (*)")
     )
   })
 
@@ -617,8 +701,79 @@ server <- function(input, output, session) {
 ##########  ##########  ##########  ##########  ##########  ##########  ########  
   
   
+  
+  userData <- reactiveValues(
+    data = NULL, 
+    mainTitle = "Title", 
+    xLabel = "X-axis", 
+    yLabel = "Y-axis",
+    plotWidth = "850px", 
+    plotHeight = "500px"
+  )
+  
+  
+  
+  #    Dimenstion , X and Y
+  observeEvent(input$dimBtn, {
+    showModal(modalDialog(
+      title = "Set Plot with & height",
+      textInput("plotWidth", "Plot Width", value = userData$plotWidth),
+      textInput("plotHeight", "Plot Height", value = userData$plotHeight),
+      selectInput("theme", "Select Theme",
+                  choices = list("Line Draw" = "theme_linedraw",
+                                  "Default" = "theme_gray",
+                                 "Minimal" = "theme_minimal",
+                                 "Classic" = "theme_classic",
+                                 "Light" = "theme_light",
+                                 "Dark" = "theme_dark",
+                                 "Void" = "theme_void")),
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("okDimensions", "OK")
+      )
+    ))
+  })
+  
+  # Update plot dimensions when 'OK' is clicked in dimensions modal
+  observeEvent(input$okDimensions, {
+    userData$plotWidth <- input$plotWidth
+    userData$plotHeight <- input$plotHeight
+    userData$selectedTheme <- input$theme  # Storing the selected theme
+    removeModal()
+  })
+  
+  
+
+  #    observer , when "Plot Labels" is clicked, will ask for : 
+  #    Title, X-Label and Y-Label
+  observeEvent(input$plotSettings, {
+    showModal(modalDialog(
+      title = "Set Plot Settings",
+      textInput("mainTitle", "Title", userData$mainTitle),
+      textInput("xLabel", "X-axis Title", userData$xLabel),
+      textInput("yLabel", "Y-axis Title", userData$yLabel),
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("ok", "OK")
+      )
+    ))
+  })
+  
+  # observer for the button "ok" above
+  observeEvent(input$ok, {
+    userData$mainTitle <- input$mainTitle
+    userData$xLabel <- input$xLabel
+    userData$yLabel <- input$yLabel
+    removeModal()
+  })
+  
+
+  
+  
+  
   # Define a reactive value
   values <- reactiveValues(islog = "No")
+  
   
   # Observe any changes in the checkbox and update the reactive value
   observe({
@@ -629,33 +784,6 @@ server <- function(input, output, session) {
     }
   })
   
-  
-  #    observer , when "Plot Labels" is clicked, will ask for : 
-  #    Title, X-Label and Y-Label
-  observeEvent(input$plotSettings, {
-    showModal(modalDialog(
-      title = "Set Plot Settings",
-      textInput("mainTitle", "Title", userData$mainTitle),
-      textInput("xTitle", "X-axis Title", userData$xTitle),
-      textInput("yTitle", "Y-axis Title", userData$yTitle),
-      footer = tagList(
-        modalButton("Cancel"),
-        actionButton("ok", "OK")
-      )
-    ))
-  })
-  
-  
-  # observer for the button "ok" above
-  observeEvent(input$ok, {
-    userData$mainTitle <- input$mainTitle
-    userData$xTitle <- input$xTitle
-    userData$yTitle <- input$yTitle
-    removeModal()
-  })
-  
-
- 
   # # Observer to update the selectInput based on the frequency of data
   # observe({
   #   # Ensure that 'input$time' has a value before proceeding
@@ -870,7 +998,7 @@ server <- function(input, output, session) {
   output$tsPlot <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
     
-    plot(tsData(),main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle, type = 'l',lwd = 2)
+    plot(tsData(),main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l',lwd = 2)
   })
   
   
@@ -898,7 +1026,7 @@ server <- function(input, output, session) {
   output$tsDisplay2 <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
     
-    ggtsdisplay(tsData(), plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
+    ggtsdisplay(tsData(), plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
   })
   
   
@@ -931,7 +1059,7 @@ server <- function(input, output, session) {
     req(tsData()) # Ensure tsData is not NULL
     log_st <- log(tsData())
     
-    plot(log_st, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle, type = 'l', lwd = 2)
+    plot(log_st, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
   })
   
   
@@ -963,7 +1091,7 @@ server <- function(input, output, session) {
     req(tsData()) # Ensure tsData is not NULL
     log_st <- log(tsData())
     
-    ggtsdisplay(log_st, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
+    ggtsdisplay(log_st, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
   })
 
   
@@ -990,7 +1118,7 @@ server <- function(input, output, session) {
     req(tsData()) # Ensure tsData is not NULL
     d1_St <- diff(tsData())
     
-    plot(d1_St, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle, type = 'l', lwd = 2)
+    plot(d1_St, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
   })
   
   
@@ -1022,7 +1150,7 @@ server <- function(input, output, session) {
     req(tsData()) # Ensure tsData is not NULL
     d1_St <- diff(tsData())
     
-    ggtsdisplay(d1_St, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
+    ggtsdisplay(d1_St, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
   })
   
   
@@ -1048,7 +1176,7 @@ server <- function(input, output, session) {
     frequency = as.numeric(currentFrequency())
     D1_St <- diff(tsData(), frequency)
     
-    plot(D1_St, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle, type = 'l', lwd = 2)
+    plot(D1_St, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
   })
   
   
@@ -1084,7 +1212,7 @@ server <- function(input, output, session) {
     frequency = as.numeric(currentFrequency())
     D1_St <- diff(tsData(), frequency)
     
-    ggtsdisplay(D1_St, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
+    ggtsdisplay(D1_St, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
   })
 
 
@@ -1113,7 +1241,7 @@ server <- function(input, output, session) {
     frequency = as.numeric(currentFrequency())
     D1_log_St <- diff(log(tsData()), frequency)
     
-    plot(D1_log_St, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle, type = 'l', lwd = 2)
+    plot(D1_log_St, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
   })
   
   
@@ -1148,7 +1276,7 @@ server <- function(input, output, session) {
     frequency = as.numeric(currentFrequency())
     D1_log_St <- diff(log(tsData()), frequency)
     
-    ggtsdisplay(D1_log_St , plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
+    ggtsdisplay(D1_log_St , plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
   })
   
   
@@ -1178,7 +1306,7 @@ server <- function(input, output, session) {
     frequency = as.numeric(currentFrequency())
     d1_D1_log_St <- diff(diff(log(tsData()), frequency))
     
-    plot(d1_D1_log_St, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle, lwd = 2)
+    plot(d1_D1_log_St, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, lwd = 2)
   })
   
   output$dDlogplotACF <- renderPlot({
@@ -1212,7 +1340,7 @@ server <- function(input, output, session) {
     frequency = as.numeric(currentFrequency())
     d1_D1_log_St <- diff(diff(log(tsData()), frequency))
     
-    ggtsdisplay(d1_D1_log_St, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
+    ggtsdisplay(d1_D1_log_St, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
   })
   
   output$teststationarited1Ds1LogSt <- renderPrint({
@@ -1240,7 +1368,7 @@ server <- function(input, output, session) {
     req(tsData()) # Ensure tsData is not NULL
     d1_log_st <- diff(log(tsData()))
     
-    plot(d1_log_st, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle, type = 'l', lwd = 2)
+    plot(d1_log_st, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
   })
   
   
@@ -1272,7 +1400,7 @@ server <- function(input, output, session) {
     req(tsData()) # Ensure tsData is not NULL
     d1_log_st <- diff(log(tsData()))
     
-    ggtsdisplay(d1_log_st, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
+    ggtsdisplay(d1_log_st, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
   })
   
   
@@ -1306,7 +1434,7 @@ server <- function(input, output, session) {
                         input$d_n,
                         input$DS_n)
     
-    ggtsdisplay(myData, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
+    ggtsdisplay(myData, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
   })
   
   
@@ -1318,7 +1446,7 @@ server <- function(input, output, session) {
                 input$d_n,
                 input$DS_n)
 
-    plot(myData,main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle, type = 'l',lwd = 2)
+    plot(myData,main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l',lwd = 2)
   })
   
   output$difference2ACF <- renderPlot({
@@ -1394,7 +1522,7 @@ server <- function(input, output, session) {
 
   output$tsDisplay <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    ggtsdisplay(tsData(),plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xTitle, ylab = userData$yTitle)
+    ggtsdisplay(tsData(),plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
   })
   
   
@@ -1959,23 +2087,34 @@ server <- function(input, output, session) {
   ####################################################################################
   
   
+  output$Previsions_Plot_pdq_UI <- renderUI({
+    plotOutput("Previsions_Plot_pdq", width = userData$plotWidth, height = userData$plotHeight)
+  })
+  
+  
+
   output$Previsions_Plot_pdq <- renderPlot({
     req(tsData())
-    if (input$driftYN == "TRUE") {
-      driftConsideration =TRUE
-    }
-    else {
-      driftConsideration =FALSE
-    }
-    
-    myData <- tsData()    
-    
+
     sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
-    # sarima_model<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
-   
-     fcst <- forecast(sarima_model,h=input$length)
-    plot(fcst, lwd = 2)
-    # autoplot(fcst, lwd = 2, include =2)
+
+    forecasted_Data <- forecast(sarima_model,h=input$length)
+
+    # Convert to ggplot object using autoplot
+    ggplot_forecast <- autoplot(forecasted_Data, lwd = 3)
+
+
+    # Apply selected theme, or default theme if none selected
+    plot_theme <- if (is.null(input$theme) || input$theme == "") theme_light() else get(input$theme)()
+
+    # Add labels and title
+    ggplot_forecast <- ggplot_forecast +
+      labs(x = userData$xLabel,
+           y = userData$yLabel,
+           title = userData$mainTitle) +
+      plot_theme
+
+    ggplot_forecast
   })
   
   
@@ -2058,6 +2197,70 @@ server <- function(input, output, session) {
 
     plot(sarima_model) 
   })
+  
+  
+  output$timeSeriesPlot_SARIMA <- renderPlot({
+    req(tsData())
+    ts_data <- tsData()  #  time series data
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput   #  SARIMA model
+
+    #Plot the time series data
+    plot(ts_data, type = "l", lwd = 2, col = "blue3", main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
+    
+    # Add the fitted values from the SARIMA model
+    fitted_values <- fitted(sarima_model)
+    lines(fitted_values, col = "firebrick", type = "l")  # 'type = "p"' plots the fitted values as points
+
+    # plot(sarima_model) 
+  })
+  
+  
+  output$plotUI <- renderUI({
+    plotOutput("timeSeriesPlot_and_SARIMA", width = userData$plotWidth, height = userData$plotHeight)
+  })
+  
+  
+  output$timeSeriesPlot_and_SARIMA <- renderPlot({
+    req(tsData())
+    ts_data <- tsData()  # time series data
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput  # SARIMA model
+    
+    ts_LineType <- as.numeric(input$tsLineType)
+    model_LineType <- as.numeric(input$sarimaLineType)
+    
+    # Convert time series data to a data frame for ggplot2
+    ts_df <- data.frame(time = time(ts_data), value = as.vector(ts_data))
+    
+    # Create a ggplot object
+    p <- ggplot(ts_df, aes(x = time, y = value)) +
+      geom_line(lty = ts_LineType, size = input$tsLineWidth, color = input$tsLineColor) +
+      ggtitle(userData$mainTitle) + xlab(userData$xLabel) + ylab(userData$yLabel)
+    
+    # Add the fitted values from the SARIMA model as a line
+    fitted_values <- data.frame(time = time(ts_data), value = fitted(sarima_model))
+    p <- p + geom_line(data = fitted_values, aes(x = time, y = value), lty = model_LineType, color = input$sarimaLineColor, size = input$sarimaLineWidth)
+    
+    # Apply the selected theme, or default to theme_linedraw() if none selected
+    selected_theme <- ifelse(is.null(input$theme) || input$theme == "", "theme_linedraw", input$theme)
+    p + get(selected_theme)()
+  })
+  
+  
+  # output$timeSeriesPlot_and_SARIMA <- renderPlot({
+  #   req(tsData())
+  #   ts_data <- tsData()  #  time series data
+  #   sarima_model <- results_ARIMA_pdPD_drift()$modelOutput   #  SARIMA model
+  #   
+  #   ts_LineType <- as.numeric(input$tsLineType)
+  #   
+  #   model_LineType <- as.numeric(input$sarimaLineType)
+  #   
+  #   # Plot the time series data
+  #   plot(ts_data, lty = ts_LineType, lwd = input$tsLineWidth, col = input$tsLineColor, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
+  #   # Add the fitted values from the SARIMA model as a line
+  #   fitted_values <- fitted(sarima_model)
+  #   lines(fitted_values, lty = model_LineType, col = input$sarimaLineColor, lwd = input$sarimaLineWidth)
+  # })
   
   ########  ########  ########  ########  ########  ########  ########  ########
   #
@@ -2152,8 +2355,8 @@ server <- function(input, output, session) {
     # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
     
     ggtsdiag(sarima_model) 
-        # xlab(userData$xTitle)+
-        # ylab(userData$yTitle) +
+        # xlab(userData$xLabel)+
+        # ylab(userData$yLabel) +
         # ggtitle(userData$mainTitle)
   })
   
@@ -2225,6 +2428,11 @@ server <- function(input, output, session) {
   
   
   
+  output$ForecastedPlotUI <- renderUI({
+    plotOutput("SARIMAforecastplot", width = userData$plotWidth, height = userData$plotHeight)
+  })
+  
+  
   output$SARIMAforecastplot <- renderPlot({
     req(tsData())
     req(currentFrequency())
@@ -2245,7 +2453,7 @@ server <- function(input, output, session) {
                P = input$ARIMAps, D = input$ARIMAds, Q = input$ARIMAqs,
                S = frequency,
                no.constant=nodriftConsideration, lwd = 2,
-               main = userData$mainTitle, xlab = userData$xTitle)
+               main = userData$mainTitle, xlab = userData$xLabel)
   })
   
 
@@ -2316,11 +2524,14 @@ server <- function(input, output, session) {
   output$auto_SARIMA_symbolic <- renderUI({
     req(tsData())
     # get the model
-    fittedModel <- results()$modelOutput
-    
-    eqs <- extractSARIMAeqLaTeX(fittedModel)
-    
-    withMathJax(helpText(eqs$symbolic))
+    if (input$Model == "ARIMA"){ 
+        fittedModel <- results()$modelOutput
+        eqs <- extractSARIMAeqLaTeX(fittedModel)
+        withMathJax(helpText(eqs$symbolic))
+    }else{
+        "select the ARIMA model for this output"
+    } 
+
   })
   
   
