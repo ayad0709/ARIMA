@@ -2220,47 +2220,47 @@ server <- function(input, output, session) {
   })
   
   
-  output$timeSeriesPlot_and_SARIMA <- renderPlot({
-    req(tsData())
-    ts_data <- tsData()  # time series data
-    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput  # SARIMA model
-    
-    ts_LineType <- as.numeric(input$tsLineType)
-    model_LineType <- as.numeric(input$sarimaLineType)
-    
-    # Convert time series data to a data frame for ggplot2
-    ts_df <- data.frame(time = time(ts_data), value = as.vector(ts_data))
-    
-    # Create a ggplot object
-    p <- ggplot(ts_df, aes(x = time, y = value)) +
-      geom_line(lty = ts_LineType, size = input$tsLineWidth, color = input$tsLineColor) +
-      ggtitle(userData$mainTitle) + xlab(userData$xLabel) + ylab(userData$yLabel)
-    
-    # Add the fitted values from the SARIMA model as a line
-    fitted_values <- data.frame(time = time(ts_data), value = fitted(sarima_model))
-    p <- p + geom_line(data = fitted_values, aes(x = time, y = value), lty = model_LineType, color = input$sarimaLineColor, size = input$sarimaLineWidth)
-    
-    # Apply the selected theme, or default to theme_linedraw() if none selected
-    selected_theme <- ifelse(is.null(input$theme) || input$theme == "", "theme_linedraw", input$theme)
-    p + get(selected_theme)()
-  })
-  
-  
   # output$timeSeriesPlot_and_SARIMA <- renderPlot({
   #   req(tsData())
-  #   ts_data <- tsData()  #  time series data
-  #   sarima_model <- results_ARIMA_pdPD_drift()$modelOutput   #  SARIMA model
+  #   ts_data <- tsData()  # time series data
+  #   sarima_model <- results_ARIMA_pdPD_drift()$modelOutput  # SARIMA model
   #   
   #   ts_LineType <- as.numeric(input$tsLineType)
-  #   
   #   model_LineType <- as.numeric(input$sarimaLineType)
   #   
-  #   # Plot the time series data
-  #   plot(ts_data, lty = ts_LineType, lwd = input$tsLineWidth, col = input$tsLineColor, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
+  #   # Convert time series data to a data frame for ggplot2
+  #   ts_df <- data.frame(time = time(ts_data), value = as.vector(ts_data))
+  #   
+  #   # Create a ggplot object
+  #   p <- ggplot(ts_df, aes(x = time, y = value)) +
+  #     geom_line(lty = ts_LineType, size = input$tsLineWidth, color = input$tsLineColor) +
+  #     ggtitle(userData$mainTitle) + xlab(userData$xLabel) + ylab(userData$yLabel)
+  #   
   #   # Add the fitted values from the SARIMA model as a line
-  #   fitted_values <- fitted(sarima_model)
-  #   lines(fitted_values, lty = model_LineType, col = input$sarimaLineColor, lwd = input$sarimaLineWidth)
+  #   fitted_values <- data.frame(time = time(ts_data), value = fitted(sarima_model))
+  #   p <- p + geom_line(data = fitted_values, aes(x = time, y = value), lty = model_LineType, color = input$sarimaLineColor, size = input$sarimaLineWidth)
+  #   
+  #   # Apply the selected theme, or default to theme_linedraw() if none selected
+  #   selected_theme <- ifelse(is.null(input$theme) || input$theme == "", "theme_linedraw", input$theme)
+  #   p + get(selected_theme)()
   # })
+  
+  
+  output$timeSeriesPlot_and_SARIMA <- renderPlot({
+    req(tsData())
+    ts_data <- tsData()  #  time series data
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput   #  SARIMA model
+
+    ts_LineType <- as.numeric(input$tsLineType)
+
+    model_LineType <- as.numeric(input$sarimaLineType)
+
+    # Plot the time series data
+    plot(ts_data, lty = ts_LineType, lwd = input$tsLineWidth, col = input$tsLineColor, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
+    # Add the fitted values from the SARIMA model as a line
+    fitted_values <- fitted(sarima_model)
+    lines(fitted_values, lty = model_LineType, col = input$sarimaLineColor, lwd = input$sarimaLineWidth)
+  })
   
   ########  ########  ########  ########  ########  ########  ########  ########
   #
