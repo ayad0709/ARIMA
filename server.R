@@ -634,6 +634,37 @@ server <- function(input, output, session) {
   
   # Use renderUI to conditionally render the buttons : 
   # for asking to input The : Title label of the graph , X label , and Y label
+  
+  observeEvent(input$mainTabset, {
+    updateUI()
+  })
+  
+  observeEvent(input$subTabset, {
+    updateUI()
+  })
+  
+  # updateUI <- function() {
+  #   output$conditionalButtons <- renderUI({
+  #     # Define the tabs that trigger the button style change
+  #     activeTabs <- c("main_tab_1", "sub_tab_1")
+  #     
+  #     # Initialize default button style
+  #     dimBtnStyle <- "color: black; background-color: grey;"
+  #     
+  #     # Check if the current main tab or sub-tab is one of the active tabs
+  #     if (input$mainTabset %in% activeTabs || input$subTabset %in% activeTabs) {
+  #       dimBtnStyle <- "color: white; background-color: green;"
+  #     }
+  #     
+  #     tagList(
+  #       actionButton("plotSettings", "Labels"),
+  #       actionButton("dimBtn", "Dim. (*)", style = dimBtnStyle)
+  #     )
+  #   })
+  # }
+
+  
+  
   output$conditionalButtons <- renderUI({
     # Only show buttons if a file has been loaded
     req(input$fileData) # Ensure that a file is uploaded before showing the input
@@ -707,8 +738,9 @@ server <- function(input, output, session) {
     mainTitle = "Title", 
     xLabel = "X-axis", 
     yLabel = "Y-axis",
-    plotWidth = "850px", 
-    plotHeight = "500px"
+    plotWidth = "750px", 
+    plotHeight = "600px",
+    labelsize = 10
   )
   
   
@@ -738,7 +770,7 @@ server <- function(input, output, session) {
   observeEvent(input$okDimensions, {
     userData$plotWidth <- input$plotWidth
     userData$plotHeight <- input$plotHeight
-    userData$selectedTheme <- input$theme  # Storing the selected theme
+    userData$selectedTheme <- input$theme  
     removeModal()
   })
   
@@ -750,8 +782,9 @@ server <- function(input, output, session) {
     showModal(modalDialog(
       title = "Set Plot Settings",
       textInput("mainTitle", "Title", userData$mainTitle),
-      textInput("xLabel", "X-axis Title", userData$xLabel),
-      textInput("yLabel", "Y-axis Title", userData$yLabel),
+      textInput("xLabel", "X-axis label", userData$xLabel),
+      textInput("yLabel", "Y-axis label", userData$yLabel),
+      numericInput("labelsize", "tick size", value = 10, min = 1),
       footer = tagList(
         modalButton("Cancel"),
         actionButton("ok", "OK")
@@ -764,6 +797,7 @@ server <- function(input, output, session) {
     userData$mainTitle <- input$mainTitle
     userData$xLabel <- input$xLabel
     userData$yLabel <- input$yLabel
+    userData$labelsize <- input$labelsize # Storing the numeric value
     removeModal()
   })
   
@@ -1425,6 +1459,9 @@ server <- function(input, output, session) {
   ########  ########  ########  ########  ########  ########  ########  ######## 
   
 
+  output$d_D_Log_ts_Choice_UI <- renderUI({
+    plotOutput("d_D_Log_ts_Choice", width = userData$plotWidth, height = userData$plotHeight)
+  })
   
   output$d_D_Log_ts_Choice <- renderPlot({
     # expression to get myData
@@ -1434,9 +1471,18 @@ server <- function(input, output, session) {
                         input$d_n,
                         input$DS_n)
     
-    ggtsdisplay(myData, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
+
+    ggtsdisplay(myData,
+                plot.type = input$plot_type ,
+                main = userData$mainTitle,
+                xlab = userData$xLabel,
+                ylab = userData$yLabel)
   })
   
+  
+  output$tsPlot_Choice_UI <- renderUI({
+    plotOutput("tsPlot_Choice", width = userData$plotWidth, height = userData$plotHeight)
+  })
   
   output$tsPlot_Choice <- renderPlot({
     # expression to get myData
@@ -1446,8 +1492,30 @@ server <- function(input, output, session) {
                 input$d_n,
                 input$DS_n)
 
-    plot(myData,main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l',lwd = 2)
-  })
+   # plot(myData,main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l',lwd = 2)
+
+    # Convert to a dataframe for ggplot2
+    df <- data.frame(Time = time(myData), Value = as.numeric(myData))
+    
+    # Apply selected theme, or default theme if none selected
+    plot_theme <- if (is.null(input$theme) || input$theme == "") theme_light() else get(input$theme)()
+    
+   # Create ggplot
+   ggplot_ts <- ggplot(df, aes(x = Time, y = Value)) +
+     geom_line(size = 1) + # Line width set to 2
+     labs(title = userData$mainTitle, 
+          x = userData$xLabel, 
+          y = userData$yLabel) +plot_theme
+   
+     
+   # Add the theme to the ggplot
+   # ggplot_ts + theme(axis.text = element_text(size = userData$labelsize))
+   ggplot_ts + theme(axis.text = element_text(size = input$tickSize))
+   
+   
+     })
+  
+  
   
   output$difference2ACF <- renderPlot({
     # expression to get myData
@@ -2095,14 +2163,11 @@ server <- function(input, output, session) {
 
   output$Previsions_Plot_pdq <- renderPlot({
     req(tsData())
-
     sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
-
     forecasted_Data <- forecast(sarima_model,h=input$length)
 
     # Convert to ggplot object using autoplot
     ggplot_forecast <- autoplot(forecasted_Data, lwd = 3)
-
 
     # Apply selected theme, or default theme if none selected
     plot_theme <- if (is.null(input$theme) || input$theme == "") theme_light() else get(input$theme)()
@@ -2203,16 +2268,22 @@ server <- function(input, output, session) {
     req(tsData())
     ts_data <- tsData()  #  time series data
     sarima_model <- results_ARIMA_pdPD_drift()$modelOutput   #  SARIMA model
-
-    #Plot the time series data
-    plot(ts_data, type = "l", lwd = 2, col = "blue3", main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
+    forecasted_Data <- forecast(sarima_model,h=input$length)
     
-    # Add the fitted values from the SARIMA model
+    
     fitted_values <- fitted(sarima_model)
-    lines(fitted_values, col = "firebrick", type = "l")  # 'type = "p"' plots the fitted values as points
+    
+    
+    #Plot the time series data
+    plot(forecasted_Data, type = "l", lwd = 2, col = "red4", main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
+    lines(fitted_values, col = "firebrick3", type = "l", lwd = 2)
+    # Add the fitted values from the SARIMA model
+    # fitted_values <- fitted(sarima_model)
+    lines(ts_data, col = "black", type = "l", lwd = 2)  # 'type = "p"' plots the fitted values as points
 
     # plot(sarima_model) 
   })
+  
   
   
   output$plotUI <- renderUI({
@@ -2220,47 +2291,147 @@ server <- function(input, output, session) {
   })
   
   
-  # output$timeSeriesPlot_and_SARIMA <- renderPlot({
-  #   req(tsData())
-  #   ts_data <- tsData()  # time series data
-  #   sarima_model <- results_ARIMA_pdPD_drift()$modelOutput  # SARIMA model
-  #   
-  #   ts_LineType <- as.numeric(input$tsLineType)
-  #   model_LineType <- as.numeric(input$sarimaLineType)
-  #   
-  #   # Convert time series data to a data frame for ggplot2
-  #   ts_df <- data.frame(time = time(ts_data), value = as.vector(ts_data))
-  #   
-  #   # Create a ggplot object
-  #   p <- ggplot(ts_df, aes(x = time, y = value)) +
-  #     geom_line(lty = ts_LineType, size = input$tsLineWidth, color = input$tsLineColor) +
-  #     ggtitle(userData$mainTitle) + xlab(userData$xLabel) + ylab(userData$yLabel)
-  #   
-  #   # Add the fitted values from the SARIMA model as a line
-  #   fitted_values <- data.frame(time = time(ts_data), value = fitted(sarima_model))
-  #   p <- p + geom_line(data = fitted_values, aes(x = time, y = value), lty = model_LineType, color = input$sarimaLineColor, size = input$sarimaLineWidth)
-  #   
-  #   # Apply the selected theme, or default to theme_linedraw() if none selected
-  #   selected_theme <- ifelse(is.null(input$theme) || input$theme == "", "theme_linedraw", input$theme)
-  #   p + get(selected_theme)()
-  # })
-  
-  
   output$timeSeriesPlot_and_SARIMA <- renderPlot({
     req(tsData())
     ts_data <- tsData()  #  time series data
     sarima_model <- results_ARIMA_pdPD_drift()$modelOutput   #  SARIMA model
-
+    
     ts_LineType <- as.numeric(input$tsLineType)
-
+    
     model_LineType <- as.numeric(input$sarimaLineType)
-
+    
     # Plot the time series data
     plot(ts_data, lty = ts_LineType, lwd = input$tsLineWidth, col = input$tsLineColor, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-    # Add the fitted values from the SARIMA model as a line
+   
+    # Add grid lines to the plot
+    grid(nx = NULL, ny = NULL, col = "gray55", lty = "dotted", lwd = par("lwd"))
+    
+     # Add the fitted values from the SARIMA model as a line
     fitted_values <- fitted(sarima_model)
     lines(fitted_values, lty = model_LineType, col = input$sarimaLineColor, lwd = input$sarimaLineWidth)
   })
+  
+  
+  
+
+  output$plotAll_UI <- renderUI({
+    plotOutput("timeSeriesPlot_and_SARIMA_and_Pred", width = userData$plotWidth, height = userData$plotHeight)
+  })
+
+
+  # Generate dynamic inputs
+  output$dynamicInputs <- renderUI({
+
+    tagList(
+      
+      # tags$label("t(S)", style = "color: #546FC6;"),
+      # tags$br(),  # Line break
+      tags$input(type = "color", id = "color1", value = "#546FC6"),
+      tags$label(" Ts(t)", style = "color: #546FC6;"),
+      tags$br(), tags$br(), # Line break
+      selectInput("tsLineType2", label = NULL, choices = c("solid" = 1, "dashed" = 2, "dotted" = 3, "dotdash" = 4, "longdash" = 5, "twodash" = 6), selected = "l"),
+      numericInput("tsLineWidth2", label = NULL, min = 0, value = 2),
+      # selectInput("tsLineType2", label = HTML("<span style='color:#546FC6;'>  S(t).Type  </span>"), choices = c("solid" = 1, "dashed" = 2, "dotted" = 3, "dotdash" = 4, "longdash" = 5, "twodash" = 6), selected = "l"),
+      # numericInput("tsLineWidth2", label = HTML("<span style='color:#546FC6;'>  S(t).Width  </span>"), min = 0, value = 2),
+      # tags$hr(),
+      # tags$label("SARIMA", style = "color: #EE6666;"),
+      tags$br(),  # Line break
+      tags$input(type = "color", id = "color2", value = "#EE6666"),
+      tags$label("SARIMA", style = "color: #EE6666;"),
+      tags$br(), tags$br(), # Line break
+      selectInput("sarimaLineType2", label = NULL , choices = c("solid" = 1, "dashed" = 2, "dotted" = 3, "dotdash" = 4, "longdash" = 5, "twodash" = 6), selected = "3"),
+      numericInput("sarimaLineWidth2", label = NULL , min = 0, value = 2),
+      # selectInput("sarimaLineType2", label = HTML("<span style='color:#EE6666;'>  SARIMA.Type  </span>"), choices = c("solid" = 1, "dashed" = 2, "dotted" = 3, "dotdash" = 4, "longdash" = 5, "twodash" = 6), selected = "3"),
+      # numericInput("sarimaLineWidth2", label = HTML("<span style='color:#EE6666;'>  SARIMA.Width  </span>"), min = 0, value = 2),
+      tags$hr(),
+      # tags$label("Forecast", style = "color: #3BA372;"),
+      # tags$br(),  # Line break
+      tags$input(type = "color", id = "color3", value = "#3BA372"),
+      tags$label("Forecast", style = "color: #3BA372;"),
+      tags$br(), tags$br(), # Line break
+      selectInput("FLineType2", label = NULL , choices = c("solid" = 1, "dashed" = 2, "dotted" = 3, "dotdash" = 4, "longdash" = 5, "twodash" = 6), selected = "2"),
+      numericInput("FLineWidth2", label = NULL , min = 0, value = 2),
+      # selectInput("FLineType2", label = HTML("<span style='color:#3BA372;'>  Forecast.Type  </span>"), choices = c("solid" = 1, "dashed" = 2, "dotted" = 3, "dotdash" = 4, "longdash" = 5, "twodash" = 6), selected = "2"),
+      # numericInput("FLineWidth2", label = HTML("<span style='color:#3BA372;'>  Forecast.Width  </span>"), min = 0, value = 2),
+
+      
+      tags$script(HTML("
+            $(document).ready(function() {
+              // Immediately send the default color values to Shiny when the app loads
+              ['#color1', '#color2', '#color3'].forEach(function(colorId) {
+                var colorValue = $(colorId).val();
+                Shiny.setInputValue(colorId.substring(1), colorValue);
+              });
+          
+              // Update Shiny input values when user changes the color
+              $(document).on('input', '#color1, #color2, #color3', function() {
+                Shiny.setInputValue(this.id, this.value);
+              });
+            });
+          "))
+    )
+  })
+
+  
+  output$timeSeriesPlot_and_SARIMA_and_Pred <- renderPlot({
+    req(tsData())  # Ensure that tsData is available
+    ts_data <- tsData()  # Time series data
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput  # SARIMA model
+    
+    tsLineColor <-  input$color1 
+    sarimaLineColor <- input$color2 
+    FLineColor <- input$color3
+    
+    # Forecaste data
+    forecast_horizon <- input$length
+    forecasted_Data <- forecast(sarima_model, h = forecast_horizon)$mean
+    
+    # Add fitted values from the SARIMA model
+    fitted_values <- fitted(sarima_model)
+    
+    # Determine the x-axis limits
+    last_date <- max(time(ts_data))
+    end_date <- last_date + forecast_horizon / frequency(ts_data)
+    if (input$FLineWidth2 == 0) {
+      xlim_values = c(min(time(ts_data)), max(time(ts_data)))
+      
+    }else {
+      xlim_values = c(min(time(ts_data)), end_date)
+      
+    }
+    
+    # Determine the y-axis limits
+    all_data <- c(ts_data, fitted_values, forecasted_Data)
+    ylim_values <- range(all_data, na.rm = TRUE)
+    
+    # Create an empty plot with appropriate x and y axis limits
+    plot(ts_data, type = 'n', xlim = xlim_values, ylim = ylim_values, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
+    
+    # Add the original time series data
+    lines(ts_data, col = tsLineColor, lty = as.numeric(input$tsLineType2), lwd = input$tsLineWidth2)
+    
+    # Add the fitted values from the SARIMA model
+    lines(fitted_values, col = sarimaLineColor, lty = as.numeric(input$sarimaLineType2), lwd = input$sarimaLineWidth2)
+    
+    # Add the forecasted data
+    forecast_times <- seq(from = last_date + 1/frequency(ts_data), by = 1/frequency(ts_data), length.out = forecast_horizon)
+    lines(forecast_times, forecasted_Data, col = FLineColor, lty = as.numeric(input$FLineType2), lwd = input$FLineWidth2)
+    
+    # Draw a line connecting the last value of ts_data and the first value of forecasted_Data
+    if (length(ts_data) > 0 && length(forecasted_Data) > 0) {
+      last_ts_point <- ts_data[length(ts_data)]
+      first_forecast_point <- forecasted_Data[1]
+      segments(x0 = last_date, y0 = last_ts_point, x1 = last_date + 1/frequency(ts_data), y1 = first_forecast_point, col = FLineColor, lty = as.numeric(input$FLineType2), lwd = input$FLineWidth2)
+    }
+    
+    # Add grid lines
+    grid(nx = NULL, ny = NULL, col = "gray55", lty = "dotted", lwd = par("lwd"))
+  })
+  
+
+  
+  
+
   
   ########  ########  ########  ########  ########  ########  ########  ########
   #
@@ -2334,17 +2505,25 @@ server <- function(input, output, session) {
   #
   ########  ########  ########  ########  ########  ########  ########  ######## 
   
+  
+  output$chkResARIMApdq_UI <- renderUI({
+    plotOutput("chkResARIMApdq", width = userData$plotWidth, height = userData$plotHeight) 
+  })
 
   output$chkResARIMApdq <- renderPlot({
     req(tsData())
 
-    
     sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
-    # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
     
-    checkresiduals(sarima_model)
+    checkresiduals(sarima_model) + theme(axis.text = element_text(size = userData$labelsize))
   })
   
+  
+  
+  
+  output$tsdiagARIMApdq_UI <- renderUI({
+    plotOutput("tsdiagARIMApdq", width = userData$plotWidth, height = userData$plotHeight)
+  })
   
   
   output$tsdiagARIMApdq <- renderPlot({
@@ -2354,7 +2533,7 @@ server <- function(input, output, session) {
     sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
     # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration) 
     
-    ggtsdiag(sarima_model) 
+    ggtsdiag(sarima_model) + theme(axis.text = element_text(size = userData$labelsize))
         # xlab(userData$xLabel)+
         # ylab(userData$yLabel) +
         # ggtitle(userData$mainTitle)
@@ -2428,7 +2607,7 @@ server <- function(input, output, session) {
   
   
   
-  output$ForecastedPlotUI <- renderUI({
+  output$ForecastePlotUI <- renderUI({
     plotOutput("SARIMAforecastplot", width = userData$plotWidth, height = userData$plotHeight)
   })
   
