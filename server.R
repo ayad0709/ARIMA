@@ -295,11 +295,8 @@ server <- function(input, output, session) {
     numerical_one_line_Y_t <- paste0("$$ ", numerical_one_line_Y_t, " $$")
     
     
-    ########  ##########  ##########  ##########  ##########  ##########  ##########   
 
-    
-
-    ########  ##########  ##########  ##########  ##########  ##########  ##########   
+ 
 
     
     return(list(
@@ -333,13 +330,13 @@ server <- function(input, output, session) {
                "Holt-Winters..Multiplicative..Model..Equations:",
                " \\\\ \\text{ } \\\\ ",
                
-               "Level: ( L_t = \\alpha \\frac{Y_t}{S_{t-s}} + (1 - \\alpha) (L_{t-1} + T_{t-1}) )",
+               "Level:  L_t = \\alpha \\frac{Y_t}{S_{t-s}} + (1 - \\alpha) (L_{t-1} + T_{t-1}) ",
                " \\\\ \\text{ } \\\\ ",
                
-               "Trend: ( T_t = \\beta (L_t - L_{t-1}) + (1 - \\beta) T_{t-1} )",
+               "Trend:  T_t = \\beta (L_t - L_{t-1}) + (1 - \\beta) T_{t-1} ",
                " \\\\ \\text{ } \\\\ ",
                
-               "Seasonal: ( S_t = \\gamma \\frac{Y_t}{L_t} + (1 - \\gamma) S_{t-s} )",
+               "Seasonal:  S_t = \\gamma \\frac{Y_t}{L_t} + (1 - \\gamma) S_{t-s} ",
                " \\\\ \\text{ } \\\\ ",
                
                
@@ -353,11 +350,11 @@ server <- function(input, output, session) {
                
                "Holt-Winters.. Additive.. Model.. Equations:",
                " \\\\ \\text{ } \\\\ ",
-               "Level: ( L_t = \\alpha (Y_t - S_{t-s}) + (1 - \\alpha) (L_{t-1} + T_{t-1}) )",
+               "Level:  L_t = \\alpha (Y_t - S_{t-s}) + (1 - \\alpha) (L_{t-1} + T_{t-1}) ",
                " \\\\ \\text{ } \\\\ ",
-               "Trend: ( T_t = \\beta (L_t - L_{t-1}) + (1 - \\beta) T_{t-1} )",
+               "Trend:  T_t = \\beta (L_t - L_{t-1}) + (1 - \\beta) T_{t-1} ",
                " \\\\ \\text{ } \\\\ ",
-               "Seasonal: ( S_t = \\gamma (Y_t - L_t) + (1 - \\gamma) S_{t-s} )",
+               "Seasonal:  S_t = \\gamma (Y_t - L_t) + (1 - \\gamma) S_{t-s} ",
                " \\\\ \\text{ } \\\\ ",
                  
                "Level: L_t = ", alpha, " * (Y_t - S_{t-", s, "}) + (1 - ", alpha, ") * (L_{t-1} + T_{t-1})",
@@ -590,12 +587,7 @@ server <- function(input, output, session) {
   })
   
   
-  # choices = c("HoltWinters" = "hw",
-  #             "HoltWinters Multiplicative" = "hwm",
-  #             "HoltWinters Additive" = "hwa",
-  #             "Holt's Exponential Smoothing" = "hes"))
-  
-  
+
   
   # choose the type of Plot for the Panel "Ts Display" that is using the function "ggtsdisplay"
   output$graphTypeUI <- renderUI({
@@ -784,7 +776,7 @@ server <- function(input, output, session) {
       textInput("mainTitle", "Title", userData$mainTitle),
       textInput("xLabel", "X-axis label", userData$xLabel),
       textInput("yLabel", "Y-axis label", userData$yLabel),
-      numericInput("labelsize", "tick size", value = 10, min = 1),
+      numericInput("labelsize", "tick size", value = 12, min = 1),
       footer = tagList(
         modalButton("Cancel"),
         actionButton("ok", "OK")
@@ -818,38 +810,6 @@ server <- function(input, output, session) {
     }
   })
   
-  # # Observer to update the selectInput based on the frequency of data
-  # observe({
-  #   # Ensure that 'input$time' has a value before proceeding
-  #   req(currentFrequency())
-  #   
-  #   vall <- currentFrequency()
-  #   
-  #   if (vall == "Yearly") {
-  #     updateSelectInput(
-  #       session,
-  #       "Model",
-  #       label = "Select the Model:",
-  #       selected = "ARIMA",
-  #       choices = c("ARIMA", "HOLT's Exponential Smoothing")
-  #     )
-  #   } else {
-  #     updateSelectInput(
-  #       session,
-  #       "Model",
-  #       label = "Select the Model:",
-  #       selected = "ARIMA",
-  #       choices = c(
-  #         "ARIMA",
-  #         "HOLT's Exponential Smoothing",
-  #         "Holt-Winters Additive",
-  #         "Holt-Winters Multiplicative"
-  #       )
-  #     )
-  #   }
-  # })
-  
-
   
   ########  ########  ########  ########  ########  ########  ########  ########
   #
@@ -1487,33 +1447,33 @@ server <- function(input, output, session) {
   output$tsPlot_Choice <- renderPlot({
     # expression to get myData
     myData <- getMyData(tsData(),
-                currentFrequency(),
-                values$islog,
-                input$d_n,
-                input$DS_n)
-
-   # plot(myData,main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l',lwd = 2)
-
+                        currentFrequency(),
+                        values$islog,
+                        input$d_n,
+                        input$DS_n)
+    
+    # plot(myData,main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l',lwd = 2)
+    
     # Convert to a dataframe for ggplot2
     df <- data.frame(Time = time(myData), Value = as.numeric(myData))
     
     # Apply selected theme, or default theme if none selected
     plot_theme <- if (is.null(input$theme) || input$theme == "") theme_light() else get(input$theme)()
     
-   # Create ggplot
-   ggplot_ts <- ggplot(df, aes(x = Time, y = Value)) +
-     geom_line(size = 1) + # Line width set to 2
-     labs(title = userData$mainTitle, 
-          x = userData$xLabel, 
-          y = userData$yLabel) +plot_theme
-   
-     
-   # Add the theme to the ggplot
-   # ggplot_ts + theme(axis.text = element_text(size = userData$labelsize))
-   ggplot_ts + theme(axis.text = element_text(size = input$tickSize))
-   
-   
-     })
+    # Create ggplot
+    ggplot_ts <- ggplot(df, aes(x = Time, y = Value)) +
+      geom_line(size = 1) + # Line width set to 2
+      labs(title = userData$mainTitle, 
+           x = userData$xLabel, 
+           y = userData$yLabel) +plot_theme
+    
+    
+    # Add the theme to the ggplot
+    # ggplot_ts + theme(axis.text = element_text(size = userData$labelsize))
+    ggplot_ts + theme(axis.text = element_text(size = input$tickSize))
+    
+    
+  })
   
   
   
@@ -2843,7 +2803,7 @@ server <- function(input, output, session) {
     cat("                                                                                                       \n") 
     cat("                                                                                                       \n")
     cat("                                                                                                       \n")
-    cat("                              University Abdelmalek Essaadi                                            \n")
+    cat("                              University Abdelmalek Essaadi  - Morocco -                                          \n")
     cat("                                                                                                       \n")
     cat("                                                                                                       \n")
     cat("                                                                                                       \n")
@@ -2978,7 +2938,7 @@ server <- function(input, output, session) {
     cat("                                                                                                       \n") 
     cat("                                                                                                       \n")
     cat("                                                                                                       \n")
-    cat("                              Université Abdelmalek Essaadi                                            \n")
+    cat("                              Université Abdelmalek Essaadi  - Maroc -                                         \n")
     cat("                                                                                                       \n")
     cat("                                                                                                       \n")
     cat("                                                                                                       \n")

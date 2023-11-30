@@ -256,48 +256,45 @@ shinyUI(
                             )), 
                    
 
-                   tabPanel("d?D?(log?(St))",
-                            fluidPage(
-                              tabsetPanel(
-                                
-                                tabPanel("d?D?(log?(St))", br(),
-                                         sidebarLayout(
-                                           sidebarPanel(width=2,
-                                                        br(),br(),
-                                                        numericInput("d_n", label = "d :", min=0, value=0),
-                                                        numericInput("DS_n", label = "D :",min=0,  value=0),
-                                                        # selectInput("islog", label = "log", choices=c("Yes","No"),selected="No"),
-                                                        br(),
-                                                        checkboxInput("check_box", HTML("<b>log(S(t))</b>"), value = FALSE),
-                                                        br(),br(),
-                                                        conditionalPanel(
-                                                          condition = "input.tabs == 'Plot (*)'",
-                                                          numericInput("tickSize", label = HTML("<span style='color:red;'>Tick size :</span>"), min=1,  value=12)
-                                                        )
-                                           ),
-                                           mainPanel(width=10,
-                                                     tabsetPanel(id = "tabs",
-                                                                 tabPanel("d?D?log?(St) (*)", value = "dDlog_b", uiOutput("d_D_Log_ts_Choice_UI")), 
-                                                                 # tabPanel("d?D?log?(St)", plotOutput("d_D_Log_ts_Choice",width=750,height = 500 )),
-                                                                 tabPanel("Plot (*)", value = "PLot_b", uiOutput("tsPlot_Choice_UI")),
-                                                                 # tabPanel("Plot",plotOutput("tsPlot_Choice",width=750,height = 500)),
-                                                                 tabPanel("ACF", plotOutput("difference2ACF",width=750,height = 500)),
-                                                                 tabPanel("PACF", plotOutput("difference2PACF",width=750,height = 500)),
-                                                                 tabPanel("ACF+PACF", plotOutput("difference2ACFPACF",width=620,height = 500)),
-                                                                 tabPanel("stationary[ADF]", 
-                                                                          sidebarLayout(
-                                                                            sidebarPanel(width=3,
-                                                                                         selectInput("alternd2St", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                                                         numericInput("LagOrderADFd2St", label = "Lag",  min=0, value=12),
-                                                                                         #submitButton("Submit ==>"),
-                                                                            ),
-                                                                            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited2St")),
-                                                                          )),
-                                                                 tabPanel("ARIMA", verbatimTextOutput("ARIMA_d_D_log" )),
-                                                     )
+                   tabPanel("d?D?(log?(St))", br(),
+                            sidebarLayout(
+                              sidebarPanel(width=2,
+                                           br(),br(),
+                                           numericInput("d_n", label = "d :", min=0, value=0),
+                                           numericInput("DS_n", label = "D :",min=0,  value=0),
+                                           # selectInput("islog", label = "log", choices=c("Yes","No"),selected="No"),
+                                           br(),
+                                           checkboxInput("check_box", HTML("<b>log(S(t))</b>"), value = FALSE),
+                                           br(),br(),
+                                           conditionalPanel(
+                                             condition = "input.tabs == 'Plot (*)'",
+                                             numericInput("tickSize", label = HTML("<span style='color:red;'>Tick size :</span>"), min=1,  value=12)
                                            )
-                                         )),
-                              ))), 
+                              ),
+                              mainPanel(width=10,
+                                        tabsetPanel(id = "tabs",
+                                                    tabPanel("d?D?log?(St) (*)", uiOutput("d_D_Log_ts_Choice_UI")), 
+                                                    # tabPanel("d?D?log?(St)", plotOutput("d_D_Log_ts_Choice",width=750,height = 500 )),
+                                                    tabPanel("Plot (*)", uiOutput("tsPlot_Choice_UI")),
+                                                    # tabPanel("Plot",plotOutput("tsPlot_Choice",width=750,height = 500)),
+                                                    tabPanel("ACF", plotOutput("difference2ACF",width=750,height = 500)),
+                                                    tabPanel("PACF", plotOutput("difference2PACF",width=750,height = 500)),
+                                                    tabPanel("ACF+PACF", plotOutput("difference2ACFPACF",width=620,height = 500)),
+                                                    tabPanel("stationary[ADF]", 
+                                                             sidebarLayout(
+                                                               sidebarPanel(width=3,
+                                                                            selectInput("alternd2St", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
+                                                                            numericInput("LagOrderADFd2St", label = "Lag",  min=0, value=12),
+                                                                            #submitButton("Submit ==>"),
+                                                               ),
+                                                               tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited2St")),
+                                                             )),
+                                                    tabPanel("ARIMA", verbatimTextOutput("ARIMA_d_D_log" )),
+                                        )
+                              )
+                            )),
+                   
+             
                  )),
 
         
@@ -359,7 +356,7 @@ shinyUI(
                    tabPanel("Model Equation",
                             tabsetPanel(
                               tabPanel("Model SARIMA", uiOutput("auto_SARIMA_symbolic")),
-                              tabPanel("Model HW Equation", uiOutput("equationOutput_HW"))
+                              # tabPanel("Model HW Equation", uiOutput("equationOutput_HW"))
                             )),
 
                    tabPanel("Forecaste", 
