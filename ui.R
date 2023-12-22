@@ -545,11 +545,12 @@ shinyUI(
                    tabsetPanel(
                      tabPanel("Help", verbatimTextOutput("AboutAng")),
                      tabPanel("Aide", verbatimTextOutput("AboutFr")),
+                     
                      # tabPanel("debugOutput", verbatimTextOutput("debugOutput")),
                    ))
         ),
 
-
+        tabPanel("Model Help", uiOutput("Model_Help_ui")),
       )
     )
   )

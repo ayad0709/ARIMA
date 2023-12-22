@@ -138,9 +138,9 @@ server <- function(input, output, session) {
     # Add LaTeX delimiters for MathJax
     symbolic_eq2 <- paste0("$$ ", symbolic_eq2, " $$")
 
-    ########  ##########  ##########  ##########  ##########  ##########  ##########
+    #######  ##########  ##########  ##########  ##########  ##########  ##########
     # model_Help <- paste0("
-    #
+    # 
     #                    &(1 - \sum_{i=1}^{p} \phi_i L^i) & \text{ represents the non-seasonal AR component.} \\\\
     #                   &(1 - \sum_{j=1}^{P} \Phi_j L^{jS}) & \text{ represents the seasonal AR component.} \\\\
     #                   &(1 - L)^d & \text{ represents the non-seasonal differencing.} \\\\
@@ -151,10 +151,11 @@ server <- function(input, output, session) {
     #                   &(1 + \sum_{j=1}^{Q} \Theta_j L^{jS}) & \text{ represents the seasonal MA component.} \\\\
     #                   &\varepsilon_t & \text{ is the error term.} \\\\
     #                   &\delta t & \text{ represents the drift component.}
-    #
+    # 
     #                      ")
-    #
+    # 
     # model_Help <- paste0("$$ ", model_Help, " $$")
+
 
 
     ########  ##########  ##########  ##########  ##########  ##########  ##########
@@ -2705,6 +2706,48 @@ server <- function(input, output, session) {
   })
 
 
+  output$Model_Help_ui <- renderUI({
+    model_Help <- paste0("
+    
+                            $$
+                            \\phi_p(L)\\Phi_P(L^S)(1-L)^d(1-L^S)^D Y_t = c+\\theta_q(L)\\Theta_Q(L^S)\\varepsilon_t+ \\delta t
+                            $$
+
+                            $$
+                            (1 - \\sum_{i=1}^{p} \\phi_i L^i)(1 - \\sum_{j=1}^{P} \\Phi_j L^{jS}) (1 - L)^d (1 - L^S)^D Y_t
+                            = c + (1 + \\sum_{i=1}^{q} \\theta_i L^i)(1 + \\sum_{j=1}^{Q} \\Theta_j L^{jS}) \\varepsilon_t + \\delta t
+                            $$
+                            
+                            **Where:**
+     
+                            \\begin{align*}
+                            Y_t  : & \\text{ is the time series.} \\\\
+                            p, q : & \\text{ are the orders of the non-seasonal AR (AutoRegressive) and MA (Moving Average) parts, respectively.} \\\\
+                            P, Q : & \\text{ are the orders of the seasonal AR and MA parts, respectively.} \\\\
+                            d, D : & \\text{ are the orders of non-seasonal and seasonal differencing, respectively.} \\\\
+                            S : & \\text{ is the length of the seasonal period.} \\\\
+                            \\phi, \\Phi : & \\text{ are the parameters of the non-seasonal and seasonal AR parts, respectively.} \\\\
+                            \\theta, \\Theta : & \\text{ are the parameters of the non-seasonal and seasonal MA parts, respectively.} \\\\
+                            L : & \\text{ is the lag operator.} \\\\
+                            c : & \\text{ is a constant term (intercept).} \\\\
+                            \\varepsilon_t : & \\text{ is the error term.} \\\\
+                            \\delta : & \\text{ is the drift coefficient.} \\\\
+                            t : & \\text{ is the time index.} \\\\
+                            (1 - \\sum_{i=1}^{p} \\phi_i L^i) : & \\text{ represents the non-seasonal AR component.} \\\\
+                            (1 - \\sum_{j=1}^{P} \\Phi_j L^{jS}) : & \\text{ represents the seasonal AR component.} \\\\
+                            (1 - L)^d : & \\text{ represents the non-seasonal differencing.} \\\\
+                            (1 - L^S)^D : & \\text{ represents the seasonal differencing.} \\\\
+                            (1 + \\sum_{i=1}^{q} \\theta_i L^i) : & \\text{ represents the non-seasonal MA component.} \\\\
+                            (1 + \\sum_{j=1}^{Q} \\Theta_j L^{jS}) : & \\text{ represents the seasonal MA component.} \\\\
+                            \\delta t : & \\text{ represents the drift component.} \\\\
+                            \\end{align*}
+
+                            
+                        ")
+    
+    withMathJax(helpText(model_Help))
+    
+  })
   ################################################################################
 
 
