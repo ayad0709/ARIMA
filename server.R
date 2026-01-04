@@ -635,37 +635,82 @@ server <- function(input, output, session) {
     selectedTheme = "theme_linedraw"
   )
 
-  # Observer for Plot Dimensions and Theme
-  observeEvent(input$dimBtn, {
-    showModal(modalDialog(
-      title = "Set Plot Dimensions & Theme",
-      div(style = "display: flex; gap: 10px;",
-          textInput("plotWidth", "Plot Width (e.g. 800px)", value = userData$plotWidth),
-          textInput("plotHeight", "Plot Height (e.g. 600px)", value = userData$plotHeight)
-      ),
-      selectInput("theme", "Select Visual Theme",
-                  choices = list("Line Draw" = "theme_linedraw",
-                                 "Default"   = "theme_gray",
-                                 "Minimal"   = "theme_minimal",
-                                 "Classic"   = "theme_classic",
-                                 "Light"     = "theme_light",
-                                 "Dark"      = "theme_dark",
-                                 "Void"      = "theme_void"),
-                  selected = userData$selectedTheme),
-      footer = tagList(
-        modalButton("Cancel"),
-        actionButton("okDimensions", "OK", class = "btn-primary")
-      )
-    ))
-  })
-
-  # Update userData when 'OK' is clicked in dimensions modal
-  observeEvent(input$okDimensions, {
-    userData$plotWidth <- input$plotWidth
-    userData$plotHeight <- input$plotHeight
-    userData$selectedTheme <- input$theme
-    removeModal()
-  })
+  # # Observer for Plot Dimensions and Theme
+  # observeEvent(input$dimBtn, {
+  #   showModal(modalDialog(
+  #     title = "Set Plot Dimensions & Theme",
+  #     div(style = "display: flex; gap: 10px;",
+  #         textInput("plotWidth", "Plot Width (e.g. 800px)", value = userData$plotWidth),
+  #         textInput("plotHeight", "Plot Height (e.g. 600px)", value = userData$plotHeight)
+  #     ),
+  #     selectInput("theme", "Select Visual Theme",
+  #                 choices = list("Line Draw" = "theme_linedraw",
+  #                                "Default"   = "theme_gray",
+  #                                "Minimal"   = "theme_minimal",
+  #                                "Classic"   = "theme_classic",
+  #                                "Light"     = "theme_light",
+  #                                "Dark"      = "theme_dark",
+  #                                "Void"      = "theme_void"),
+  #                 selected = userData$selectedTheme),
+  #     footer = tagList(
+  #       modalButton("Cancel"),
+  #       actionButton("okDimensions", "OK", class = "btn-primary")
+  #     )
+  #   ))
+  # })
+  
+  
+    # 1. Initialize userData with your defaults at the start of the server function
+    userData <- reactiveValues(
+      plotWidth = 900, 
+      plotHeight = 650, 
+      selectedTheme = "theme_gray"
+    )
+    
+    # 2. The Modal Trigger
+    observeEvent(input$dimBtn, {
+      showModal(modalDialog(
+        title = "Set Plot Dimensions & Style",
+        size = "l",  # "l" for Large makes the modal wider, making sliders longer
+        
+        # Use the value from userData so it reflects current state
+        sliderInput("plotWidth", "Plot Width (px)", 
+                    min = 400, max = 3500, 
+                    value = userData$plotWidth, # Shows 900 initially, then updates
+                    step = 10, 
+                    width = '100%'),
+        
+        sliderInput("plotHeight", "Plot Height (px)", 
+                    min = 300, max = 2500, 
+                    value = userData$plotHeight, # Shows 650 initially, then updates
+                    step = 10, 
+                    width = '100%'),
+        
+        selectInput("theme", "Select Theme",
+                    selected = userData$selectedTheme,
+                    choices = list("Line Draw" = "theme_linedraw",
+                                   "Default" = "theme_gray",
+                                   "Minimal" = "theme_minimal",
+                                   "Classic" = "theme_classic",
+                                   "Light" = "theme_light",
+                                   "Dark" = "theme_dark",
+                                   "Void" = "theme_void"),
+                    width = '100%'),
+        
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton("okDimensions", "OK", class = "btn-primary")
+        )
+      ))
+    })
+    
+    # 3. Update userData when 'OK' is clicked
+    observeEvent(input$okDimensions, {
+      userData$plotWidth <- input$plotWidth
+      userData$plotHeight <- input$plotHeight
+      userData$selectedTheme <- input$theme
+      removeModal()
+    })
 
   # Observer for Plot Titles and Labels
   observeEvent(input$plotSettings, {
@@ -1457,8 +1502,9 @@ server <- function(input, output, session) {
     ggtsdisplay(tsData(),plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
   })
 
-
+  ########  ######## 
   # Plot the box plot
+  ########  ######## 
   output$boxP <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
     # Create a box plot with the data across cycles of the time series
@@ -1467,6 +1513,7 @@ server <- function(input, output, session) {
   
   # 1. The Dynamic UI Wrapper (Handles Width & Height)
   output$boxP_UI <- renderUI({
+    #plotly::plotlyOutput("boxP2",width = userData$plotWidth, height = userData$plotHeight)
     plotly::plotlyOutput("boxP2",width = userData$plotWidth, height = userData$plotHeight)
   })
   
@@ -1481,8 +1528,9 @@ server <- function(input, output, session) {
     p 
   })
 
-
+  ########  ######## 
   # Plot the time series data
+  ########  ######## 
   output$SubSeriesPlot <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
     ggsubseriesplot(tsData())
@@ -1507,8 +1555,9 @@ server <- function(input, output, session) {
     plotly::ggplotly(p)
   })
   
-
+  ########  ######## 
   # Plot the seasonal
+  ########  ######## 
   output$SeasonPlot <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
     ggseasonplot(tsData())
@@ -1531,16 +1580,19 @@ server <- function(input, output, session) {
     p 
   })
   
-
-    # Plot the Polar
+  
+  ########  ######## 
+  # Plot the Polar
+  ########  ######## 
   output$SeasonPlotPolar <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
     ggseasonplot(tsData(), polar=TRUE)
   })
   
   
-
+  ########  ######## 
   # Plot the lag plot
+  ########  ######## 
   output$lagPlot <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
     gglagplot(tsData())
@@ -1572,10 +1624,11 @@ server <- function(input, output, session) {
     ts_seasonal(tsData(), type = "all")
   })
 
-  # plot <- reactive({
+ 
 
-
-  # Plot the lag plot
+  ########  ######## 
+  # Plot the All plot
+  ########  ######## 
   
   output$allPlotUI <- renderUI({
     plotly::plotlyOutput("allPlot", width = userData$plotWidth, height = userData$plotHeight)

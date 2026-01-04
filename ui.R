@@ -1,7 +1,6 @@
 ################################################################################
-### LIBRARIES ####
+# 1. LIBRARIES & DEPENDENCIES
 ################################################################################
-
 
 packages = c("shiny", "shinythemes", "data.table", "ggplot2", "lubridate",
              "urca", "summarytools", "dplyr", "fpp2", "forecast", "stats",
@@ -27,28 +26,25 @@ if (!require("hrbrthemes", character.only = TRUE)) {
 }
 
 
-
 ################################################################################
-#                             Main
+# 2. MAIN USER INTERFACE
 ################################################################################
 
 shinyUI(
   fluidPage(
-
+    
+    # LaTeX rendering support
     tags$head(
       tags$script(type = "text/javascript",
                   src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML")
     ),
 
 
-################################################################################
-#                             Theme
-################################################################################
+  # Theme
   theme = shinytheme("spacelab"),
-  #
-
-
-  ##############################################################################
+  
+  # Initialize shinyjs
+  useShinyjs(),  
 
   # Include custom CSS
   tags$head(
@@ -60,22 +56,24 @@ shinyUI(
   ),
 
 
-  ##############################################################################
-
+  # UI Title
   titlePanel("SARIMA & H.W."),
 
-  useShinyjs(),  # Initialize shinyjs
+
 
   sidebarLayout(
 
-  ##############################################################################
-  #        Side Panel
-  ##############################################################################
+    ##########################################################################
+    # 3. SIDEBAR PANEL (Left Side)
+    ##########################################################################
 
     sidebarPanel(width=2,
+      # File Import
       fileInput("fileData", "File (xlsx, csv, txt ,sav)", accept = c(".xlsx", ".csv", ".txt", ".sav")),
+      # Dynamic Column Selectors
       uiOutput("dateColUI"),
       uiOutput("colNumUI"),
+      
       uiOutput("monthUI"),
       uiOutput("frequencyInputUI"),
       uiOutput("customInput"),
@@ -88,20 +86,21 @@ shinyUI(
     ),
 
 
-  ##############################################################################
-  #        Right Panels
-  ##############################################################################
+    ##########################################################################
+    # 4. MAIN PANEL (Tabs)
+    ##########################################################################
 
     mainPanel(
       tabsetPanel(
 
-
+        # 4.1 DATA PREVIEW TABS
         tabPanel("Stats.",
                  tabsetPanel(
                    tabPanel("Data", tableOutput("dataPrint")),
                    tabPanel("Statistics 1", tableOutput("data_StatisticsText1_Table")),
                    tabPanel("Statistics 2", verbatimTextOutput("data_StatisticsText2")),
                  )),
+        
 
         tabPanel("Time.Series",
                  tabsetPanel(
