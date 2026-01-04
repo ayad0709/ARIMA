@@ -2,50 +2,48 @@
 server <- function(input, output, session) {
 
 
-  # Reactive expression to read data from the file
+  # 1. Reactive expression to read data from the file
   data <- reactive({
     req(input$fileData)
     inFile <- input$fileData
-
-    if (is.null(inFile)) {
+    
+    # Extract extension from the original filename (more reliable than datapath)
+    ext <- tools::file_ext(inFile$name)
+    
+    # Use tryCatch to prevent the app from crashing on bad file formatting
+    df <- tryCatch({
+      switch(ext,
+             "csv"  = read.csv(inFile$datapath, header = TRUE),
+             "txt"  = read.delim(inFile$datapath),
+             "xlsx" = readxl::read_excel(inFile$datapath),
+             "xls"  = readxl::read_excel(inFile$datapath),
+             "sav"  = haven::read_spss(inFile$datapath),
+             stop("Unsupported file format. Please upload .csv, .txt, .xlsx, or .sav"))
+    }, error = function(e) {
+      shinyalert("Import Error", e$message, type = "error")
       return(NULL)
-    }
-
-    # Check file extension to decide on reading method
-    ext <- tools::file_ext(inFile$datapath)
-    if (ext == "csv") {
-      read.csv(inFile$datapath, header = TRUE)
-    } else if (ext %in% c("xls", "xlsx")) {
-      read_excel(inFile$datapath)
-    } else {
-      stop("Unsupported file type.")
-    }
-
-
-    # Determine the file type and read data accordingly
-    if (grepl("\\.xlsx$", inFile$name)) {
-      read_excel(inFile$datapath)
-    } else if (grepl("\\.csv$", inFile$name)) {
-      read.csv(inFile$datapath)
-    } else if (grepl("\\.txt$", inFile$name)) {
-      read.delim(inFile$datapath)
-    } else if (grepl("\\.sav$", inFile$name)) {
-      haven::read_spss(inFile$datapath)
-    }
+    })
+    
+    return(df)
   })
-
-
-  # Reactive expression to extract the selected column
+  
+  # 2. Reactive expression to extract the selected column
   selected_column_data <- reactive({
-    req(input$fileData, input$colNum)
+    req(data(), input$colNum)
     df <- data()
-    colData <- df[[as.numeric(input$colNum)]]
-    if (!is.numeric(colData)) {
-      stop("Selected column is not numeric.")
-    }
-    return(colData)
+    
+    # FIX: Use the column name directly. 
+    # input$colNum is a string (e.g., "Sales"). as.numeric("Sales") returns NA, causing a crash.
+    colData <- df[[input$colNum]]
+    
+    # Use validate() instead of stop() for a cleaner user interface message
+    validate(
+      need(is.numeric(colData), "The selected column is not numeric. Please select a different column.")
+    )
+    
+    # Ensure it returns a simple numeric vector for TS functions
+    return(as.numeric(colData))
   })
-
 
 
 ########  ##########  ##########  ##########  ##########  ##########  ##########
@@ -138,23 +136,6 @@ server <- function(input, output, session) {
     # Add LaTeX delimiters for MathJax
     symbolic_eq2 <- paste0("$$ ", symbolic_eq2, " $$")
 
-    #######  ##########  ##########  ##########  ##########  ##########  ##########
-    # model_Help <- paste0("
-    # 
-    #                    &(1 - \sum_{i=1}^{p} \phi_i L^i) & \text{ represents the non-seasonal AR component.} \\\\
-    #                   &(1 - \sum_{j=1}^{P} \Phi_j L^{jS}) & \text{ represents the seasonal AR component.} \\\\
-    #                   &(1 - L)^d & \text{ represents the non-seasonal differencing.} \\\\
-    #                   &(1 - L^S)^D & \text{ represents the seasonal differencing.} \\\\
-    #                   &Y_t & \text{ is the time series.} \\\\
-    #                   &c & \text{ is a constant.} \\\\
-    #                   &(1 + \sum_{i=1}^{q} \theta_i L^i) & \text{ represents the non-seasonal MA component.} \\\\
-    #                   &(1 + \sum_{j=1}^{Q} \Theta_j L^{jS}) & \text{ represents the seasonal MA component.} \\\\
-    #                   &\varepsilon_t & \text{ is the error term.} \\\\
-    #                   &\delta t & \text{ represents the drift component.}
-    # 
-    #                      ")
-    # 
-    # model_Help <- paste0("$$ ", model_Help, " $$")
 
 
 
@@ -298,9 +279,6 @@ server <- function(input, output, session) {
 
     # Add LaTeX delimiters for MathJax
     numerical_one_line_Y_t <- paste0("$$ ", numerical_one_line_Y_t, " $$")
-
-
-
 
 
 
@@ -485,285 +463,203 @@ server <- function(input, output, session) {
   }
 
 
-
-
 ########  ##########  ##########  ##########  ##########  ##########  ##########
 ########  ##########  ##########  ##########  ##########  ##########  ##########
-#
-#                           Render UI's
-#
+#   
+#                             Render UI Logic
+#  
 ########  ##########  ##########  ##########  ##########  ##########  ##########
 ########  ##########  ##########  ##########  ##########  ##########  ##########
-
-
-
-  # Reactive value to store the current frequency
-  currentFrequency <- reactiveVal()
-
-  # Observe changes in the dropdown selection
-  observe({
-    # Check if input$frequency is not NULL
-    if(!is.null(input$frequency)) {
-      if(input$frequency == "other") {
-        # Do nothing, wait for custom input
+    
+    # 1. Reactive expression for currentFrequency
+    # We keep your name 'currentFrequency' but make it a reactive expression
+    currentFrequency <- reactive({
+      req(input$frequency)
+      if (input$frequency == "other") {
+        req(input$customFrequency)
+        return(as.numeric(input$customFrequency))
       } else {
-        # Update the reactive value with the selected frequency
-        currentFrequency(input$frequency)
+        return(as.numeric(input$frequency))
       }
-    }
-  })
-
-  # Observe changes in the custom frequency input
-  observeEvent(input$customFrequency, {
-    # Check if input$customFrequency is not NULL
-    if(!is.null(input$customFrequency)) {
-      # Update the reactive value with the custom frequency
-      currentFrequency(input$customFrequency)
-    }
-  })
-
-
-
-  # Render the selectInput dynamically
-  output$frequencyInputUI <- renderUI({
-    req(input$fileData) # Ensure that a file is uploaded before showing the input
-    selectInput("frequency", "Frequency :",
-                choices = c("Quarterly   P[4]"   = 4,
-                            "Monthly     P[12]"  = 12,
-                            "Weekly      P[52]"  = 52,
-                            "Daily       P[365]" = 365,
-                            "7 days      P[7]"   = 7,
-                            "Other (Specify)" = "other"),
-                selected = 12)
-  })
-
-
-
-  # Render the numeric input when "Other" is selected
-  output$customInput <- renderUI({
-    if(!is.null(input$frequency) && input$frequency == "other") {
-      numericInput("customFrequency",
-                   span(class = "custom-label", "Enter Frequency :"),
-                   value = NULL)
-    }
-  })
-
-
-
-  # choose the forecast period
-  output$lengthInputUI <- renderUI({
-    req(input$fileData) # Ensure that a file is uploaded before showing the input
-    # Here we create the numericInput dynamically
-    numericInput("length",
-                 label = "Forecast Length :",
-                 value = 12,
-                 min = 1,
-                 max = 200)
-  })
-
-
-
-  # choose the column where the data is
-  output$colNumUI <- renderUI({
-    req(data())
-    df <- data()
-    column_names <- names(df)
-
-    # Ensure there are at least two columns
-    if (length(column_names) >= 2) {
-      selectInput("colNum", "Data :", column_names, selected = column_names[2] )
-    } else {
-      selectInput("colNum", "Data :", column_names )
-    }
-  })
-
-
-  # choose the Model for analyzing the data :  ARIMA  or H.W.
-  output$modelSelectUI <- renderUI({
-    req(input$fileData) # Ensure that a file is uploaded before showing the input
-    # Create the selectInput with default options. The options will be updated by the observer
-    selectInput("Model",
-                label = "Model :",
-                choices = c("ARIMA",
-                            "Holt-Winters Additive",
-                            "Holt-Winters Multiplicative",
-                            "HOLT's Exponential Smoothing"),
-                selected = "ARIMA")
-  })
-
-
-
-
-  # choose the type of Plot for the Panel "Ts Display" that is using the function "ggtsdisplay"
-  output$graphTypeUI <- renderUI({
-    req(input$fileData) # Ensure that a file is uploaded before showing the input
-    # Create the selectInput with default options. The options will be updated by the observer
-    selectInput("plot_type",
-                label = "Plot Type [for Ts Display]",
-                choices=c("partial", "histogram", "scatter", "spectrum"),
-                selected = "partial")
-  })
-
-
-
-  # Generate the select input for date column dynamically based on the data
-  output$dateColUI <- renderUI({
-    df <- data()
-    selectInput("dateCol", "Date :", names(df))
-  })
-
-
-
-  # Display data with correct date format in the 'Data' tab
-  output$dataPrint <- renderTable({
-    df <- data()
-    dateColName <- input$dateCol
-
-    if (!is.null(dateColName)) {
-      df[[dateColName]] <- as.Date(df[[dateColName]], origin = "1899-12-30")
-      df[[dateColName]] <- format(df[[dateColName]], "%d/%m/%Y")
-    }
-
-    df
-  }, rownames = TRUE)
-
-
-
-  # Use renderUI to conditionally render the buttons :
-  # for asking to input The : Title label of the graph , X label , and Y label
-
-  observeEvent(input$mainTabset, {
-    updateUI()
-  })
-
-  observeEvent(input$subTabset, {
-    updateUI()
-  })
-
-  # updateUI <- function() {
-  #   output$conditionalButtons <- renderUI({
-  #     # Define the tabs that trigger the button style change
-  #     activeTabs <- c("main_tab_1", "sub_tab_1")
-  #
-  #     # Initialize default button style
-  #     dimBtnStyle <- "color: black; background-color: grey;"
-  #
-  #     # Check if the current main tab or sub-tab is one of the active tabs
-  #     if (input$mainTabset %in% activeTabs || input$subTabset %in% activeTabs) {
-  #       dimBtnStyle <- "color: white; background-color: green;"
-  #     }
-  #
-  #     tagList(
-  #       actionButton("plotSettings", "Labels"),
-  #       actionButton("dimBtn", "Dim. (*)", style = dimBtnStyle)
-  #     )
-  #   })
-  # }
-
-
-
-  output$conditionalButtons <- renderUI({
-    # Only show buttons if a file has been loaded
-    req(input$fileData) # Ensure that a file is uploaded before showing the input
-    tagList(
-      actionButton("plotSettings", "Labels"),
-      actionButton("dimBtn", "Dim. (*)")
-    )
-  })
-
-
-########  ##########  ##########  ##########  ##########  ##########  ##########
-########  ##########  ##########  ##########  ##########  ##########  ##########
-#
-#             Time Series [ Data --> ts ]        tsData()
-#
-########  ##########  ##########  ##########  ##########  ##########  ##########
-########  ##########  ##########  ##########  ##########  ##########  ##########
-
-
-  # Reactive expression for the time series data
-  tsData <- reactive({
-    # Ensure that the file and column are selected and frequency is chosen
-    req(input$fileData)
-    req(input$colNum)
-    req(currentFrequency())
-    req(input$dateCol)
-
-    df <- data()
-
-    colData <- df[[input$colNum]]
-
-    date_col <- as.Date(df[[input$dateCol]])
-
-    # Get the Starting date in the series , and get the day, month and year
-    starting_date <- min(date_col, na.rm = TRUE)
-
-    start_day <- day(starting_date)
-    start_month <- month(starting_date)
-    start_year <- year(starting_date)
-
-    # Get the Last date in the series , and get the day, month and year
-    last_date <- max(date_col, na.rm = TRUE)
-
-    last_day <- day(last_date)
-    last_month <- month(last_date)
-    last_year <- year(last_date)
-
-    # Get the data from the file
-    numeric_data <- as.numeric(colData)
-
-    # Create the ts object
-    ts(numeric_data, frequency = as.numeric(currentFrequency()) ,start = c(start_year, start_month), end = c(last_year, last_month))
-
-  })
-
-
-
+    })
+    
+    # 2. Dynamic Input Renderers
+    output$frequencyInputUI <- renderUI({
+      req(input$fileData)
+      selectInput("frequency", "Frequency :",
+                  choices = c("Quarterly   P[4]"   = 4,
+                              "Monthly     P[12]"  = 12,
+                              "Weekly      P[52]"  = 52,
+                              "Daily       P[365]" = 365,
+                              "7 days      P[7]"   = 7,
+                              "Other (Specify)"    = "other"),
+                  selected = 12)
+    })
+    
+    output$customInput <- renderUI({
+      req(input$frequency)
+      if (input$frequency == "other") {
+        numericInput("customFrequency", 
+                     label = tags$span(class = "custom-label", "Enter Custom Frequency :"),
+                     value = 1, min = 1)
+      }
+    })
+    
+    output$lengthInputUI <- renderUI({
+      req(input$fileData)
+      numericInput("length", "Forecast Length (Periods) :", value = 12, min = 1, max = 500)
+    })
+    
+    output$colNumUI <- renderUI({
+      req(data())
+      choices <- names(data())
+      default_selection <- if(length(choices) >= 2) choices[2] else choices[1]
+      selectInput("colNum", "Select Data Column :", choices = choices, selected = default_selection)
+    })
+    
+    output$dateColUI <- renderUI({
+      req(data())
+      selectInput("dateCol", "Select Date Column :", choices = names(data()))
+    })
+    
+    output$modelSelectUI <- renderUI({
+      req(input$fileData)
+      selectInput("Model", "Forecasting Model :",
+                  choices = c("ARIMA", 
+                              "Holt-Winters Additive", 
+                              "Holt-Winters Multiplicative", 
+                              "HOLT's Exponential Smoothing"),
+                  selected = "ARIMA")
+    })
+    
+    output$graphTypeUI <- renderUI({
+      req(input$fileData)
+      selectInput("plot_type", "Diagnostic Plot Type :",
+                  choices = c("Partial ACF" = "partial", 
+                              "Histogram"   = "histogram", 
+                              "Scatter"     = "scatter", 
+                              "Spectrum"    = "spectrum"),
+                  selected = "partial")
+    })
+    
+    # 3. Data Table Display
+    output$dataPrint <- renderTable({
+      req(data(), input$dateCol)
+      df <- data()
+      try({
+        if(is.numeric(df[[input$dateCol]])) {
+          df[[input$dateCol]] <- as.Date(df[[input$dateCol]], origin = "1899-12-30")
+        } else {
+          df[[input$dateCol]] <- as.Date(df[[input$dateCol]])
+        }
+        df[[input$dateCol]] <- format(df[[input$dateCol]], "%d/%m/%Y")
+      }, silent = TRUE)
+      head(df, 100) 
+    }, rownames = TRUE)
+    
+    # 4. Conditional Sidebar Buttons
+    output$conditionalButtons <- renderUI({
+      req(input$fileData)
+      tagList(
+        actionButton("plotSettings", "Labels", icon = icon("tags")),
+        div(style="margin-top: 10px;"), 
+        actionButton("dimBtn", "Dim. (*)", icon = icon("expand"))
+      )
+    })
+    
+    
+    ########  ##########  ##########  ##########  ##########  ##########  ##########
+    #                  Time Series Object Creation [tsData()]
+    ########  ##########  ##########  ##########  ##########  ##########  ##########
+    
+    tsData <- reactive({
+      req(input$fileData, input$colNum, input$dateCol)
+      
+      # This now works because currentFrequency is defined as a reactive() above
+      freq <- currentFrequency() 
+      req(freq)
+      
+      df <- data()
+      colData <- df[[input$colNum]]
+      
+      # Date Parsing
+      date_vec <- tryCatch({
+        if(is.numeric(df[[input$dateCol]])) {
+          as.Date(df[[input$dateCol]], origin = "1899-12-30")
+        } else {
+          as.Date(df[[input$dateCol]])
+        }
+      }, error = function(e) return(NULL))
+      
+      req(date_vec)
+      starting_date <- min(date_vec, na.rm = TRUE)
+      
+      # Dynamic Start Vector Calculation
+      start_year <- lubridate::year(starting_date)
+      start_period <- switch(as.character(freq),
+                             "12"  = lubridate::month(starting_date),
+                             "4"   = lubridate::quarter(starting_date),
+                             "52"  = lubridate::isoweek(starting_date),
+                             "365" = lubridate::yday(starting_date),
+                             "7"   = lubridate::wday(starting_date),
+                             1 + as.numeric(format(starting_date, "%j")) %/% (365/freq)
+      )
+      
+      numeric_data <- as.numeric(colData)
+      numeric_data <- na.omit(numeric_data) 
+      
+      # Create the TS Object
+      ts_obj <- ts(numeric_data, 
+                   start = c(start_year, start_period), 
+                   frequency = freq)
+      
+      return(ts_obj)
+    })
+    
+    
+    
 
 ##########  ##########  ##########  ##########  ##########  ##########  ########
-########  ########  ########  ########  ########  ########  ########  ##########
-#
-#                            Observers
-#
-########  ########  ########  ########  ########  ########  ########  ##########
+#                                Observers
 ##########  ##########  ##########  ##########  ##########  ##########  ########
 
-
-
+  # Initialize reactive values for plot customization
   userData <- reactiveValues(
     data = NULL,
-    mainTitle = "Title",
-    xLabel = "X-axis",
-    yLabel = "Y-axis",
-    plotWidth = "750px",
+    mainTitle = "Time Series Plot",
+    xLabel = "Time",
+    yLabel = "Values",
+    plotWidth = "800px",  # Changed to percentage for better responsiveness
     plotHeight = "600px",
-    labelsize = 10
+    labelsize = 12,
+    selectedTheme = "theme_linedraw"
   )
 
-
-
-  #    Dimenstion , X and Y
+  # Observer for Plot Dimensions and Theme
   observeEvent(input$dimBtn, {
     showModal(modalDialog(
-      title = "Set Plot with & height",
-      textInput("plotWidth", "Plot Width", value = userData$plotWidth),
-      textInput("plotHeight", "Plot Height", value = userData$plotHeight),
-      selectInput("theme", "Select Theme",
+      title = "Set Plot Dimensions & Theme",
+      div(style = "display: flex; gap: 10px;",
+          textInput("plotWidth", "Plot Width (e.g. 800px)", value = userData$plotWidth),
+          textInput("plotHeight", "Plot Height (e.g. 600px)", value = userData$plotHeight)
+      ),
+      selectInput("theme", "Select Visual Theme",
                   choices = list("Line Draw" = "theme_linedraw",
-                                  "Default" = "theme_gray",
-                                 "Minimal" = "theme_minimal",
-                                 "Classic" = "theme_classic",
-                                 "Light" = "theme_light",
-                                 "Dark" = "theme_dark",
-                                 "Void" = "theme_void")),
+                                 "Default"   = "theme_gray",
+                                 "Minimal"   = "theme_minimal",
+                                 "Classic"   = "theme_classic",
+                                 "Light"     = "theme_light",
+                                 "Dark"      = "theme_dark",
+                                 "Void"      = "theme_void"),
+                  selected = userData$selectedTheme),
       footer = tagList(
         modalButton("Cancel"),
-        actionButton("okDimensions", "OK")
+        actionButton("okDimensions", "OK", class = "btn-primary")
       )
     ))
   })
 
-  # Update plot dimensions when 'OK' is clicked in dimensions modal
+  # Update userData when 'OK' is clicked in dimensions modal
   observeEvent(input$okDimensions, {
     userData$plotWidth <- input$plotWidth
     userData$plotHeight <- input$plotHeight
@@ -771,50 +667,48 @@ server <- function(input, output, session) {
     removeModal()
   })
 
-
-
-  #    observer , when "Plot Labels" is clicked, will ask for :
-  #    Title, X-Label and Y-Label
+  # Observer for Plot Titles and Labels
   observeEvent(input$plotSettings, {
     showModal(modalDialog(
-      title = "Set Plot Settings",
-      textInput("mainTitle", "Title", userData$mainTitle),
-      textInput("xLabel", "X-axis label", userData$xLabel),
-      textInput("yLabel", "Y-axis label", userData$yLabel),
-      numericInput("labelsize", "tick size", value = 12, min = 1),
+      title = "Plot Titles and Label Settings",
+      textInput("mainTitle", "Main Title", userData$mainTitle),
+      div(style = "display: flex; gap: 10px;",
+          textInput("xLabel", "X-axis Label", userData$xLabel),
+          textInput("yLabel", "Y-axis Label", userData$yLabel)
+      ),
+      numericInput("labelsize", "Axis Tick Size", value = userData$labelsize, min = 1),
       footer = tagList(
         modalButton("Cancel"),
-        actionButton("ok", "OK")
+        actionButton("ok", "OK", class = "btn-primary")
       )
     ))
   })
 
-  # observer for the button "ok" above
+  # Update userData when 'OK' is clicked in settings modal
   observeEvent(input$ok, {
     userData$mainTitle <- input$mainTitle
     userData$xLabel <- input$xLabel
     userData$yLabel <- input$yLabel
-    userData$labelsize <- input$labelsize # Storing the numeric value
+    userData$labelsize <- input$labelsize 
     removeModal()
   })
 
-
-
-
-
-  # Define a reactive value
+  # Log Transformation Observer
+  # Keeping the 'values' reactiveValues and 'islog' variable names as requested
   values <- reactiveValues(islog = "No")
 
-
-  # Observe any changes in the checkbox and update the reactive value
   observe({
+    # req ensures input$check_box exists before checking value
+    req(!is.null(input$check_box))
     if (input$check_box) {
       values$islog <- "Yes"
     } else {
       values$islog <- "No"
     }
   })
-
+    
+    
+    
 
   ########  ########  ########  ########  ########  ########  ########  ########
   #
@@ -1608,10 +1502,20 @@ server <- function(input, output, session) {
 
 
   # Plot the lag plot
-  output$allPlot <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    print(dataAll())
-    # plot %>% bind_shiny(plot_id="plot")
+  
+  output$allPlotUI <- renderUI({
+    plotly::plotlyOutput("allPlot", width = userData$plotWidth, height = userData$plotHeight)
+  })
+  
+  output$allPlot <- plotly::renderPlotly({
+    req(tsData())
+    
+    # ts_seasonal with type="all" creates a 4-pane interactive dashboard:
+    # Seasonal, Normal, Cycle, and Boxplot views combined.
+    p <- TSstudio::ts_seasonal(tsData(), type = "all")
+    
+    # Just return the object p. Do NOT use print().
+    p
   })
 
   ########  ########  ########  ########  ########  ########  ########  ########

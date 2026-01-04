@@ -2,28 +2,29 @@
 ### LIBRARIES ####
 ################################################################################
 
+
 packages = c("shiny", "shinythemes", "data.table", "ggplot2", "lubridate",
              "urca", "summarytools", "dplyr", "fpp2", "forecast", "stats",
              "Kendall", "lmtest", "vtable","shinyalert", "mathjaxr", "psych",
              "tseries", "seasonal", "xts", "astsa", "ggfortify",  "pastecs",
              "tsibble", "feasts", "readxl", "TSstudio", "latex2exp", "Hmisc",
-             "foreign","shinyWidgets","hrbrthemes", "shinyjs","TSstudio")
+             "foreign","shinyWidgets", "shinyjs", "plotly") 
 
-
-
-################################################################################
-# Now load or install & load LIBRARIES
-################################################################################
-
-package.check <- lapply(
-  packages,
-  FUN = function(x) {
-    if (!require(x, character.only = TRUE)) {
-      install.packages(x, dependencies = TRUE)
-      library(x, character.only = TRUE)
-    }
+load_packages <- function(p) {
+  if (!require(p, character.only = TRUE)) {
+    install.packages(p, dependencies = TRUE, repos = "https://cran.rstudio.com/")
+    library(p, character.only = TRUE)
   }
-)
+}
+
+invisible(lapply(packages, load_packages))
+
+# Special handling for hrbrthemes
+if (!require("hrbrthemes", character.only = TRUE)) {
+  message("hrbrthemes not found. Using theme_minimal as fallback.")
+  # Create a dummy function so the app doesn't crash when it sees theme_ipsum()
+  theme_ipsum <- function() theme_minimal()
+}
 
 
 
@@ -39,40 +40,12 @@ shinyUI(
                   src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML")
     ),
 
-    # # Include JavaScript for custom binding
-    # tags$head(
-    #   tags$script(HTML("
-    #   Shiny.inputBindings.register({
-    #     find: function(scope) {
-    #       return $(scope).find('.color-input');
-    #     },
-    #     getValue: function(el) {
-    #       return $(el).val();
-    #     },
-    #     subscribe: function(el, callback) {
-    #       $(el).on('input.colorInputBinding', function(e) {
-    #         callback();
-    #       });
-    #     },
-    #     unsubscribe: function(el) {
-    #       $(el).off('.colorInputBinding');
-    #     }
-    #   });
-    # "))
-    # ),
 
 ################################################################################
 #                             Theme
 ################################################################################
   theme = shinytheme("spacelab"),
   #
-  # Replace " ******* " with your preferred theme. Valid themes are:
-  #
-  #     cerulean, cosmo, cyborg, darkly, flatly, journal, lumen, paper,
-  #     readable, sandstone, simplex, slate, spacelab, superhero, united, yeti
-  #
-
-  #useShinyalert(force = TRUE),
 
 
   ##############################################################################
@@ -310,7 +283,8 @@ shinyUI(
                      tabPanel("Graphs Sais.", plotOutput("SeasonPlot",width=900,height = 630 )),
                      tabPanel("Graphs Sais. Polaire", plotOutput("SeasonPlotPolar",width=900,height = 630 )),
                      tabPanel("lag Plots", plotOutput("lagPlot",width=900,height = 630 )),
-                     tabPanel("All", plotOutput("allPlot",width=900,height = 630 )),
+                     #tabPanel("All", plotOutput("allPlot",width=900,height = 630 )),
+                     tabPanel("All", uiOutput("allPlotUI")),
 
                    ))),
 
