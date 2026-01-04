@@ -664,7 +664,12 @@ server <- function(input, output, session) {
     userData <- reactiveValues(
       plotWidth = 900, 
       plotHeight = 650, 
-      selectedTheme = "theme_gray"
+      selectedTheme = "theme_linedraw",
+      mainTitle = "Title",
+      xLabel = "X labe",
+      yLabel = "Y label",
+      labelsize =12 
+      
     )
     
     # 2. The Modal Trigger
