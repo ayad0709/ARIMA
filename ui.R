@@ -277,12 +277,24 @@ shinyUI(
         tabPanel("Stat.Plots",
                  fluidPage(
                    tabsetPanel(
-                     tabPanel("Ts Display", plotOutput("tsDisplay",width=900,height = 630 )),
+                     tabPanel("Ts", plotOutput("tsDisplay",width=900,height = 630 )),
+                     
                      tabPanel("Box-Plot", plotOutput("boxP",width=900,height = 630 )),
+                     tabPanel("B.P.2", uiOutput("boxP_UI")),
+                     
                      tabPanel("Sous-séries", plotOutput("SubSeriesPlot",width=900,height = 630 )),
+                     tabPanel("S.S.2", uiOutput("SubSeriesPlot_UI")),
+                     
                      tabPanel("Graphs Sais.", plotOutput("SeasonPlot",width=900,height = 630 )),
+                     tabPanel("G.S.2", uiOutput("SeasonPlot_UI")),
+                     
                      tabPanel("Graphs Sais. Polaire", plotOutput("SeasonPlotPolar",width=900,height = 630 )),
-                     tabPanel("lag Plots", plotOutput("lagPlot",width=900,height = 630 )),
+                     #tabPanel("G.S.P.2", uiOutput("SeasonPlotPolar_UI")),
+                     
+                     tabPanel("lag Plot", plotOutput("lagPlot",width=900,height = 630 )),
+                     tabPanel("Lag Plot2", uiOutput("lagPlot_UI")),
+                     
+                     
                      #tabPanel("All", plotOutput("allPlot",width=900,height = 630 )),
                      tabPanel("All", uiOutput("allPlotUI")),
 

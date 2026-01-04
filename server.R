@@ -1464,6 +1464,22 @@ server <- function(input, output, session) {
     # Create a box plot with the data across cycles of the time series
     boxplot(as.numeric(tsData()) ~ cycle(tsData()), xlab = "Cycle", ylab = "Data", main = "Box Plot by Cycle")
   })
+  
+  # 1. The Dynamic UI Wrapper (Handles Width & Height)
+  output$boxP_UI <- renderUI({
+    plotly::plotlyOutput("boxP2",width = userData$plotWidth, height = userData$plotHeight)
+  })
+  
+  # 2. The Plotly Render Function (Uses built-in TSstudio logic)
+  output$boxP2 <- plotly::renderPlotly({
+    req(tsData()) # Ensure data is loaded
+    
+    # TSstudio built-in seasonal boxplot is natively interactive (Plotly based)
+    p <- TSstudio::ts_seasonal(tsData(), type = "box")
+    
+    # Return the plotly object to the UI
+    p 
+  })
 
 
   # Plot the time series data
@@ -1472,6 +1488,25 @@ server <- function(input, output, session) {
     ggsubseriesplot(tsData())
   })
 
+  
+  # 1. The Dynamic UI Wrapper (Handles Width & Height)
+  output$SubSeriesPlot_UI <- renderUI({
+    plotly::plotlyOutput("SubSeriesPlot2", width = userData$plotWidth, height = userData$plotHeight)
+  })
+  
+  # 2. The Plotly Render Function
+  output$SubSeriesPlot2 <- plotly::renderPlotly({
+    req(tsData()) # Ensure data is loaded
+    
+    # Create the ggplot object using forecast::ggsubseriesplot
+    p <- ggsubseriesplot(tsData()) + 
+      ggtitle("Seasonal Sub-series Plot") +
+      theme_minimal()
+    
+    # Convert the ggplot object to an interactive Plotly object
+    plotly::ggplotly(p)
+  })
+  
 
   # Plot the seasonal
   output$SeasonPlot <- renderPlot({
@@ -1479,18 +1514,57 @@ server <- function(input, output, session) {
     ggseasonplot(tsData())
   })
 
+  # 1. The Dynamic UI Wrapper (Handles Width & Height)
+  output$SeasonPlot_UI <- renderUI({
+    plotly::plotlyOutput("SeasonPlot2", width = userData$plotWidth, height = userData$plotHeight)
+  })
+  
+  # 2. The Plotly Render Function
+  output$SeasonPlot2 <- plotly::renderPlotly({
+    req(tsData()) # Ensure data is loaded
+    
+    # TSstudio built-in seasonal plot is natively interactive (Plotly based)
+    # 'normal' type creates the classic overlapping seasonal lines
+    p <- TSstudio::ts_seasonal(tsData(), type = "normal")
+    
+    # Return the plotly object
+    p 
+  })
+  
 
     # Plot the Polar
   output$SeasonPlotPolar <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
     ggseasonplot(tsData(), polar=TRUE)
   })
-
+  
+  
 
   # Plot the lag plot
   output$lagPlot <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
     gglagplot(tsData())
+  })
+  
+  
+  output$lagPlot_UI <- renderUI({
+    req(userData$plotWidth, userData$plotHeight)
+    plotly::plotlyOutput("lagPlot_Plotly", width = userData$plotWidth, height = userData$plotHeight)
+  })
+  
+  # 2. The Plotly Render Function
+  output$lagPlot_Plotly <- plotly::renderPlotly({
+    req(tsData()) # Ensure data is loaded
+    
+    # Create the ggplot object using forecast::gglagplot
+    # Note: we use suppressWarnings to avoid the 'fortify' message
+    p <- suppressWarnings(gglagplot(tsData())) + 
+      theme_minimal() +
+      labs(title = paste("Lag Plots:", userData$mainTitle))
+    
+    # Convert the ggplot object to an interactive Plotly object
+    # tooltip = "all" allows you to see the values for both axes on hover
+    plotly::ggplotly(p)
   })
 
 
