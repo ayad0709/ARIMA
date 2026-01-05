@@ -54,13 +54,6 @@ shinyUI(
     titlePanel("SARIMA & H.W."),
     
 
-    # # LaTeX rendering support
-    # tags$head(
-    #   tags$script(type = "text/javascript",
-    #               src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML")
-    # ),
-
-
   # Include custom CSS
   tags$head(
     tags$style(HTML("
@@ -314,13 +307,10 @@ shinyUI(
                      tabPanel("G.S.2", uiOutput("SeasonPlot_UI")),
                      
                      tabPanel("Graphs Sais. Polaire", plotOutput("SeasonPlotPolar",width=900,height = 630 )),
-                     #tabPanel("G.S.P.2", uiOutput("SeasonPlotPolar_UI")),
-                     
+
                      tabPanel("lag Plot", plotOutput("lagPlot",width=900,height = 630 )),
                      tabPanel("Lag Plot2", uiOutput("lagPlot_UI")),
                      
-                     
-                     #tabPanel("All", plotOutput("allPlot",width=900,height = 630 )),
                      tabPanel("All", uiOutput("allPlotUI")),
 
                    ))),
@@ -429,24 +419,6 @@ shinyUI(
                    tabPanel("unit Cercle", plotOutput("unitCercle", width=750, height = 580)),
 
 
-                   # tabPanel("ARIMA Slow",
-                   #          tabsetPanel(
-                   #            tabPanel("ARIMA Slow Model (P.S. Take Times to display Results)",
-                   #                sidebarLayout(
-                   #                  sidebarPanel(width=3,
-                   #                               numericInput("maxp", label = "max.p", min=0, value=5),
-                   #                               numericInput("maxd", label = "max.d",min=0,  value=2),
-                   #                               numericInput("maxq", label = "max.q", min=0, value=5),
-                   #                               numericInput("maxPs", label = "max.P",min=0,  value=2),
-                   #                               numericInput("maxDs", label = "max.D",min=0,  value=1),
-                   #                               numericInput("maxQs", label = "max.Q", min=0, value=2),
-                   #                               numericInput("maxorder", label = "max.order[p+q+P+Q]", min=0, value=8),
-                   #                  ),
-                   #                  tabPanel("ARIMA Slow Model(Wait)", verbatimTextOutput("Pslow"), class="span7"),
-                   #                )),
-                   # 
-                   #  )),
-                   
                    tabPanel("ARIMA Slow",
                             tabsetPanel(
                               tabPanel("ARIMA Slow Model (P.S. Take Times to display Results)",

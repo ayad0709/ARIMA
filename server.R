@@ -766,47 +766,6 @@ server <- function(input, output, session) {
   ########  ########  ########  ########  ########  ########  ########  ########
 
 
-  # getMyData <- function(tsData, frequency, islog, d_n, DS_n) {
-  #   # Ensure tsData is not NULL
-  #   req(tsData)
-  # 
-  #   # Convert frequency to numeric
-  #   frequency <- as.numeric(frequency)
-  # 
-  #   if (islog == "Yes") {
-  #     if (d_n == 0 && DS_n == 0) {
-  #       myData <- log(tsData)
-  #     } else {
-  #       if (d_n == 0 && DS_n > 0) {
-  #         myData <- diff(log(tsData), DS_n * frequency)
-  #       } else {
-  #         if (d_n > 0 && DS_n == 0) {
-  #           myData <- diff(log(tsData), difference = d_n)
-  #         } else {
-  #           myData <- diff(diff(log(tsData), DS_n * frequency), difference = d_n)
-  #         }
-  #       }
-  #     }
-  #   } else {
-  #     if (d_n == 0 && DS_n == 0) {
-  #       myData <- tsData
-  #     } else {
-  #       if (d_n == 0 && DS_n > 0) {
-  #         myData <- diff(tsData, DS_n * frequency)
-  #       } else {
-  #         if (d_n > 0 && DS_n == 0) {
-  #           myData <- diff(tsData, difference = d_n)
-  #         } else {
-  #           myData <- diff(diff(tsData, DS_n * frequency), difference = d_n)
-  #         }
-  #       }
-  #     }
-  #   }
-  #   return(myData)
-  # }
-
-
-  
   getMyData <- function(tsData, frequency, islog = "No", d_n = 0, DS_n = 0) {
     # 1. Ensure data is present before proceeding
     shiny::req(tsData)
@@ -835,123 +794,8 @@ server <- function(input, output, session) {
     return(working_ts)
   }
 
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # #
-  # #      Statistics output for selected column
-  # #
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # 
-  # 
-  #   #  descr()  stats Row format
-  #   output$data_StatisticsText1 <- renderPrint({
-  #   req(input$fileData)
-  #   req(input$colNum)
-  # 
-  #   df <- data()
-  #   data_Statistics <- df[[input$colNum]]
-  # 
-  #   # Ensure the selected column data is numeric
-  #   if(is.numeric(data_Statistics)) {
-  #     descr(data_Statistics)
-  #   } else {
-  #     "Selected column data is not numeric"
-  #   }
-  # })
-  # 
-  # #  descr()  stats in a table format
-  # output$data_StatisticsText1_Table <- renderTable({
-  #   req(input$fileData)
-  #   req(input$colNum)
-  # 
-  #   df <- data()
-  #   data_Statistics <- df[[input$colNum]]
-  # 
-  #   # Ensure the selected column data is numeric
-  #   if(is.numeric(data_Statistics)) {
-  #     descr_Statistics <- descr(data_Statistics)
-  #     descr_DataFrame <- as.data.frame(descr_Statistics)
-  # 
-  #     descr_Table <- data.frame(date = row.names(descr_DataFrame), descr_DataFrame)
-  # 
-  #     # Specify the custom column names here in the vector
-  #     # Make sure the number of names matches the number of columns in descr_Table
-  #     my_column_names <- c("Statistics", "Value")
-  # 
-  #     # Set the column names
-  #     colnames(descr_Table) <- my_column_names
-  # 
-  #     descr_Table
-  # 
-  #   } else {
-  #     "Selected column data is not numeric"
-  #   }
-  # })
-  # 
-  # 
-  # ###############################################################
-  # 
-  # 
-  # output$data_StatisticsText2 <- renderPrint({
-  #   req(input$fileData)
-  #   req(input$colNum)
-  # 
-  #   df <- data()
-  #   colData <- df[[input$colNum]]
-  # 
-  #   # Ensure the selected column data is numeric
-  #   if(is.numeric(colData)) {
-  #     #stat.desc(colData )
-  # 
-  #     # Compute descriptive statistics
-  #     stats_output <- stat.desc(colData)
-  # 
-  #     # Extract the statistics names and values
-  #     stat_names <- names(stats_output)
-  #     stat_values <- unname(stats_output)
-  # 
-  #     # Print the formatted output
-  #     cat("Descriptive Statistics \n")
-  #     cat("data_Statistics   \n")
-  #     cat(" \n")
-  #     cat(" \n")
-  #     cat("         data_Statistics\n")
-  #     cat("-------  -----------------\n")
-  #     for (i in seq_along(stat_names)) {
-  #       cat(sprintf("%-10s %s\n", stat_names[i], stat_values[i]))
-  #     }
-  # 
-  # 
-  #   } else {
-  #     "Selected column data is not numeric"
-  #   }
-  # })
-  # 
-  # 
-  # 
-  # 
-  # # Output for the forecasting model based on the user's selection
-  # output$modelOutput <- renderPrint({
-  #   req(input$Model)  # Ensure 'Select the Model' input is provided
-  #   col_data <- selected_column_data() # The column data as vector
-  #   frequency <- 1 # Placeholder for frequency, adjust as needed
-  #   ts_data <- ts(col_data, frequency = frequency) # Convert to ts
-  # 
-  #   # Fit the model based on selection
-  #   model_selected <- input$Model
-  #   fit <- switch(model_selected,
-  #                 "ARIMA" = auto.arima(ts_data),
-  #                 "Holt-Winters Additive" = HoltWinters(ts_data, seasonal = "additive"),
-  #                 "Holt-Winters Multiplicative" = HoltWinters(ts_data, seasonal = "multiplicative"),
-  #                 stop("Invalid model selection.")
-  #   )
-  #   # Output the summary or forecast
-  #   summary(fit)  # Or use forecast::forecast(fit) if we want to forecast
-  # })
-
-
   
+ 
   ######## ######## ######## ######## ######## ######## ######## ########
   #
   #           Statistics & Model Outputs for Selected Column
@@ -1024,65 +868,6 @@ server <- function(input, output, session) {
   
   
   
-  
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # #
-  # #       t(s) plot + ACF + PACF
-  # #
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # 
-  # output$tsPlot <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  # 
-  #   plot(tsData(),main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l',lwd = 2)
-  # })
-  # 
-  # 
-  # output$StACF <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  # 
-  #   plot(Acf(tsData()), lwd = 2, main = userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$StPACF <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  # 
-  #   plot(Pacf(tsData()), lwd = 2, main = userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$StACFPACF <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  # 
-  #   acf2(tsData(), lwd = 3,main = userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$tsDisplay2 <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  # 
-  #   ggtsdisplay(tsData(), plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-  # })
-  # 
-  # 
-  # output$teststationariteSt <- renderPrint({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   helpADF()
-  # 
-  #   adf.test(tsData(), alternative =input$alternSt, k=input$LagOrderADFSt)
-  # })
-  # 
-  # output$teststationariteSt <- renderPrint({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   helpADF()
-  # 
-  #   adf.test(tsData(), alternative =input$alternSt, k=input$LagOrderADFSt)
-  # })
-
-
 
   ######## ######## ######## ######## ######## ######## ######## ########
   #
@@ -1091,21 +876,6 @@ server <- function(input, output, session) {
   ######## ######## ######## ######## ######## ######## ######## ########
   
 
-  
-  # # 1. Main Time Series Plot [S(t)]
-  # output$tsPlot <- renderPlot({
-  #   req(tsData())
-  #   
-  #   autoplot(tsData(), size = 1, colour = "steelblue") +
-  #     labs(
-  #       title = userData$mainTitle, 
-  #       x = userData$xLabel, 
-  #       y = userData$yLabel
-  #     ) +
-  #     apply_user_theme()
-  # })
-  
-  
   # 1. Main Time Series Plot [S(t)]
   output$tsPlot <- renderPlot({
     req(tsData())
@@ -1214,17 +984,7 @@ server <- function(input, output, session) {
   
   
   
-  
-  
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
-  #
-  #       log(St)  plot + ACF + PACF
-  #
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
-  
-  
+
   ######## ######## ######## ######## ######## ######## ######## ########
   ######## ######## ######## ######## ######## ######## ######## ########
   #
@@ -1337,55 +1097,6 @@ server <- function(input, output, session) {
   })
   
 
-  # output$plotLogSt <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   log_st <- log(tsData())
-  # 
-  #   plot(log_st, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
-  # })
-  # 
-  # 
-  # output$logStACF <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   log_st <- log(tsData())
-  # 
-  #   plot(Acf(log_st), lwd = 2, main=userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$logStPACF <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   log_st <- log(tsData())
-  # 
-  #   plot(Pacf(log_st), lwd = 2, main=userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$logStACFPACF <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   log_st <- log(tsData())
-  # 
-  #   acf2(log_st, lwd = 3, main=userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$log_ts_Display <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   log_st <- log(tsData())
-  # 
-  #   ggtsdisplay(log_st, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-  # })
-  # 
-  # 
-  # output$teststationariteLogSt <- renderPrint({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   log_st <- log(tsData())
-  #   helpADF()
-  # 
-  #   adf.test(log_st, alternative =input$alternLogSt, k=input$LagOrderADFLogSt)
-  # })
-
-
 
 
   ######## ######## ######## ######## ######## ######## ######## ########
@@ -1494,55 +1205,6 @@ server <- function(input, output, session) {
       cat("Execution Error: ", e$message)
     })
   })
-
-  # output$difference1 <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   d1_St <- diff(tsData())
-  # 
-  #   plot(d1_St, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
-  # })
-  # 
-  # 
-  # output$d1StACF <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   d1_St <- diff(tsData())
-  # 
-  #   plot(Acf(d1_St), lwd = 2, main = userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$d1StPACF <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   d1_St <- diff(tsData())
-  # 
-  #   plot(Pacf(d1_St), lwd = 2, main = userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$d1StACFPACF <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   d1_St <- diff(tsData())
-  # 
-  #   acf2(d1_St, lwd = 3, main = userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$d1_ts_Display <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   d1_St <- diff(tsData())
-  # 
-  #   ggtsdisplay(d1_St, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-  # })
-  # 
-  # 
-  # output$teststationarited1St <- renderPrint({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   d1_St <- diff(tsData())
-  #   helpADF()
-  # 
-  #   adf.test(d1_St, alternative =input$alternd1St, k=input$LagOrderADFd1St)
-  # })
-
 
   
 
@@ -1656,61 +1318,6 @@ server <- function(input, output, session) {
   })
   
 
-  # output$DS1Stplot <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   frequency = as.numeric(currentFrequency())
-  #   D1_St <- diff(tsData(), frequency)
-  # 
-  #   plot(D1_St, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
-  # })
-  # 
-  # 
-  # output$DS1StACF <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   frequency = as.numeric(currentFrequency())
-  #   D1_St <- diff(tsData(), frequency)
-  # 
-  #   plot(Acf(D1_St), lwd = 2, main = userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$DS1StPACF <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   frequency = as.numeric(currentFrequency())
-  #   D1_St <- diff(tsData(), frequency)
-  # 
-  #   plot(Pacf(D1_St), lwd = 2, main = userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$DS1StACFPACF <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   frequency = as.numeric(currentFrequency())
-  #   D1_St <- diff(tsData(), frequency)
-  # 
-  #   acf2(D1_St, lwd = 3, main = userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$Ds1_ts_Display <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   frequency = as.numeric(currentFrequency())
-  #   D1_St <- diff(tsData(), frequency)
-  # 
-  #   ggtsdisplay(D1_St, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-  # })
-  # 
-  # 
-  # output$teststationariteDs1St <- renderPrint({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   frequency = as.numeric(currentFrequency())
-  #   D1_St <- diff(tsData(), frequency)
-  #   helpADF()
-  # 
-  #   adf.test(D1_St, alternative =input$alternDs1St, k=input$LagOrderADFDs1St)
-  # })
-
-
 
   
   ######## ######## ######## ######## ######## ######## ######## ########
@@ -1819,53 +1426,6 @@ server <- function(input, output, session) {
     })
   })
   
-  # output$plotd1Log <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   d1_log_st <- diff(log(tsData()))
-  #   
-  #   plot(d1_log_st, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
-  # })
-  # 
-  # 
-  # output$d1LogStACFa <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   d1_log_st <- diff(log(tsData()))
-  #   
-  #   plot(Acf(d1_log_st), lwd = 2, main = userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$d1LogStPACFa <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   d1_log_st <- diff(log(tsData()))
-  #   
-  #   plot(Pacf(d1_log_st), lwd = 2, main = userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$d1LogStACFPACFa <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   d1_log_st <- diff(log(tsData()))
-  #   
-  #   acf2(d1_log_st, lwd = 3, main = userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$d1_log_ts_Display <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   d1_log_st <- diff(log(tsData()))
-  #   
-  #   ggtsdisplay(d1_log_st, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-  # })
-  # 
-  # 
-  # output$teststationarited1LogSt <- renderPrint({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   d1_log_st <- diff(log(tsData()))
-  #   helpADF()
-  #   
-  #   adf.test(d1_log_st, alternative =input$alternd1LogSt, k=input$LagOrderADFd1LogSt)
-  # })
   
   
 
@@ -1977,59 +1537,7 @@ server <- function(input, output, session) {
     })
   })
 
-  # output$Dlogplot <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   frequency = as.numeric(currentFrequency())
-  #   D1_log_St <- diff(log(tsData()), frequency)
-  # 
-  #   plot(D1_log_St, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
-  # })
-  # 
-  # 
-  # output$DlogplotACF <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   frequency = as.numeric(currentFrequency())
-  #   D1_log_St <- diff(log(tsData()), frequency)
-  # 
-  #   plot(Acf(D1_log_St), lwd = 2, main = userData$mainTitle)
-  # })
-  # 
-  # output$DlogplotPACF <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   frequency = as.numeric(currentFrequency())
-  #   D1_log_St <- diff(log(tsData()), frequency)
-  # 
-  #   plot(Pacf(D1_log_St), lwd = 2, main = userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$DlogplotACFPACF <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   frequency = as.numeric(currentFrequency())
-  #   D1_log_St <- diff(log(tsData()), frequency)
-  # 
-  #   acf2(D1_log_St , lwd = 3, main = userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$Ds1_log_ts_Display <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   frequency = as.numeric(currentFrequency())
-  #   D1_log_St <- diff(log(tsData()), frequency)
-  # 
-  #   ggtsdisplay(D1_log_St , plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-  # })
-  # 
-  # 
-  # output$teststationariteDs1LogSt <- renderPrint({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   frequency = as.numeric(currentFrequency())
-  #   D1_log_St <- diff(log(tsData()), frequency)
-  #   helpADF()
-  # 
-  #   adf.test(D1_log_St, alternative =input$alternDs1LogSt, k=input$LagOrderADFDs1LogSt)
-  # })
-
+  
 
 
 
@@ -2330,19 +1838,52 @@ server <- function(input, output, session) {
   ########  ########  ########  ########  ########  ########  ########  ########
 
 
+
+  #    TIME SERIES DIAGNOSTIC DISPLAY (ACF/PACF/Plot)
   output$tsDisplay <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    ggtsdisplay(tsData(),plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-  })
+
+    # The forecast::ggtsdisplay function creates a combined plot
+    # showing the time series, ACF, and PACF (or histogram/scatter)
+    forecast::ggtsdisplay(tsData(),
+                          plot.type = input$plot_type,
+                          main = userData$mainTitle,
+                          xlab = userData$xLabel,
+                          ylab = userData$yLabel)
+  },
+  # Direct dynamic dimensions for renderPlot
+  width = function() as.numeric(gsub("[^0-9]", "", userData$plotWidth)),
+  height = function() as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+  )
 
   ########  ######## 
   # Plot the box plot
   ########  ######## 
+
+  #     SEASONAL BOXPLOT (Base R with T-bar Whiskers)
   output$boxP <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    # Create a box plot with the data across cycles of the time series
-    boxplot(as.numeric(tsData()) ~ cycle(tsData()), xlab = "Cycle", ylab = "Data", main = "Box Plot by Cycle")
-  })
+    req(tsData()) 
+    
+    # Note: Base R plots don't support ggplot themes directly.
+    # We set the 'range = 0' to force whiskers to absolute Min and Max.
+    boxplot(as.numeric(tsData()) ~ cycle(tsData()), 
+            xlab = "Cycle", 
+            ylab = userData$yLabel, 
+            main = "Box Plot by Cycle",
+            range = 0,            # Force whiskers to Min/Max
+            staplewex = 0.5,      # Width of the horizontal whisker line (T-bar)
+            whisklty = 1,         # Solid line style for whiskers
+            whiskcol = "black",   # Color of the whiskers
+            boxwex = 0.6,         # Width of the box
+            col = "steelblue")    # Fill color
+    
+  }, 
+  # Direct dynamic dimensions
+  width = function() as.numeric(gsub("[^0-9]", "", userData$plotWidth)),
+  height = function() as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+  )
+  
+  
   
   # 1. The Dynamic UI Wrapper (Handles Width & Height)
   output$boxP_UI <- renderUI({
@@ -2351,23 +1892,47 @@ server <- function(input, output, session) {
   })
   
   # 2. The Plotly Render Function (Uses built-in TSstudio logic)
+  #     SEASONAL BOXPLOT (TSstudio - No Data Points)
   output$boxP2 <- plotly::renderPlotly({
-    req(tsData()) # Ensure data is loaded
+    req(tsData()) 
     
-    # TSstudio built-in seasonal boxplot is natively interactive (Plotly based)
+    # 1. Extract numeric values from your userData
+    w <- as.numeric(gsub("[^0-9]", "", userData$plotWidth))
+    h <- as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+    
+    # 2. Generate the plot
     p <- TSstudio::ts_seasonal(tsData(), type = "box")
     
-    # Return the plotly object to the UI
-    p 
+    # 3. Modify the trace to hide points and apply layout
+    p %>% 
+      plotly::style(boxpoints = FALSE) %>% # This hides all individual data points
+      plotly::layout(width = w, height = h)
   })
 
+  
   ########  ######## 
   # Plot the time series data
   ########  ######## 
+  
+  #     SEASONAL SUB-SERIES PLOT (ggplot2 / forecast)
   output$SubSeriesPlot <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    ggsubseriesplot(tsData())
-  })
+    
+    # Create the sub-series plot
+    # This displays the seasonal changes over time for each individual period
+    forecast::ggsubseriesplot(tsData()) + 
+      labs(
+        title = paste("Sub-series Plot:", userData$mainTitle),
+        x = "Season",
+        y = userData$yLabel
+      ) +
+      apply_user_theme() # Apply your custom theme
+    
+  }, 
+  # Direct dynamic dimensions for renderPlot
+  width = function() as.numeric(gsub("[^0-9]", "", userData$plotWidth)),
+  height = function() as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+  )
 
   
   # 1. The Dynamic UI Wrapper (Handles Width & Height)
@@ -2376,25 +1941,51 @@ server <- function(input, output, session) {
   })
   
   # 2. The Plotly Render Function
+  #     SEASONAL SUB-SERIES PLOT (Interactive)
   output$SubSeriesPlot2 <- plotly::renderPlotly({
     req(tsData()) # Ensure data is loaded
     
-    # Create the ggplot object using forecast::ggsubseriesplot
-    p <- ggsubseriesplot(tsData()) + 
+    # 1. Extract numeric values from your userData sliders
+    w <- as.numeric(gsub("[^0-9]", "", userData$plotWidth))
+    h <- as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+    
+    # 2. Create the ggplot object using forecast::ggsubseriesplot
+    # This plot shows the seasonal change over time for each period (e.g., every January)
+    p <- forecast::ggsubseriesplot(tsData()) + 
       ggtitle("Seasonal Sub-series Plot") +
       theme_minimal()
     
-    # Convert the ggplot object to an interactive Plotly object
-    plotly::ggplotly(p)
+    # 3. Convert to Plotly and apply dynamic dimensions
+    # Passing width/height here ensures the interactive canvas matches your sliders
+    plotly::ggplotly(p, width = w, height = h)
   })
+  
+  
   
   ########  ######## 
   # Plot the seasonal
   ########  ######## 
+
+  
+  #     SEASONAL PLOT (ggplot2 / forecast)
   output$SeasonPlot <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    ggseasonplot(tsData())
-  })
+    
+    # 1. Create the seasonal plot
+    # This plot overlaps years into a single seasonal cycle (1-12 or 1-4)
+    forecast::ggseasonplot(tsData(), 
+                           main = paste("Seasonal Plot:", userData$mainTitle),
+                           year.labels = TRUE, 
+                           year.labels.left = TRUE) + 
+      labs(x = "Season", y = userData$yLabel) +
+      apply_user_theme() # Apply your custom theme here
+    
+  }, 
+  # Direct dynamic dimensions for renderPlot
+  width = function() as.numeric(gsub("[^0-9]", "", userData$plotWidth)),
+  height = function() as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+  )
+  
 
   # 1. The Dynamic UI Wrapper (Handles Width & Height)
   output$SeasonPlot_UI <- renderUI({
@@ -2402,34 +1993,69 @@ server <- function(input, output, session) {
   })
   
   # 2. The Plotly Render Function
+  #     SEASONAL PLOT (TSstudio)
   output$SeasonPlot2 <- plotly::renderPlotly({
-    req(tsData()) # Ensure data is loaded
+    req(tsData()) 
     
-    # TSstudio built-in seasonal plot is natively interactive (Plotly based)
-    # 'normal' type creates the classic overlapping seasonal lines
+    # 1. Extract numeric values from your userData sliders
+    w <- as.numeric(gsub("[^0-9]", "", userData$plotWidth))
+    h <- as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+    
+    # 2. Generate the seasonal plot (type = "normal" for overlapping lines)
     p <- TSstudio::ts_seasonal(tsData(), type = "normal")
     
-    # Return the plotly object
-    p 
+    # 3. Apply the dynamic dimensions via layout
+    p %>% plotly::layout(width = w, height = h)
   })
   
   
   ########  ######## 
   # Plot the Polar
   ########  ######## 
+  
+  #     POLAR SEASONAL PLOT (ggplot2 / forecast)
+  
   output$SeasonPlotPolar <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    ggseasonplot(tsData(), polar=TRUE)
-  })
+    
+    # Generate the seasonal plot in polar coordinates
+    forecast::ggseasonplot(tsData(), 
+                           polar = TRUE,
+                           main = paste("Polar Seasonal Plot:", userData$mainTitle)) + 
+      labs(y = userData$yLabel) +
+      apply_user_theme() # Apply your custom theme logic
+    
+  }, 
+  # Direct dynamic dimensions for renderPlot
+  width = function() as.numeric(gsub("[^0-9]", "", userData$plotWidth)),
+  height = function() as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+  )
+  
   
   
   ########  ######## 
   # Plot the lag plot
   ########  ######## 
-  output$lagPlot <- renderPlot({
+  
+  #     LAG PLOT (ggplot2 / forecast)
+ 
+   output$lagPlot <- renderPlot({
     req(tsData()) # Ensure tsData is not NULL
-    gglagplot(tsData())
-  })
+    
+    # Create the lag plot grid
+    # This displays scatter plots of the series against its own lagged values
+    forecast::gglagplot(tsData()) + 
+      labs(
+        title = paste("Lag Plots:", userData$mainTitle),
+        y = userData$yLabel
+      ) +
+      apply_user_theme() # Apply your custom theme
+    
+  }, 
+  # Direct dynamic dimensions for renderPlot
+  width = function() as.numeric(gsub("[^0-9]", "", userData$plotWidth)),
+  height = function() as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+  )
   
   
   output$lagPlot_UI <- renderUI({
@@ -2438,18 +2064,23 @@ server <- function(input, output, session) {
   })
   
   # 2. The Plotly Render Function
+  #     LAG PLOTS (Interactively Rendered)
   output$lagPlot_Plotly <- plotly::renderPlotly({
     req(tsData()) # Ensure data is loaded
     
-    # Create the ggplot object using forecast::gglagplot
-    # Note: we use suppressWarnings to avoid the 'fortify' message
-    p <- suppressWarnings(gglagplot(tsData())) + 
+    # 1. Extract numeric values from your userData sliders
+    w <- as.numeric(gsub("[^0-9]", "", userData$plotWidth))
+    h <- as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+    
+    # 2. Create the ggplot object using forecast::gglagplot
+    # suppressWarnings prevents the common 'fortify' method message in the console
+    p <- suppressWarnings(forecast::gglagplot(tsData())) + 
       theme_minimal() +
       labs(title = paste("Lag Plots:", userData$mainTitle))
     
-    # Convert the ggplot object to an interactive Plotly object
-    # tooltip = "all" allows you to see the values for both axes on hover
-    plotly::ggplotly(p)
+    # 3. Convert to Plotly and apply dynamic dimensions
+    # We set width and height here because it's a ggplotly conversion
+    plotly::ggplotly(p, width = w, height = h, tooltip = "all")
   })
 
 
@@ -2467,16 +2098,28 @@ server <- function(input, output, session) {
     plotly::plotlyOutput("allPlot", width = userData$plotWidth, height = userData$plotHeight)
   })
   
+  #     COMPREHENSIVE SEASONAL DASHBOARD (TSstudio)
   output$allPlot <- plotly::renderPlotly({
     req(tsData())
     
-    # ts_seasonal with type="all" creates a 4-pane interactive dashboard:
-    # Seasonal, Normal, Cycle, and Boxplot views combined.
+    # 1. Extract numeric values from your userData sliders
+    w <- as.numeric(gsub("[^0-9]", "", userData$plotWidth))
+    h <- as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+    
+    # 2. Generate the 4-pane interactive dashboard
+    # This combines Normal, Cycle, Box, and Trend plots
     p <- TSstudio::ts_seasonal(tsData(), type = "all")
     
-    # Just return the object p. Do NOT use print().
-    p
+    # 3. Apply the dynamic dimensions and adjust margins
+    p %>% plotly::layout(
+      width = w, 
+      height = h,
+      margin = list(l = 50, r = 50, b = 50, t = 80), # More top margin for subplot titles
+      title = list(text = paste("Seasonal Analysis:", userData$mainTitle), x = 0.5)
+    )
   })
+  
+
 
   ########  ########  ########  ########  ########  ########  ########  ########
   ########  ########  ########  ########  ########  ########  ########  ########
@@ -2510,13 +2153,7 @@ server <- function(input, output, session) {
   height = function() getPlotDim(userData$plotHeight)
   )
 
-  # output$decompose <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   myData <- tsData()
-  # 
-  #   decompose_time_Series <- decompose(myData,input$model1)
-  #   plot(decompose_time_Series, lwd = 2)
-  # })
+
 
 
   output$decompose2 <- renderPlot({
@@ -2585,26 +2222,6 @@ server <- function(input, output, session) {
     }
   })
   
-  # output$dFactors <- renderPrint({
-  #   req(tsData(), input$model1)
-  #   
-  #   myData %>% decompose(type=input$model1) -> fit
-  #   cat(".......................................................\n")
-  #   cat("\n")
-  #   cat("            Coefficients saisonnier                    ")
-  #   cat("\n")
-  #   cat("\n")
-  #   cat(".......................................................\n")
-  #   cat("\n")
-  #   cat("\n")
-  # 
-  #   cat(round(fit$figure, 2))
-  #   # cat(format(fit$figure, nsmall = 2))
-  # 
-  #   cat("\n")
-  #   cat("\n")
-  # 
-  # })
 
   
   ######## ######## ######## ######## ######## ######## ######## ########
@@ -2688,59 +2305,7 @@ server <- function(input, output, session) {
   }) 
   
 
-  # output$X11decompose <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   myData <- tsData()
-  # 
-  #   myData %>% seas(x11="") -> fit
-  #   autoplot(fit) +
-  #     ggtitle("X11 decomposition")
-  # })
-  # 
-  # 
-  # 
-  # output$SEATSdecompose <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   myData <- tsData()
-  # 
-  #   myData %>% seas() %>%
-  #     autoplot() +
-  #     ggtitle("SEATS decomposition")
-  # })
-  # 
-  # 
-  # output$SEATSFactors <- renderPrint({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   myData <- tsData()
-  # 
-  #   myData %>% seas() -> fit
-  #   summary(fit)
-  # })
-  # 
-  # output$X11Factors <- renderPrint({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   myData <- tsData()
-  # 
-  #   myData %>% seas(x11="") -> fit
-  #   summary(fit)
-  # })
-  # 
-  # output$STLdecompose <- renderPlot({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   myData <- tsData()
-  # 
-  #   myData %>% stl(t.window=13, s.window="periodic", robust=TRUE) %>% autoplot()
-  # })
-  # 
-  # 
-  # output$STLFactors <- renderPrint({
-  #   req(tsData()) # Ensure tsData is not NULL
-  #   myData <- tsData()
-  # 
-  #   myData %>% stl(t.window=13, s.window="periodic", robust=TRUE) -> fit
-  #   fit
-  # })
-
+  
 
   ######## ######## ######## ######## ######## ######## ######## ########
   ######## ######## ######## ######## ######## ######## ######## ########
@@ -2797,12 +2362,6 @@ server <- function(input, output, session) {
   }
   
   # 5. Output: Model Summary
-  # output$autoForecast <- renderPrint({
-  #   req(results())
-  #   summary(results()$modelOutput)
-  # })
-  
-  
   output$autoForecast <- renderPrint({
     # 1. Essential inputs
     req(input$fileData, input$colNum, input$Model)
@@ -2924,197 +2483,7 @@ server <- function(input, output, session) {
   })
 
 
-# ########  ########  ########  ########  ########  ########  ########  ##########
-# ########  ########  ########  ########  ########  ########  ########  ##########
-# #
-# #                      Auto ARIMA   &    H.W.
-# #
-# ########  ########  ########  ########  ########  ########  ########  ##########
-# ########  ########  ########  ########  ########  ########  ########  ##########
-# 
-# 
-#   # Cache for forecast results
-#   forecastCache <- reactiveValues()
-# 
-# 
-# 
-#   # Function to create a unique key based on input parameters
-#   createCacheKey <- function(file, col, model,  freq1) {
-#     # Check if the file input is valid
-#     if (is.null(file) || !is.data.frame(file) || nrow(file) == 0  ) {
-#       return(NULL)
-#     }
-#     # Use the file name and last modification time to create a unique key
-#     fileName <- file$name
-#     fileModTime <- file$datapath  # or use file$size for an additional layer of uniqueness
-#     # Ensure other inputs are non-NULL and convert them to strings
-#     if (is.null(col) || is.null(model) ) {
-#       return(NULL)
-#     }
-#     paste0(fileName, "_", fileModTime, "_", as.character(col), "_", as.character(model), "_",  as.character(freq1) )
-#   }
-# 
-# 
-# 
-# 
-#   # Reactive expression to compute or fetch the forecast
-#   results <- reactive({
-#     key <- createCacheKey(input$fileData, input$colNum,  input$Model,  currentFrequency())
-#     if (!is.null(forecastCache[[key]])) {
-#       forecastCache[[key]]
-#     } else {
-#       result <- modelisation(input$Model , input$length)
-#       forecastCache[[key]] <- result
-#       result
-#     }
-#   })
-# 
-# 
-# ####################################################################################
-# #
-# #   modeling , the result is accessed via : results()$modelOutput
-# #
-# ####################################################################################
-# 
-#   modelisation <- function(  modelType,  forecastLength  ) {
-# 
-#     req(tsData())
-# 
-#     # the time series data
-#     timeSeriesData <- tsData()
-#     if (is.null(timeSeriesData)) {
-#       stop("Error in processing time series data")
-#     }
-# 
-#     # Choose the model based on input
-#     fittedModel <- switch(modelType,
-#                           "ARIMA" = auto.arima(timeSeriesData, trace = TRUE, allowdrift = TRUE),
-#                           "Holt-Winters Additive" = hw(timeSeriesData, "additive", h = forecastLength)$model,
-#                           "Holt-Winters Multiplicative" = hw(timeSeriesData, "multiplicative", h = forecastLength)$model,
-#                           holt(timeSeriesData, h = forecastLength)$model)  # Default case
-# 
-#     # Forecasting to delete keep just fittedModel
-#     forecastedValues <- forecast(fittedModel, level = c(80, 95), h = forecastLength)
-#     plotForecast <- plot(forecastedValues, lwd = 2)
-#     forecastDataFrame <- as.data.frame(forecastedValues)
-#     forecastTable <- data.frame(date = row.names(forecastDataFrame), forecastDataFrame)
-# 
-#     modelResiduals <- fittedModel$resid
-#     modelResidualsDataFrame <- as.data.frame(modelResiduals)
-# 
-# 
-#     # Return a list of outputs
-#     list(
-#       modelOutput = fittedModel,
-#       plot = plotForecast,
-#       forecast = forecastedValues,
-#       forecastTable = forecastTable,
-#       modelResiduals = modelResidualsDataFrame
-#     )
-#   }
-# 
-# ####################################################################################
-# ####################################################################################
-# 
-# 
-#   # Render function to display ARIMA model summary
-#   output$autoForecast <- renderPrint({
-#     results()$modelOutput
-#     })
-# 
-# 
-#   output$autoForecast_plot <- renderPlot({
-#     forecastedValues <- forecast(results()$modelOutput, level = c(80, 95), h = input$length)
-#     plot(forecastedValues, lwd = 2)
-#   })
-# 
-#   output$results_forecast <- renderPrint({
-#     forecastedValues <- forecast(results()$modelOutput, level = c(80, 95), h = input$length)
-#     forecastedValues
-#   })
-# 
-#   output$results_forecastTable <- renderTable({
-#     forecastedValues <- forecast(results()$modelOutput, level = c(80, 95), h = input$length)
-#     forecastDataFrame <- as.data.frame(forecastedValues)
-#     forecastTable <- data.frame(date = row.names(forecastDataFrame), forecastDataFrame)
-#     forecastTable
-#   })
-# 
-# 
-# 
-#   # Render function to display extracted ARIMA parameters
-#   output$arimaParams <- renderPrint({
-#     # get the model
-#     fittedModel <- results()$modelOutput
-#     # Extract ARIMA parameters
-#     bm_p <- fittedModel$arma[1]
-#     bm_d <- fittedModel$arma[6]
-#     bm_q <- fittedModel$arma[2]
-#     bm_P <- fittedModel$arma[3]
-#     bm_D <- fittedModel$arma[7]
-#     bm_Q <- fittedModel$arma[4]
-#     bm_s <- fittedModel$arma[5]
-#     bm_AICc <- fittedModel$aicc
-# 
-#     cat("ARIMA Parameters:\n",
-#         "p:", bm_p, "\n",
-#         "d:", bm_d, "\n",
-#         "q:", bm_q, "\n",
-#         "P:", bm_P, "\n",
-#         "D:", bm_D, "\n",
-#         "Q:", bm_Q, "\n",
-#         "S:", bm_s, "\n",
-#         "AICc:", bm_AICc, "\n")
-#   })
-# 
-# 
-# 
-#   ########  ########  ########  ########  ########  ########  ########  ########
-#   #
-#   #             Output the SARIMA Coefficient
-#   #
-#   ########  ########  ########  ########  ########  ########  ########  ########
-# 
-# 
-#   # Render the model details
-#   output$modelDetails <- renderPrint({
-# 
-#     fittedModel <- results()$modelOutput
-# 
-#     # Extracting the components
-#     arimaOrder <- fittedModel$arma
-# 
-#     # AR components
-#     arOrder <- arimaOrder[1]
-#     arParameters <- fittedModel$coef[1:arOrder]
-# 
-#     # MA components
-#     maOrder <- arimaOrder[6]
-#     maParameters <- fittedModel$coef[(arOrder + 1):(arOrder + maOrder)]
-# 
-#     # Seasonal components
-#     sarOrder <- arimaOrder[2]
-#     sarParameters <- fittedModel$coef[(arOrder + maOrder + 1):(arOrder + maOrder + sarOrder)]
-#     smaOrder <- arimaOrder[7]
-#     smaParameters <- fittedModel$coef[(arOrder + maOrder + sarOrder + 1):(arOrder + maOrder + sarOrder + smaOrder)]
-# 
-#     # Drift component
-#     drift <- ifelse(fittedModel$arma[9] == 1, fittedModel$coef[length(fittedModel$coef)], "No drift")
-# 
-#     # Print the components
-#     list(
-#       AR_Order = arOrder,
-#       AR_Parameters = arParameters,
-#       MA_Order = maOrder,
-#       MA_Parameters = maParameters,
-#       SAR_Order = sarOrder,
-#       SAR_Parameters = sarParameters,
-#       SMA_Order = smaOrder,
-#       SMA_Parameters = smaParameters,
-#       Drift = drift
-#     )
-#   })
-# 
+
 
 
   ######## ######## ######## ######## ######## ######## ######## ########
@@ -3199,46 +2568,7 @@ server <- function(input, output, session) {
     }
   })
 
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # #
-  # #      Auto-Forecast             -  Tests   -
-  # #
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # 
-  # output$testTrendMK <- renderPrint({
-  #   myData <- tsData()
-  #   helpMK()
-  # 
-  #   MannKendall(myData)
-  # })
-  # 
-  # 
-  # output$test_ADF <- renderPrint({
-  #   myData <- tsData()
-  #   helpADF()
-  # 
-  #   adf.test(myData, alternative =input$altern, k=input$LagOrderADF)
-  # })
-  # 
-  # 
-  # output$test_KPSS <- renderPrint({
-  #   myData <- tsData()
-  #   helpKPSS()
-  # 
-  #   kpss.test(myData, null = "Trend")
-  # })
-  # 
-  # 
-  # output$testLBn <- renderPrint({
-  #   # tsData <- tsData()
-  #   fittedModel <- results()$modelOutput
-  #   model_Residuals <- fittedModel$resid
-  # 
-  #   helpLjungBox()
-  # 
-  #   Box.test(model_Residuals, lag=input$lagorder, type=input$typeBoxTest)
-  # 
-  # })
+  
 
 
   
@@ -3261,14 +2591,6 @@ server <- function(input, output, session) {
   )
   
   # 2. GG-style Diagnostic Panel
-  # output$tsdiag <- renderPlot({
-  #   req(results()$modelOutput)
-  #   # Note: ggtsdiag provides a cleaner ggplot version of diagnostics
-  #   forecast::ggtsdiag(results()$modelOutput) 
-  # }, 
-  # 
-  # )
-  
   output$tsdiag <- renderPlot({
     req(results()$modelOutput)
     fittedModel <- results()$modelOutput
@@ -3316,19 +2638,6 @@ server <- function(input, output, session) {
   height = function() getPlotDim(userData$plotHeight)
   )
   
-  # 6. Inverse AR/MA Roots (Unit Circle)
-  # output$unitCercle <- renderPlot({
-  #   req(results()$modelOutput)
-  #   fit <- results()$modelOutput
-  #   
-  #   # autoplot on an Arima object displays the unit circle roots
-  #   autoplot(fit) + 
-  #     labs(title = "Inverse AR/MA Roots", subtitle = "Roots must lie inside the unit circle for stability/invertibility") +
-  #     apply_user_theme()
-  # }, 
-  # width = function() getPlotDim(userData$plotWidth),
-  # height = function() getPlotDim(userData$plotHeight)
-  # )
   
  
    # 6. Inverse AR/MA Roots (Unit Circle)
@@ -3348,60 +2657,6 @@ server <- function(input, output, session) {
   )
   
   
-
-  
-  
-  
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # #
-  # #   Auto-Forecast  -  Residuals Panels   ,  ACF  ,  PACF  ,  Unit Circle
-  # #
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # 
-  # 
-  # output$chkRes <- renderPlot({
-  #   fittedModel <- results()$modelOutput
-  #   myData <- fittedModel
-  #   checkresiduals(myData)
-  # })
-  # 
-  # 
-  # output$tsdiag <- renderPlot({
-  #   fittedModel <- results()$modelOutput
-  #   myData <- fittedModel
-  #   ggtsdiag(myData)
-  # })
-  # 
-  # 
-  # output$plotACFRes <- renderPlot({
-  #   fittedModel <- results()$modelOutput
-  #   model_Residuals <- fittedModel$resid
-  #   plot(Acf(model_Residuals), lwd = 2)
-  # })
-  # 
-  # 
-  # output$plotPACFRes <- renderPlot({
-  #   fittedModel <- results()$modelOutput
-  #   model_Residuals <- fittedModel$resid
-  #   plot(Pacf(model_Residuals), lwd = 2)
-  # })
-  # 
-  # 
-  # output$plot_ACF_PACF_Res <- renderPlot({
-  #   fittedModel <- results()$modelOutput
-  #   model_Residuals <- fittedModel$resid
-  #   acf2(model_Residuals, lwd = 3,main = userData$mainTitle)
-  # })
-  # 
-  # 
-  # output$unitCercle <- renderPlot({
-  #   fittedModel <- results()$modelOutput
-  # 
-  #   plot(fittedModel)
-  # 
-  # })
-
-
 
   
   ######## ######## ######## ######## ######## ######## ######## ########
@@ -3589,242 +2844,7 @@ server <- function(input, output, session) {
     }) 
     
   
-  # output$Pslow <- renderPrint({
-  #   req(tsData())
-  #   
-  #   # 1. Show Modal with an Animated 'Indeterminate' Progress Bar
-  #   showModal(modalDialog(
-  #     title = "Advanced Exhaustive Search in Progress",
-  #     tags$div(
-  #       style = "text-align: center;",
-  #       tags$p("The algorithm is testing hundreds of ARIMA combinations using exact likelihood."),
-  #       tags$p("This ensures the mathematically optimal model is found. Please wait..."),
-  #       tags$div(class = "progress progress-striped active",
-  #                tags$div(class = "progress-bar progress-bar-primary", 
-  #                         style = "width: 100%;"))
-  #     ),
-  #     footer = NULL, 
-  #     easyClose = FALSE
-  #   ))
-  #   
-  #   # 2. Start Computation Logic
-  #   result_text <- tryCatch({
-  #     
-  #     # 2a. Anomaly Detection
-  #     outliers <- forecast::tsoutliers(tsData())
-  #     
-  #     # 2b. The Exhaustive Search (stepwise=FALSE, approx=FALSE)
-  #     # We capture the trace to show the "Competition" between models
-  #     trace_log <- capture.output({
-  #       sarima_model <- forecast::auto.arima(
-  #         tsData(),
-  #         max.p = as.numeric(input$maxp), max.d = as.numeric(input$maxd), max.q = as.numeric(input$maxq),
-  #         max.P = as.numeric(input$maxPs), max.D = as.numeric(input$maxDs), max.Q = as.numeric(input$maxQs),
-  #         max.order = as.numeric(input$maxorder),
-  #         stepwise = FALSE,      # Check all combinations
-  #         approximation = FALSE, # Use exact MLE for precision
-  #         trace = TRUE,          # Show the work
-  #         allowdrift = TRUE
-  #       )
-  #     })
-  #     
-  #     # 2c. Statistical Validation Calculations
-  #     resids <- residuals(sarima_model)
-  #     lb_test <- Box.test(resids, lag = 24, type = "Ljung-Box")
-  #     jb_test <- tseries::jarque.bera.test(resids)
-  #     
-  #     # 2d. Backtesting (Time Series Cross-Validation)
-  #     cv_error <- tryCatch({
-  #       mean(abs(forecast::tsCV(tsData(), forecast::Arima, 
-  #                               order=sarima_model$arma[c(1,6,2)], 
-  #                               seasonal=sarima_model$arma[c(3,7,4)])))
-  #     }, error = function(e) return(NA))
-  #     
-  #     # 3. Construct the Unified Professional Report
-  #     output_content <- capture.output({
-  #       cat("================================================================\n")
-  #       cat("                 I. DATA QUALITY & OUTLIER SCAN                 \n")
-  #       cat("================================================================\n")
-  #       if(length(outliers$index) > 0) {
-  #         cat("ANOMALIES DETECTED: Significant outliers found at indices:", outliers$index, ".\n")
-  #         cat("Interpretation: These points represent shocks or errors that deviate from\n")
-  #         cat("the normal trend. The model has attempted to stay robust despite these points.\n")
-  #       } else { 
-  #         cat("The data quality check is complete: No significant outliers were detected.\n") 
-  #       }
-  #       
-  #       cat("\n================================================================\n")
-  #       cat("                 II. EXHAUSTIVE SEARCH HISTORY                  \n")
-  #       cat("   [ Candidate Model ]                 [ Selection Metric (AICs) ]  \n")
-  #       cat("================================================================\n")
-  #       cat(paste(trace_log, collapse = "\n"))
-  #       
-  #       cat("\n\n================================================================\n")
-  #       cat("                 III. MODEL SELECTION LOGIC                     \n")
-  #       cat("================================================================\n")
-  #       cat("BEST MODEL IDENTIFIED: ", forecast:::arima.string(sarima_model), "\n\n")
-  #       cat("Why is this the optimal model?\n")
-  #       cat("1. AICc Minimization: This model yielded the lowest Corrected Akaike\n")
-  #       cat("   Information Criterion (AICc) among all candidates in the trace above.\n")
-  #       cat("2. Information Balance: It provides the best fit to the historical data\n")
-  #       cat("   while remaining simple enough to avoid 'overfitting' (Parsimony).\n")
-  #       cat("3. Convergence: The model successfully reached a global maximum for\n")
-  #       cat("   the log-likelihood function using exact MLE methods.\n")
-  #       
-  #       cat("\n================================================================\n")
-  #       cat("                 IV. ESTIMATED MODEL COEFFICIENTS               \n")
-  #       cat("================================================================\n")
-  #       print(sarima_model$coef)
-  #       cat("\nInterpretation: These coefficients represent the mathematical weights of the\n")
-  #       cat("Auto-Regressive (AR) and Moving Average (MA) lags. If a coefficient is close\n")
-  #       cat("to zero, that specific lag has minimal predictive power for the series.\n")
-  #       
-  #       cat("\n================================================================\n")
-  #       cat("                 V. GOODNESS-OF-FIT METRICS                     \n")
-  #       cat("================================================================\n")
-  #       cat("Sigma^2 (Residual Variance): ", round(sarima_model$sigma2, 4), "\n")
-  #       cat("Log Likelihood:             ", round(sarima_model$loglik, 2), "\n")
-  #       cat("AIC (Akaike):               ", round(sarima_model$aic, 2), "\n")
-  #       cat("AICc (AIC Corrected):       ", round(sarima_model$aicc, 2), "\n")
-  #       cat("BIC (Bayesian):             ", round(sarima_model$bic, 2), "\n")
-  #       
-  #       cat("\nInterpretation:\n")
-  #       cat("- Sigma^2: Measures the variance of the errors; lower is more precise.\n")
-  #       cat("- AIC/BIC: Information criteria used to compare models. Smaller values\n")
-  #       cat("           indicate a better balance between accuracy and simplicity.\n")
-  #       
-  #       cat("\n================================================================\n")
-  #       cat("                 VI. STATISTICAL VALIDATION TESTS               \n")
-  #       cat("================================================================\n")
-  #       
-  #       # Ljung-Box Analysis
-  #       cat("[1] LJUNG-BOX TEST FOR INDEPENDENCE\n")
-  #       cat("    Purpose: To confirm the residuals (errors) are purely random.\n")
-  #       cat("    H0 (Null): Residuals are White Noise (No remaining patterns).\n")
-  #       cat("    Result: The test returned a p-value of", round(lb_test$p.value, 4), ".\n")
-  #       if(lb_test$p.value > 0.05) {
-  #         cat("    Decision: We fail to reject the null hypothesis. The residuals are\n")
-  #         cat("              independent; the model has successfully captured all data structure.\n")
-  #       } else {
-  #         cat("    Decision: We reject the null hypothesis. Autocorrelation remains in the\n")
-  #         cat("              residuals, meaning the model is missing key information.\n")
-  #       }
-  #       
-  #       # Jarque-Bera Analysis
-  #       cat("\n[2] JARQUE-BERA TEST FOR NORMALITY\n")
-  #       cat("    Purpose: To check if the error distribution is symmetric (Bell Curve).\n")
-  #       cat("    H0 (Null): Residuals follow a Normal Distribution.\n")
-  #       cat("    Result: The test returned a p-value of", round(jb_test$p.value, 4), ".\n")
-  #       if(jb_test$p.value > 0.05) {
-  #         cat("    Decision: We fail to reject the null hypothesis. Residuals are normal,\n")
-  #         cat("              validating the reliability of our forecast confidence intervals.\n")
-  #       } else {
-  #         cat("    Decision: We reject the null hypothesis. Residuals are non-normal;\n")
-  #         cat("              prediction intervals may be biased or overly optimistic.\n")
-  #       }
-  #       
-  #       cat("\n================================================================\n")
-  #       cat("                 VII. PREDICTIVE ACCURACY (BACKTEST)            \n")
-  #       cat("================================================================\n")
-  #       if(!is.na(cv_error)) {
-  #         cat("Mean Absolute Error (CV): ", round(cv_error, 4), "\n")
-  #         cat("Interpretation: This error rate was calculated via rolling-window cross-validation,\n")
-  #         cat("                simulating how the model performs on 'unseen' future data.\n")
-  #       }
-  #       
-  #       cat("\n================================================================\n")
-  #       cat("                 VIII. FINAL MODEL VERDICT                      \n")
-  #       cat("================================================================\n")
-  #       if(lb_test$p.value > 0.05 && jb_test$p.value > 0.05) {
-  #         cat("FINAL VERDICT: Statistically Excellent. The model is fully validated\n")
-  #         cat("and ready for production-level forecasting.\n")
-  #       } else if (lb_test$p.value > 0.05) {
-  #         cat("FINAL VERDICT: Statistically Acceptable. All information is captured,\n")
-  #         cat("               though the error distribution is non-standard.\n")
-  #       } else {
-  #         cat("FINAL VERDICT: Statistically Sub-optimal. High risk of forecast error\n")
-  #         cat("               due to remaining patterns in the residuals.\n \n \n")
-  #       }
-  #     })
-  #     
-  #     removeModal() 
-  #     output_content
-  #     
-  #   }, error = function(e) {
-  #     removeModal()
-  #     return(paste("Critical error during analysis:", e$message))
-  #   })
-  #   
-  #   # Print the final result to the renderPrint output
-  #   cat(paste(result_text, collapse = "\n"))
-  # })
   
-  # output$Pslow <- renderPrint({
-  #   req(tsData())
-  #   
-  #   # Use Shiny progress notification since stepwise=FALSE can take significant time
-  #   withProgress(message = 'Performing Exhaustive Search...', 
-  #                detail = 'This may take a few minutes for complex data...', value = 0, {
-  #                  
-  #                  # Capture the trace output to display it in the UI
-  #                  trace_output <- capture.output({
-  #                    sarima_model <- forecast::auto.arima(
-  #                      tsData(),
-  #                      max.p = as.numeric(input$maxp),
-  #                      max.d = as.numeric(input$maxd),
-  #                      max.q = as.numeric(input$maxq),
-  #                      max.P = as.numeric(input$maxPs),
-  #                      max.D = as.numeric(input$maxDs),
-  #                      max.Q = as.numeric(input$maxQs),
-  #                      max.order = as.numeric(input$maxorder),
-  #                      stepwise = FALSE,         # Exhaustive search
-  #                      approximation = FALSE,    # Use exact likelihood
-  #                      trace = TRUE,             # Capture search steps
-  #                      allowdrift = TRUE,
-  #                      test = "kpss"             # Standard unit root test
-  #                    )
-  #                  })
-  #                  
-  #                  setProgress(1) # Complete progress
-  #                  
-  #                  # Print the trace first, then the final model summary
-  #                  cat("--- SEARCH TRACE (Exhaustive) ---\n")
-  #                  cat(paste(trace_output, collapse = "\n"))
-  #                  cat("\n\n--- FINAL OPTIMAL MODEL ---\n")
-  #                  print(sarima_model)
-  #                  cat("\n")
-  #                  summary(sarima_model)
-  #                })
-  # })
-  
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # #
-  # #                     Slow   ARIMA
-  # #
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # ########  ########  ########  ########  ########  ########  ########  ########
-  # 
-  # output$Pslow <- renderPrint({
-  #     myData <- tsData()
-  # 
-  #     sarima_model <- auto.arima(myData,
-  #                             max.p = input$maxp,
-  #                             max.d = input$maxd,
-  #                             max.q = input$maxq,
-  #                             max.P = input$maxPs,
-  #                             max.D = input$maxDs,
-  #                             max.Q = input$maxQs,
-  #                             max.order = input$maxorder,
-  #                             stepwise=FALSE,
-  #                             approximation=FALSE,
-  #                             trace=TRUE,
-  #                             allowdrift=TRUE,
-  #                             test = c("kpss", "adf", "pp")
-  #     )
-  # 
-  #     sarima_model
-  #   })
 
 
   ######## ######## ######## ######## ######## ######## ######## ########
@@ -3901,93 +2921,6 @@ server <- function(input, output, session) {
     summary(results_ARIMA_pdPD_drift()$modelOutput)
   })
   
-
- #  ########  ########  ########  ########  ########  ########  ########  ########
- #  ########  ########  ########  ########  ########  ########  ########  ########
- #  #
- #  #            ARIMA (p, d, q) (P, D, Q) [S]
- #  #
- #  ########  ########  ########  ########  ########  ########  ########  ########
- #  ########  ########  ########  ########  ########  ########  ########  ########
- # 
- # 
- #  # Cache for forecast results
- #  forecastCache_autoARIMA <- reactiveValues()
- # 
- #  # Function to create a unique key based on input parameters
- #  createCacheKey_autoARIMA <- function(file, freq, model, col,  v_p, v_d, v_q, vP, vD, VQ, drift ) {
- #    # Check if the file input is valid
- #    if (is.null(file) || !is.data.frame(file) || nrow(file) == 0  ) {
- #      return(NULL)
- #    }
- #    # Use the file name and last modification time to create a unique key
- #    fileName <- file$name
- #    fileModTime <- file$datapath  # or use file$size for an additional layer of uniqueness
- #    # Ensure other inputs are non-NULL and convert them to strings
- #    if (is.null(col) || is.null(model)) {
- #      return(NULL)
- #    }
- # 
- # paste0(fileName, "_", fileModTime, "_",
- #        as.character(col), "_", as.character(model),
- #        "_", as.character(freq), "_", as.character(v_p),
- #        as.character(v_d), as.character(v_q), as.character(vP),
- #        as.character(vD), as.character(VQ), as.character(drift))  }
- # 
- # 
- #  # Reactive expression to compute or fetch the forecast
- #  results_ARIMA_pdPD_drift <- reactive({
- #    key <- createCacheKey_autoARIMA(input$fileData, currentFrequency() , input$Model,  input$colNum, input$ARIMAp, input$ARIMAd, input$ARIMAq, input$ARIMAps, input$ARIMAds, input$ARIMAqs, input$driftYN )
- #    if (!is.null(forecastCache_autoARIMA[[key]])) {
- #      forecastCache_autoARIMA[[key]]
- #    } else {
- #      result <- modelisation_Auto_SARIMA(input$Model , input$length)
- #      forecastCache_autoARIMA[[key]] <- result
- #      result
- #    }
- #  })
- # 
- # 
- # 
- #  modelisation_Auto_SARIMA <- function(  modelType,  forecastLength  ) {
- # 
- #    req(tsData())
- # 
- #    # the time series data
- #    timeSeriesData <- tsData()
- #    if (is.null(timeSeriesData)) {
- #      stop("Error in processing time series data")
- #    }
- # 
- #    if (input$driftYN == "TRUE") {
- #      driftConsideration =TRUE
- #    }
- #    else {
- #      driftConsideration =FALSE
- #    }
- # 
- #    myData <- tsData()
- # 
- #    fittedModel<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
- # 
- #    list(
- #      modelOutput = fittedModel
- #    )
- #  }
- # 
- # 
- # 
- # 
-
-
-
-
-  ####################################################################################
-  ####################################################################################
-  ####################################################################################
-  ####################################################################################
-  ####################################################################################
-  ####################################################################################
 
 
   output$Previsions_Plot_pdq_UI <- renderUI({
@@ -4271,74 +3204,301 @@ server <- function(input, output, session) {
 
 
 
-
-
   ########  ########  ########  ########  ########  ########  ########  ########
   #
   #                Tests   p, d, q, P, D, Q, S
   #
   ########  ########  ########  ########  ########  ########  ########  ########
 
+
+  # 1.    MANN-KENDALL TREND TEST
   output$testTrendMK2 <- renderPrint({
     req(tsData())
     myData <- tsData()
-
+    
+    # 1. Run the Test
+    result <- tryCatch({
+      mk_result <- MannKendall(myData)
+      
+      # 2. Construct the Report
+      capture.output({
+        cat("================================================================\n")
+        cat("                MANN-KENDALL NON-PARAMETRIC TEST                \n")
+        cat("================================================================\n\n")
+        
+        print(mk_result)
+        
+        cat("\n================================================================\n")
+        cat("                   STATISTICAL INTERPRETATION                   \n")
+        cat("================================================================\n")
+        
+        pval <- as.numeric(mk_result$sl)
+        tau  <- as.numeric(mk_result$tau)
+        
+        cat("Hypothesis Analysis:\n")
+        cat("  H0 (Null): No monotonic trend exists in the series.\n")
+        cat("  Ha (Alt):  A monotonic trend is present.\n\n")
+        
+        cat("Verdict:\n")
+        if(pval < 0.05) {
+          cat("  RESULT: Significant (p < 0.05). Reject H0.\n")
+          cat("  CONCLUSION: A significant trend is detected.\n")
+          cat("  DIRECTION: ", if(tau > 0) "Positive (Increasing)" else "Negative (Decreasing)", "\n")
+        } else {
+          cat("  RESULT: Not Significant (p >= 0.05). Fail to reject H0.\n")
+          cat("  CONCLUSION: No significant trend detected (Series is stable).\n")
+        }
+        cat("================================================================\n")
+      })
+    }, error = function(e) {
+      return(paste("Error in MK Test:", e$message))
+    })
+    
     helpMK()
-
-    MannKendall(myData)
+    cat(paste(result, collapse = "\n"))
   })
 
-
+  
+  
+  
+  # 2.    AUGMENTED DICKEY-FULLER (ADF) TEST
   output$teststationariteARIMApdq <- renderPrint({
     req(tsData())
     myData <- tsData()
-
+    
+    # 1. Run the Test and Capture Output
+    result <- tryCatch({
+      # Perform the actual ADF test
+      adf_result <- tseries::adf.test(myData, 
+                                      alternative = input$altern2, 
+                                      k = input$LagOrderADF2)
+      
+      # 2. Construct the Professional Report
+      capture.output({
+        cat("================================================================\n")
+        cat("               AUGMENTED DICKEY-FULLER (ADF) TEST               \n")
+        cat("               Metric: Unit Root Stationarity Test              \n")
+        cat("================================================================\n\n")
+        
+        # Print the formal test output
+        print(adf_result)
+        
+        cat("\n================================================================\n")
+        cat("                   STATISTICAL INTERPRETATION                   \n")
+        cat("================================================================\n")
+        
+        # Extract p-value
+        pval <- as.numeric(adf_result$p.value)
+        
+        cat("Hypothesis Testing:\n")
+        cat("  H0: The series has a unit root (It is NON-STATIONARY).\n")
+        cat("  Ha: The series is STATIONARY.\n\n")
+        
+        cat("Decision Rule:\n")
+        if(pval < 0.05) {
+          cat("  RESULT: Significant Evidence of Stationarity (p < 0.05).\n")
+          cat("  DECISION: Reject H0. The series is stationary.\n")
+          cat("  ADVICE: No further differencing (d=0) may be required for this\n")
+          cat("          specific component of the model.\n")
+        } else {
+          cat("  RESULT: Insufficient Evidence of Stationarity (p >= 0.05).\n")
+          cat("  DECISION: Fail to reject H0. The series is non-stationary.\n")
+          cat("  ADVICE: A unit root exists. You likely need to apply at least\n")
+          cat("          one level of differencing (d=1) to stabilize the mean.\n")
+        }
+        
+        cat("================================================================\n")
+      })
+    }, error = function(e) {
+      return(paste("Error in ADF Test:", e$message))
+    })
+    
+    # Call your help function
     helpADF()
-
-    adf.test(myData, alternative =input$altern2, k=input$LagOrderADF2)
+    
+    # Display result
+    cat(paste(result, collapse = "\n"))
   })
+  
+  
 
 
+  # 3.    KPSS STATIONARITY TEST
   output$kpssTest2 <- renderPrint({
     req(tsData())
     myData <- tsData()
-
+    
+    # 1. Run the Test and Capture Output
+    result <- tryCatch({
+      # null = "Trend" checks for trend-stationarity
+      kpss_result <- tseries::kpss.test(myData, null = "Trend")
+      
+      # 2. Construct the Professional Report
+      capture.output({
+        cat("================================================================\n")
+        cat("              KPSS TEST FOR TREND STATIONARITY                  \n")
+        cat("================================================================\n\n")
+        
+        # Print the formal test output
+        print(kpss_result)
+        
+        cat("\n================================================================\n")
+        cat("                   STATISTICAL INTERPRETATION                   \n")
+        cat("================================================================\n")
+        
+        # Extract p-value
+        pval <- as.numeric(kpss_result$p.value)
+        
+        cat("Hypothesis Analysis (Note: Reversed vs ADF test):\n")
+        cat("  H0: The series is STATIONARY (No unit root).\n")
+        cat("  Ha: The series is NON-STATIONARY (Unit root present).\n\n")
+        
+        cat("Decision Rule:\n")
+        if(pval < 0.05) {
+          cat("  RESULT: Significant (p < 0.05). Reject H0.\n")
+          cat("  CONCLUSION: The series is non-stationary.\n")
+          cat("  ADVICE: The data likely requires differencing (d=1) to remove\n")
+          cat("          the stochastic trend before modeling.\n")
+        } else {
+          cat("  RESULT: Not Significant (p >= 0.05). Fail to reject H0.\n")
+          cat("  CONCLUSION: The series is stationary.\n")
+          cat("  ADVICE: The series is stable around a trend; differencing may\n")
+          cat("          not be necessary.\n")
+        }
+        
+        cat("================================================================\n")
+      })
+    }, error = function(e) {
+      return(paste("Error in KPSS Test:", e$message))
+    })
+    
+    # 3. Call help function and display
     helpKPSS()
-
-    kpss.test(myData, null = "Trend")
+    
+    cat(paste(result, collapse = "\n"))
   })
 
 
+  
+  # 4.    DF-GLS UNIT ROOT TEST (ERS)
   output$test_DFGLS <- renderPrint({
     req(tsData())
     myData <- tsData()
-
-    cat(".........................................................................................\n")
-    cat("     DF-GLS Unit Root Test                                                               \n")
-    cat(".........................................................................................\n")
-    cat("                                                                                         \n")
-
-    summary(ur.ers(myData,  model = "trend",lag.max = 4))
+    
+    # 1. Run the Test
+    result <- tryCatch({
+      # ur.ers implements the Elliott, Rothenberg & Stock Unit Root Test
+      dfgls_test <- urca::ur.ers(myData, model = "trend", lag.max = 4)
+      dfgls_sum  <- summary(dfgls_test)
+      
+      # 2. Construct the Report
+      capture.output({
+        cat("================================================================\n")
+        cat("           DF-GLS UNIT ROOT TEST (ELLIOTT, ROTHENBERG & STOCK)  \n")
+        cat("================================================================\n\n")
+        
+        # Print the formal test summary
+        print(dfgls_sum)
+        
+        cat("\n================================================================\n")
+        cat("                   STATISTICAL INTERPRETATION                   \n")
+        cat("================================================================\n")
+        
+        # Extract test statistic and critical value (usually at 5%)
+        test_stat <- dfgls_sum@teststat
+        crit_val  <- dfgls_sum@cval[1, 2] # 5% critical value
+        
+        cat("Hypothesis Analysis:\n")
+        cat("  H0: The series has a unit root (Non-Stationary).\n")
+        cat("  Ha: The series is Stationary.\n\n")
+        
+        cat("Decision Rule:\n")
+        cat("  Test Statistic: ", round(test_stat, 4), "\n")
+        cat("  Critical Value (5%): ", round(crit_val, 4), "\n\n")
+        
+        if(test_stat < crit_val) {
+          cat("  RESULT: Test Statistic is more negative than Critical Value.\n")
+          cat("  CONCLUSION: Reject H0. The series is Stationary.\n")
+          cat("  ADVICE: The DF-GLS test (which has more power than ADF) confirms\n")
+          cat("          stationarity. Differencing may not be necessary.\n")
+        } else {
+          cat("  RESULT: Test Statistic is not more negative than Critical Value.\n")
+          cat("  CONCLUSION: Fail to reject H0. The series is Non-Stationary.\n")
+          cat("  ADVICE: A unit root is likely present. Consider applying\n")
+          cat("          differencing (d=1) to stabilize the series.\n")
+        }
+        cat("================================================================\n")
+      })
+    }, error = function(e) {
+      return(paste("Error in DF-GLS Test:", e$message))
+    })
+    
+    # Display the final report
+    cat(paste(result, collapse = "\n"))
   })
-
-
-
+  
+  
+  
+  # 5.    LJUNG-BOX / BOX-PIERCE RESIDUAL TEST
   output$testLBnARIMApdq <- renderPrint({
     req(tsData())
-
-
+    
+    # 1. Retrieve the model residuals
     sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
-    # sarima_model <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
-
+    req(sarima_model)
+    myDataResiduals <- sarima_model$residuals
+    
+    # 2. Run the Test and Capture Output
+    result <- tryCatch({
+      box_result <- Box.test(myDataResiduals, 
+                             lag = input$lagorder1, 
+                             type = input$typeBoxTest1)
+      
+      # 3. Construct the Professional Report
+      capture.output({
+        cat("================================================================\n")
+        cat("            RESIDUAL DIAGNOSTIC: ", toupper(input$typeBoxTest1), " TEST             \n")
+        cat("================================================================\n\n")
+        
+        # Print formal test output
+        print(box_result)
+        
+        cat("\n================================================================\n")
+        cat("                   STATISTICAL INTERPRETATION                   \n")
+        cat("================================================================\n")
+        
+        pval <- as.numeric(box_result$p.value)
+        
+        cat("Hypothesis Analysis:\n")
+        cat("  H0: Residuals are independent (White Noise / No Autocorrelation).\n")
+        cat("  Ha: Residuals are dependent (Presence of remaining patterns).\n\n")
+        
+        cat("Decision Rule:\n")
+        if(pval > 0.05) {
+          cat("  RESULT: Not Significant (p > 0.05). Fail to reject H0.\n")
+          cat("  CONCLUSION: The residuals behave like White Noise.\n")
+          cat("  ADVICE: The model has successfully captured the information in\n")
+          cat("          the data. Your forecast is likely reliable.\n")
+        } else {
+          cat("  RESULT: Significant (p <= 0.05). Reject H0.\n")
+          cat("  CONCLUSION: There is significant autocorrelation in residuals.\n")
+          cat("  ADVICE: The model is 'Underfitted'. You may need to add more\n")
+          cat("          AR or MA terms to capture the remaining patterns.\n")
+        }
+        cat("================================================================\n")
+      })
+    }, error = function(e) {
+      return(paste("Error in Box Test:", e$message))
+    })
+    
+    # Call your help function
     helpLjungBox()
-
-    myDataResiduals <- sarima_model$resid
-
-    Box.test(myDataResiduals, lag=input$lagorder1, type=input$typeBoxTest1)
-
+    
+    # Display the final report
+    cat(paste(result, collapse = "\n"))
   })
-
-
+  
+  
   ########  ########  ########  ########  ########  ########  ########  ########
   #
   #        Residuals     p  d   q  P  D  Q  S
@@ -4349,6 +3509,8 @@ server <- function(input, output, session) {
   output$chkResARIMApdq_UI <- renderUI({
     plotOutput("chkResARIMApdq", width = userData$plotWidth, height = userData$plotHeight)
   })
+  
+  
 
   output$chkResARIMApdq <- renderPlot({
     req(tsData())
@@ -4671,42 +3833,7 @@ server <- function(input, output, session) {
     # Drift component
     drift <- ifelse(fittedModel$arma[9] == 1, fittedModel$coef[length(fittedModel$coef)], "No drift")
 
-
-
     sarParameters
-
-
-
-    # req(input$fileData)
-    # req(input$colNum)
-    # req(currentFrequency())
-    # req(input$dateCol)
-    # req(input$Model)
-    #
-    #
-    # df <- read_excel(input$fileData$datapath)
-    # date_col <- as.Date(df[[input$dateCol]])
-    # starting_date <- min(date_col, na.rm = TRUE)
-    #
-    # df <- data()
-    #
-    # df[[input$dateCol]] <- as.Date(df[[input$dateCol]])
-    # #df[[input$dateCol]] <- format(as.Date(df[[input$dateCol]]), "%d/%m/%Y")
-    #
-    # date_col <- df[[input$dateCol]]
-    #
-    # starting_date <- min(date_col, na.rm = TRUE)
-    #
-    # start_day <- day(starting_date)
-    # start_month <- month(starting_date)
-    # start_year <- year(starting_date)
-    #
-    # model <- input$Model
-
-    # tsData()
-
-    # cat(model)
-
 
   })
 
@@ -5124,7 +4251,7 @@ server <- function(input, output, session) {
     cat("  p-value < 0.05 indicates the Time Series is not stationary, there is trend in the time series.    \n")
     cat("....................................................................................................\n")
     cat("                                                                                                    \n")
-    cat("     Mann-Kendall trend Test                                                                        \n")
+    cat("                                                                                                    \n")
     cat("                                                                                                    \n")
 
 
