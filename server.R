@@ -3237,8 +3237,9 @@ server <- function(input, output, session) {
         
         cat("Hypothesis Analysis:\n")
         cat("  H0 (Null): No monotonic trend exists in the series.\n")
+        cat("             There is no trend in the series\n") 
         cat("  Ha (Alt):  A monotonic trend is present.\n\n")
-        
+        cat("             There a trend in the series\n") 
         cat("Verdict:\n")
         if(pval < 0.05) {
           cat("  RESULT: Significant (p < 0.05). Reject H0.\n")
@@ -3394,8 +3395,8 @@ server <- function(input, output, session) {
       # 2. Construct the Report
       capture.output({
         cat("================================================================\n")
-        cat("           DF-GLS UNIT ROOT TEST (ELLIOTT, ROTHENBERG & STOCK)  \n")
-        cat("================================================================\n\n")
+        cat("       DF-GLS UNIT ROOT TEST (ELLIOTT, ROTHENBERG & STOCK)      \n")
+        cat("================================================================\n")
         
         # Print the formal test summary
         print(dfgls_sum)
@@ -3542,50 +3543,142 @@ server <- function(input, output, session) {
   })
 
 
+  # output$tsdiag2 <- renderPlot({
+  #   req(tsData())
+  # 
+  #   sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
+  #   # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
+  # 
+  #    qqnorm(resid(sarima_model), main = "Normal Q-Q Plot, Residual", col = "darkgrey")
+  #   qqline(resid(sarima_model), col = "dodgerblue", lwd = 2)
+  # 
+  # })
+  
+  #     NORMAL Q-Q PLOT (Residuals)
   output$tsdiag2 <- renderPlot({
     req(tsData())
-
+    
+    # 1. Retrieve the fitted model
     sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
-    # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
+    req(sarima_model)
+    
+    # 2. Extract Residuals and handle NAs (crucial for differenced models)
+    ResudialData <- as.numeric(resid(sarima_model))
+    ResudialData <- ResudialData[!is.na(ResudialData)]
+    
+    # 3. Create the Plot
+    # Base R is often preferred for Q-Q plots for its simplicity
+    qqnorm(ResudialData, 
+           main = paste("Normal Q-Q Plot:", userData$mainTitle), 
+           col = "darkgrey", 
+           pch = 16,     # Solid circles look cleaner
+           cex = 1.2)    # Slightly larger points
+    
+    # Add the reference line
+    qqline(ResudialData, 
+           col = "firebrick", # A contrasting color like red/firebrick is standard
+           lwd = 2)
+    
+    # Optional: Add a grid for better readability
+    grid(col = "lightgray", lty = "dotted")
+    
+  }, 
+  # Direct dynamic dimensions from your sliders
+  width = function() as.numeric(gsub("[^0-9]", "", userData$plotWidth)),
+  height = function() as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+  )
 
-     qqnorm(resid(sarima_model), main = "Normal Q-Q Plot, Residual", col = "darkgrey")
-    qqline(resid(sarima_model), col = "dodgerblue", lwd = 2)
 
-  })
-
-
+  
+  #  SHAPIRO-WILK NORMALITY TEST ON RESIDUALLS 
   output$ShapiroTest <- renderPrint({
     req(tsData())
-    myData <- tsData()
-
-    if (input$driftYN == "TRUE") {
-      driftConsideration =TRUE
-    }
-    else {
-      driftConsideration =FALSE
-    }
-
+    
+    # 1. Retrieve the fitted model
     sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
-    # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
-
-
-    cat("..........................................................................\n")
-    cat(" The Shapiro-Wilk test is a statistical test used to check if             \n")
-    cat(" a continuous variable follows a normal distribution.                     \n")
-    cat("..........................................................................\n")
-    cat(" (H0) states that the variable is normally distributed.                   \n")
-    cat(" (H1) states that the variable is NOT normally distributed.               \n")
-    cat("..........................................................................\n")
-    cat("Decision Rule:                                                            \n")
-    cat(" If p ≤ 0.05: Reject the null hypothesis.                                 \n")
-    cat("              (i.e. the data is NOT normally distributed).                \n")
-    cat(" If p > 0.05: Fail to reject the null hypothesis.                         \n")
-    cat("              (i.e. the data MAY BE normally distributed).                \n")
-    cat("..........................................................................\n")
-
-    ResudialData = resid(sarima_model)
-    shapiro.test(ResudialData)
-  })
+    req(sarima_model) 
+    
+    # 2. Header & Definition
+    cat("==========================================================================\n")
+    cat("               SHAPIRO-WILK NORMALITY TEST ON RESIDUALLS                  \n")
+    cat("==========================================================================\n")
+    cat(" The Shapiro-Wilk test evaluates whether the residuals of your model      \n")
+    cat(" follow a Normal (Gaussian) distribution.                                 \n")
+    cat("--------------------------------------------------------------------------\n")
+    cat(" DECISION RULE:\n")
+    cat(" • H0 (p > 0.05): Residuals are Normal (Desired for ARIMA).\n")
+    cat(" • H1 (p <= 0.05): Residuals are NOT Normal.\n")
+    cat("--------------------------------------------------------------------------\n")
+    
+    # 3. Perform Test
+    residualData <- as.numeric(resid(sarima_model))
+    residualData <- residualData[!is.na(residualData)] # Remove NAs from differencing
+    st_result <- shapiro.test(residualData)
+    
+    # 4. Result Output
+    cat(" RESULT:\n")
+    print(st_result)
+    
+    # 5. Dynamic Conclusion
+    pval <- st_result$p.value
+    cat("--------------------------------------------------------------------------\n")
+    cat(" CONCLUSION:\n")
+    if (pval > 0.05) {
+      cat("  SUCCESS: The p-value is > 0.05. We fail to reject the null hypothesis.\n")
+      cat("  The residuals appear to be normally distributed.\n")
+    } else {
+      cat("  WARNING: The p-value is <= 0.05. We reject the null hypothesis.\n")
+      cat("  The residuals do NOT follow a normal distribution.\n")
+    }
+    
+    # 6. Actionable Advice
+    cat("--------------------------------------------------------------------------\n")
+    cat(" ADVICE:\n")
+    if (pval > 0.05) {
+      cat("  Your model residuals meet the normality assumption. You can proceed   \n")
+      cat("  with confidence in your forecasts and prediction intervals.\n")
+    } else {
+      cat("  Consider: \n")
+      cat("  1. Checking for outliers that may skew the distribution.\n")
+      cat("  2. Applying a Box-Cox transformation (e.g., Log) to the data.\n")
+      cat("  3. Verifying if a significant 'Trend' or 'Seasonality' remains.\n")
+    }
+    cat("==========================================================================\n")
+  }) 
+  
+  
+  # output$ShapiroTest <- renderPrint({
+  #   req(tsData())
+  #   myData <- tsData()
+  # 
+  #   if (input$driftYN == "TRUE") {
+  #     driftConsideration =TRUE
+  #   }
+  #   else {
+  #     driftConsideration =FALSE
+  #   }
+  # 
+  #   sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
+  #   # fit<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
+  # 
+  # 
+  #   cat("..........................................................................\n")
+  #   cat(" The Shapiro-Wilk test is a statistical test used to check if             \n")
+  #   cat(" a continuous variable follows a normal distribution.                     \n")
+  #   cat("..........................................................................\n")
+  #   cat(" (H0) states that the variable is normally distributed.                   \n")
+  #   cat(" (H1) states that the variable is NOT normally distributed.               \n")
+  #   cat("..........................................................................\n")
+  #   cat("Decision Rule:                                                            \n")
+  #   cat(" If p ≤ 0.05: Reject the null hypothesis.                                 \n")
+  #   cat("              (i.e. the data is NOT normally distributed).                \n")
+  #   cat(" If p > 0.05: Fail to reject the null hypothesis.                         \n")
+  #   cat("              (i.e. the data MAY BE normally distributed).                \n")
+  #   cat("..........................................................................\n")
+  # 
+  #   ResudialData = resid(sarima_model)
+  #   shapiro.test(ResudialData)
+  # })
 
   ########  ########  ########  ########  ########  ########  ########  ########
   #
@@ -4176,8 +4269,6 @@ server <- function(input, output, session) {
 
   helpADF <- function(){
     cat(".......................................................................\n")
-    cat("               Augmented Dickey-Fuller Test                            \n")
-    cat(".......................................................................\n")
     cat("  Augmented Dickey-Fuller Test is used to check whether a given        \n")
     cat("  time series is at rest.                                              \n")
     cat("                                                                       \n")
@@ -4236,9 +4327,6 @@ server <- function(input, output, session) {
     cat("  time series data.                                                                                 \n")
     cat("  It is a nonparametric test, which means that no underlying assumptions                            \n")
     cat("  are made about the normality of the data.  It does require that there is no autocorrelation.      \n")
-    cat("                                                                                                    \n")
-    cat("  (H0) : There is no trend in the series                                                            \n")
-    cat("  (Ha) : There is a trend in the series                                                             \n")
     cat("....................................................................................................\n")
     cat("  Un test de tendance de Mann-Kendall est utilisé pour déterminer s'il existe ou non                \n")
     cat("  une tendance dans les données de séries chronologiques.                                           \n")
@@ -4250,11 +4338,7 @@ server <- function(input, output, session) {
     cat("....................................................................................................\n")
     cat("  p-value < 0.05 indicates the Time Series is not stationary, there is trend in the time series.    \n")
     cat("....................................................................................................\n")
-    cat("                                                                                                    \n")
-    cat("                                                                                                    \n")
-    cat("                                                                                                    \n")
-
-
+  
   }
 
 
