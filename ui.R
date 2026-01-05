@@ -1,28 +1,36 @@
 ################################################################################
-# 1. LIBRARIES & DEPENDENCIES
+# 1. LIBRARIES & DEPENDENCIES  
 ################################################################################
 
-packages = c("shiny", "shinythemes", "data.table", "ggplot2", "lubridate",
-             "urca", "summarytools", "dplyr", "fpp2", "forecast", "stats",
-             "Kendall", "lmtest", "vtable","shinyalert", "mathjaxr", "psych",
-             "tseries", "seasonal", "xts", "astsa", "ggfortify",  "pastecs",
-             "tsibble", "feasts", "readxl", "TSstudio", "latex2exp", "Hmisc",
-             "foreign","shinyWidgets", "shinyjs", "plotly") 
+packages <- c(
+  "shiny", "shinythemes", "data.table", "ggplot2", "lubridate",
+  "urca", "summarytools", "dplyr", "fpp2", "forecast", "stats",
+  "Kendall", "lmtest", "vtable", "shinyalert", "mathjaxr", "psych",
+  "tseries", "seasonal", "xts", "astsa", "ggfortify", "pastecs",
+  "tsibble", "feasts", "readxl", "TSstudio", "latex2exp", "Hmisc",
+  "foreign", "shinyWidgets", "shinyjs", "plotly"
+)
 
-load_packages <- function(p) {
-  if (!require(p, character.only = TRUE)) {
-    install.packages(p, dependencies = TRUE, repos = "https://cran.rstudio.com/")
-    library(p, character.only = TRUE)
-  }
+# Load packages (do NOT install packages inside a Shiny app)
+missing_pkgs <- packages[!vapply(packages, requireNamespace, logical(1), quietly = TRUE)]
+if (length(missing_pkgs) > 0) {
+  stop(
+    "Missing packages: ", paste(missing_pkgs, collapse = ", "), "\n",
+    "Install them once (outside Shiny) with:\n",
+    "install.packages(c(", paste(sprintf('"%s"', missing_pkgs), collapse = ", "), "))"
+  )
 }
 
-invisible(lapply(packages, load_packages))
+invisible(lapply(packages, library, character.only = TRUE))
 
-# Special handling for hrbrthemes
-if (!require("hrbrthemes", character.only = TRUE)) {
-  message("hrbrthemes not found. Using theme_minimal as fallback.")
-  # Create a dummy function so the app doesn't crash when it sees theme_ipsum()
-  theme_ipsum <- function() theme_minimal()
+# Safe theme wrapper for hrbrthemes::theme_ipsum()
+theme_ipsum <- function(...) {
+  if (requireNamespace("hrbrthemes", quietly = TRUE)) {
+    hrbrthemes::theme_ipsum(...)
+  } else {
+    message("hrbrthemes not found. Using ggplot2::theme_minimal() as fallback.")
+    ggplot2::theme_minimal()
+  }
 }
 
 
@@ -33,18 +41,25 @@ if (!require("hrbrthemes", character.only = TRUE)) {
 shinyUI(
   fluidPage(
     
-    # LaTeX rendering support
-    tags$head(
-      tags$script(type = "text/javascript",
-                  src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML")
-    ),
+    # Theme
+    theme = shinytheme("spacelab"),
+    
+    # Initialize shinyjs
+    useShinyjs(),
+    
+    # Use built-in MathJax support
+    withMathJax(),
+    
+    # UI Title
+    titlePanel("SARIMA & H.W."),
+    
 
+    # # LaTeX rendering support
+    # tags$head(
+    #   tags$script(type = "text/javascript",
+    #               src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML")
+    # ),
 
-  # Theme
-  theme = shinytheme("spacelab"),
-  
-  # Initialize shinyjs
-  useShinyjs(),  
 
   # Include custom CSS
   tags$head(
@@ -55,9 +70,6 @@ shinyUI(
           "))
   ),
 
-
-  # UI Title
-  titlePanel("SARIMA & H.W."),
 
 
 
@@ -242,8 +254,17 @@ shinyUI(
                                            br(),br(),
                                            conditionalPanel(
                                              condition = "input.tabs == 'Plot (*)'",
-                                             numericInput("tickSize", label = HTML("<span style='color:red;'>Tick size :</span>"), min=1,  value=12)
-                                           )
+                                             
+                                                   numericInput(
+                                                     "tickSize",
+                                                     label = HTML("<span style='color:red;'>Tick size :</span>"),
+                                                     min = 1, value = 12
+                                                   ),
+                                                   
+                                                   br(),
+                                                   
+                                                   uiOutput("ts_color_ui")
+                                              )
                               ),
                               mainPanel(width=10,
                                         tabsetPanel(id = "tabs",
@@ -258,16 +279,21 @@ shinyUI(
                                                     tabPanel("stationary[ADF]",
                                                              sidebarLayout(
                                                                sidebarPanel(width=3,
-                                                                            selectInput("alternd2St", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                                            numericInput("LagOrderADFd2St", label = "Lag",  min=0, value=12),
+                                                                            selectInput("alternd2St", label = "stationary or explosive",
+                                                                                        choices=c("stationary","explosive"),
+                                                                                        selected="stationary"),
+                                                                            numericInput("LagOrderADFd2St", label = "Lag", min=0, value=12),
                                                                             #submitButton("Submit ==>"),
                                                                ),
-                                                               tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationarited2St")),
+                                                               tabPanel("stationary [Augmented Dickey-Fuller]",
+                                                                        verbatimTextOutput("teststationarited2St"))
                                                              )),
-                                                    tabPanel("ARIMA", verbatimTextOutput("ARIMA_d_D_log" )),
+                                                    tabPanel("Auto-ARIMA", verbatimTextOutput("ARIMA_d_D_log" ))
                                         )
                               )
-                            )),
+                            )
+                   )
+                   
 
 
                  )),
@@ -312,7 +338,7 @@ shinyUI(
                                 mainPanel(width=1100,
                                           tabsetPanel(
                                             tabPanel("Classical", plotOutput("decompose",width=800,height = 700 )),
-                                            tabPanel("Classical", plotOutput("decompose2",width=800,height = 700 )),
+                                            tabPanel("Classical (*)", plotOutput("decompose2",width=800,height = 700 )),
                                             tabPanel("Coefficients saisonnier", verbatimTextOutput("dFactors" )),
                                           ))
                               )),
@@ -403,23 +429,51 @@ shinyUI(
                    tabPanel("unit Cercle", plotOutput("unitCercle", width=750, height = 580)),
 
 
+                   # tabPanel("ARIMA Slow",
+                   #          tabsetPanel(
+                   #            tabPanel("ARIMA Slow Model (P.S. Take Times to display Results)",
+                   #                sidebarLayout(
+                   #                  sidebarPanel(width=3,
+                   #                               numericInput("maxp", label = "max.p", min=0, value=5),
+                   #                               numericInput("maxd", label = "max.d",min=0,  value=2),
+                   #                               numericInput("maxq", label = "max.q", min=0, value=5),
+                   #                               numericInput("maxPs", label = "max.P",min=0,  value=2),
+                   #                               numericInput("maxDs", label = "max.D",min=0,  value=1),
+                   #                               numericInput("maxQs", label = "max.Q", min=0, value=2),
+                   #                               numericInput("maxorder", label = "max.order[p+q+P+Q]", min=0, value=8),
+                   #                  ),
+                   #                  tabPanel("ARIMA Slow Model(Wait)", verbatimTextOutput("Pslow"), class="span7"),
+                   #                )),
+                   # 
+                   #  )),
+                   
                    tabPanel("ARIMA Slow",
                             tabsetPanel(
                               tabPanel("ARIMA Slow Model (P.S. Take Times to display Results)",
-                                  sidebarLayout(
-                                    sidebarPanel(width=3,
-                                                 numericInput("maxp", label = "max.p", min=0, value=5),
-                                                 numericInput("maxd", label = "max.d",min=0,  value=2),
-                                                 numericInput("maxq", label = "max.q", min=0, value=5),
-                                                 numericInput("maxPs", label = "max.P",min=0,  value=2),
-                                                 numericInput("maxDs", label = "max.D",min=0,  value=1),
-                                                 numericInput("maxQs", label = "max.Q", min=0, value=2),
-                                                 numericInput("maxorder", label = "max.order[p+q+P+Q]", min=0, value=8),
-                                    ),
-                                    tabPanel("ARIMA Slow Model(Wait)", verbatimTextOutput("Pslow"), class="span7"),
-                                  )),
-
-                    )),
+                                       sidebarLayout(
+                                         sidebarPanel(width = 3,
+                                                      numericInput("maxp", label = "max.p", min = 0, value = 5),
+                                                      numericInput("maxd", label = "max.d", min = 0, value = 2),
+                                                      numericInput("maxq", label = "max.q", min = 0, value = 5),
+                                                      numericInput("maxPs", label = "max.P", min = 0, value = 2),
+                                                      numericInput("maxDs", label = "max.D", min = 0, value = 1),
+                                                      numericInput("maxQs", label = "max.Q", min = 0, value = 2),
+                                                      numericInput("maxorder", label = "max.order[p+q+P+Q]", min = 0, value = 8),
+                                                      hr(), # Adds a horizontal line for separation
+                                                      # The Start Button
+                                                      actionButton("startSlowArima", "Run Exhaustive Search", 
+                                                                   icon = icon("play"), 
+                                                                   style = "width: 100%; color: #fff; background-color: #337ab7; border-color: #2e6da4")
+                                         ),
+                                         mainPanel(width = 9,
+                                                   verbatimTextOutput("Pslow")
+                                         )
+                                       )
+                              )
+                            )
+                   ),
+                   
+                   
               ))),
 
 

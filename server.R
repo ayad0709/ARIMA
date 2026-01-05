@@ -45,6 +45,32 @@ server <- function(input, output, session) {
     return(as.numeric(colData))
   })
 
+  
+   # Helper function to apply the theme and the custom label sizes globally
+  apply_user_theme <- function() {
+    # 1. Get the base theme (e.g., theme_gray, theme_minimal)
+    theme_name <- if (!is.null(userData$selectedTheme)) userData$selectedTheme else "theme_gray"
+    base_theme <- match.fun(theme_name)()
+    
+    # 2. Combine the base theme with your custom global label settings
+    return(
+      base_theme +
+        theme(
+          # Global Main Title Style
+          plot.title = element_text(size = userData$labelsize + 4, face = "bold", hjust = 0.5),
+          # Global Axis Titles (X and Y)
+          axis.title = element_text(size = userData$labelsize + 2),
+          # Global Axis Ticks (Numbers/Dates)
+          axis.text = element_text(size = userData$labelsize)
+        )
+    )
+  }
+  
+  
+  # Helper to clean dimension inputs (removes 'px' if present)
+  getPlotDim <- function(dimVal) {
+    as.numeric(gsub("[^0-9]", "", dimVal))
+  }
 
 ########  ##########  ##########  ##########  ##########  ##########  ##########
 ########  ##########  ##########  ##########  ##########  ##########  ##########
@@ -623,73 +649,45 @@ server <- function(input, output, session) {
 #                                Observers
 ##########  ##########  ##########  ##########  ##########  ##########  ########
 
-  # Initialize reactive values for plot customization
-  userData <- reactiveValues(
+    
+    # 1. Initialize userData with your defaults at the start of the server function
+    userData <- reactiveValues(
     data = NULL,
     mainTitle = "Time Series Plot",
     xLabel = "Time",
     yLabel = "Values",
-    plotWidth = "800px",  # Changed to percentage for better responsiveness
-    plotHeight = "600px",
+    plotWidth = "900px",  
+    plotHeight = "650px",
     labelsize = 12,
     selectedTheme = "theme_linedraw"
   )
 
-  # # Observer for Plot Dimensions and Theme
-  # observeEvent(input$dimBtn, {
-  #   showModal(modalDialog(
-  #     title = "Set Plot Dimensions & Theme",
-  #     div(style = "display: flex; gap: 10px;",
-  #         textInput("plotWidth", "Plot Width (e.g. 800px)", value = userData$plotWidth),
-  #         textInput("plotHeight", "Plot Height (e.g. 600px)", value = userData$plotHeight)
-  #     ),
-  #     selectInput("theme", "Select Visual Theme",
-  #                 choices = list("Line Draw" = "theme_linedraw",
-  #                                "Default"   = "theme_gray",
-  #                                "Minimal"   = "theme_minimal",
-  #                                "Classic"   = "theme_classic",
-  #                                "Light"     = "theme_light",
-  #                                "Dark"      = "theme_dark",
-  #                                "Void"      = "theme_void"),
-  #                 selected = userData$selectedTheme),
-  #     footer = tagList(
-  #       modalButton("Cancel"),
-  #       actionButton("okDimensions", "OK", class = "btn-primary")
-  #     )
-  #   ))
-  # })
-  
-  
-    # 1. Initialize userData with your defaults at the start of the server function
-    userData <- reactiveValues(
-      plotWidth = 900, 
-      plotHeight = 650, 
-      selectedTheme = "theme_linedraw",
-      mainTitle = "Title",
-      xLabel = "X labe",
-      yLabel = "Y label",
-      labelsize =12 
-      
-    )
-    
+
     # 2. The Modal Trigger
     observeEvent(input$dimBtn, {
+      
+      # --- CRITICAL FIX: Convert strings to numbers for the sliders ---
+      # gsub("[^0-9]", "", x) removes everything that is NOT a number
+      current_w <- as.numeric(gsub("[^0-9]", "", userData$plotWidth))
+      current_h <- as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+      
       showModal(modalDialog(
         title = "Set Plot Dimensions & Style",
-        size = "l",  # "l" for Large makes the modal wider, making sliders longer
+        size = "l",
         
-        # Use the value from userData so it reflects current state
-        sliderInput("plotWidth", "Plot Width (px)", 
+        # Use the numeric 'current_w' instead of 'userData$plotWidth'
+        sliderInput("plotWidthSlider", "Plot Width (px)", 
                     min = 400, max = 3500, 
-                    value = userData$plotWidth, # Shows 900 initially, then updates
+                    value = current_w, 
                     step = 10, 
-                    width = '100%'),
+                    width = '100%', post = "px"),
         
-        sliderInput("plotHeight", "Plot Height (px)", 
+        # Use the numeric 'current_h' instead of 'userData$plotHeight'
+        sliderInput("plotHeightSlider", "Plot Height (px)", 
                     min = 300, max = 2500, 
-                    value = userData$plotHeight, # Shows 650 initially, then updates
+                    value = current_h, 
                     step = 10, 
-                    width = '100%'),
+                    width = '100%', post = "px"),
         
         selectInput("theme", "Select Theme",
                     selected = userData$selectedTheme,
@@ -711,8 +709,9 @@ server <- function(input, output, session) {
     
     # 3. Update userData when 'OK' is clicked
     observeEvent(input$okDimensions, {
-      userData$plotWidth <- input$plotWidth
-      userData$plotHeight <- input$plotHeight
+      # Convert numbers back to strings with "px" for your CSS/UI logic
+      userData$plotWidth <- paste0(input$plotWidthSlider, "px")
+      userData$plotHeight <- paste0(input$plotHeightSlider, "px")
       userData$selectedTheme <- input$theme
       removeModal()
     })
@@ -767,228 +766,456 @@ server <- function(input, output, session) {
   ########  ########  ########  ########  ########  ########  ########  ########
 
 
-  getMyData <- function(tsData, frequency, islog, d_n, DS_n) {
-    # Ensure tsData is not NULL
-    req(tsData)
+  # getMyData <- function(tsData, frequency, islog, d_n, DS_n) {
+  #   # Ensure tsData is not NULL
+  #   req(tsData)
+  # 
+  #   # Convert frequency to numeric
+  #   frequency <- as.numeric(frequency)
+  # 
+  #   if (islog == "Yes") {
+  #     if (d_n == 0 && DS_n == 0) {
+  #       myData <- log(tsData)
+  #     } else {
+  #       if (d_n == 0 && DS_n > 0) {
+  #         myData <- diff(log(tsData), DS_n * frequency)
+  #       } else {
+  #         if (d_n > 0 && DS_n == 0) {
+  #           myData <- diff(log(tsData), difference = d_n)
+  #         } else {
+  #           myData <- diff(diff(log(tsData), DS_n * frequency), difference = d_n)
+  #         }
+  #       }
+  #     }
+  #   } else {
+  #     if (d_n == 0 && DS_n == 0) {
+  #       myData <- tsData
+  #     } else {
+  #       if (d_n == 0 && DS_n > 0) {
+  #         myData <- diff(tsData, DS_n * frequency)
+  #       } else {
+  #         if (d_n > 0 && DS_n == 0) {
+  #           myData <- diff(tsData, difference = d_n)
+  #         } else {
+  #           myData <- diff(diff(tsData, DS_n * frequency), difference = d_n)
+  #         }
+  #       }
+  #     }
+  #   }
+  #   return(myData)
+  # }
 
-    # Convert frequency to numeric
-    frequency <- as.numeric(frequency)
 
-    if (islog == "Yes") {
-      if (d_n == 0 && DS_n == 0) {
-        myData <- log(tsData)
-      } else {
-        if (d_n == 0 && DS_n > 0) {
-          myData <- diff(log(tsData), DS_n * frequency)
-        } else {
-          if (d_n > 0 && DS_n == 0) {
-            myData <- diff(log(tsData), difference = d_n)
-          } else {
-            myData <- diff(diff(log(tsData), DS_n * frequency), difference = d_n)
-          }
-        }
-      }
-    } else {
-      if (d_n == 0 && DS_n == 0) {
-        myData <- tsData
-      } else {
-        if (d_n == 0 && DS_n > 0) {
-          myData <- diff(tsData, DS_n * frequency)
-        } else {
-          if (d_n > 0 && DS_n == 0) {
-            myData <- diff(tsData, difference = d_n)
-          } else {
-            myData <- diff(diff(tsData, DS_n * frequency), difference = d_n)
-          }
-        }
-      }
+  
+  getMyData <- function(tsData, frequency, islog = "No", d_n = 0, DS_n = 0) {
+    # 1. Ensure data is present before proceeding
+    shiny::req(tsData)
+    
+    # 2. Setup parameters
+    freq <- as.numeric(frequency)
+    d_n <- as.numeric(d_n)
+    DS_n <- as.numeric(DS_n)
+    
+    # 3. Apply Log Transformation first (if requested)
+    # We store this in 'working_ts' to avoid repeating logic later
+    working_ts <- if (identical(islog, "Yes")) log(tsData) else tsData
+    
+    # 4. Apply Seasonal Differencing (D)
+    # Standard SARIMA: lag is the frequency, differences is the order DS_n
+    if (DS_n > 0) {
+      working_ts <- diff(working_ts, lag = freq, differences = DS_n)
     }
-    return(myData)
+    
+    # 5. Apply Ordinary Differencing (d)
+    # lag is 1, differences is the order d_n
+    if (d_n > 0) {
+      working_ts <- diff(working_ts, lag = 1, differences = d_n)
+    }
+    
+    return(working_ts)
   }
 
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # #
+  # #      Statistics output for selected column
+  # #
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # 
+  # 
+  #   #  descr()  stats Row format
+  #   output$data_StatisticsText1 <- renderPrint({
+  #   req(input$fileData)
+  #   req(input$colNum)
+  # 
+  #   df <- data()
+  #   data_Statistics <- df[[input$colNum]]
+  # 
+  #   # Ensure the selected column data is numeric
+  #   if(is.numeric(data_Statistics)) {
+  #     descr(data_Statistics)
+  #   } else {
+  #     "Selected column data is not numeric"
+  #   }
+  # })
+  # 
+  # #  descr()  stats in a table format
+  # output$data_StatisticsText1_Table <- renderTable({
+  #   req(input$fileData)
+  #   req(input$colNum)
+  # 
+  #   df <- data()
+  #   data_Statistics <- df[[input$colNum]]
+  # 
+  #   # Ensure the selected column data is numeric
+  #   if(is.numeric(data_Statistics)) {
+  #     descr_Statistics <- descr(data_Statistics)
+  #     descr_DataFrame <- as.data.frame(descr_Statistics)
+  # 
+  #     descr_Table <- data.frame(date = row.names(descr_DataFrame), descr_DataFrame)
+  # 
+  #     # Specify the custom column names here in the vector
+  #     # Make sure the number of names matches the number of columns in descr_Table
+  #     my_column_names <- c("Statistics", "Value")
+  # 
+  #     # Set the column names
+  #     colnames(descr_Table) <- my_column_names
+  # 
+  #     descr_Table
+  # 
+  #   } else {
+  #     "Selected column data is not numeric"
+  #   }
+  # })
+  # 
+  # 
+  # ###############################################################
+  # 
+  # 
+  # output$data_StatisticsText2 <- renderPrint({
+  #   req(input$fileData)
+  #   req(input$colNum)
+  # 
+  #   df <- data()
+  #   colData <- df[[input$colNum]]
+  # 
+  #   # Ensure the selected column data is numeric
+  #   if(is.numeric(colData)) {
+  #     #stat.desc(colData )
+  # 
+  #     # Compute descriptive statistics
+  #     stats_output <- stat.desc(colData)
+  # 
+  #     # Extract the statistics names and values
+  #     stat_names <- names(stats_output)
+  #     stat_values <- unname(stats_output)
+  # 
+  #     # Print the formatted output
+  #     cat("Descriptive Statistics \n")
+  #     cat("data_Statistics   \n")
+  #     cat(" \n")
+  #     cat(" \n")
+  #     cat("         data_Statistics\n")
+  #     cat("-------  -----------------\n")
+  #     for (i in seq_along(stat_names)) {
+  #       cat(sprintf("%-10s %s\n", stat_names[i], stat_values[i]))
+  #     }
+  # 
+  # 
+  #   } else {
+  #     "Selected column data is not numeric"
+  #   }
+  # })
+  # 
+  # 
+  # 
+  # 
+  # # Output for the forecasting model based on the user's selection
+  # output$modelOutput <- renderPrint({
+  #   req(input$Model)  # Ensure 'Select the Model' input is provided
+  #   col_data <- selected_column_data() # The column data as vector
+  #   frequency <- 1 # Placeholder for frequency, adjust as needed
+  #   ts_data <- ts(col_data, frequency = frequency) # Convert to ts
+  # 
+  #   # Fit the model based on selection
+  #   model_selected <- input$Model
+  #   fit <- switch(model_selected,
+  #                 "ARIMA" = auto.arima(ts_data),
+  #                 "Holt-Winters Additive" = HoltWinters(ts_data, seasonal = "additive"),
+  #                 "Holt-Winters Multiplicative" = HoltWinters(ts_data, seasonal = "multiplicative"),
+  #                 stop("Invalid model selection.")
+  #   )
+  #   # Output the summary or forecast
+  #   summary(fit)  # Or use forecast::forecast(fit) if we want to forecast
+  # })
 
 
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
+  
+  ######## ######## ######## ######## ######## ######## ######## ########
   #
-  #      Statistics output for selected column
+  #           Statistics & Model Outputs for Selected Column
   #
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
-
-
-    #  descr()  stats Row format
-    output$data_StatisticsText1 <- renderPrint({
-    req(input$fileData)
-    req(input$colNum)
-
-    df <- data()
-    data_Statistics <- df[[input$colNum]]
-
-    # Ensure the selected column data is numeric
-    if(is.numeric(data_Statistics)) {
-      descr(data_Statistics)
-    } else {
-      "Selected column data is not numeric"
-    }
+  ######## ######## ######## ######## ######## ######## ######## ########
+  
+  # 1. Basic Descriptive Stats (Text/Row Format)
+  output$data_StatisticsText1 <- renderPrint({
+    req(selected_column_data())
+    
+    # summarytools::descr() provides a clean summary
+    summarytools::descr(selected_column_data(), stats = "common", transpose = TRUE)
   })
-
-  #  descr()  stats in a table format
+  
+  # 2. Descriptive Stats (Table Format)
   output$data_StatisticsText1_Table <- renderTable({
-    req(input$fileData)
-    req(input$colNum)
-
-    df <- data()
-    data_Statistics <- df[[input$colNum]]
-
-    # Ensure the selected column data is numeric
-    if(is.numeric(data_Statistics)) {
-      descr_Statistics <- descr(data_Statistics)
-      descr_DataFrame <- as.data.frame(descr_Statistics)
-
-      descr_Table <- data.frame(date = row.names(descr_DataFrame), descr_DataFrame)
-
-      # Specify the custom column names here in the vector
-      # Make sure the number of names matches the number of columns in descr_Table
-      my_column_names <- c("Statistics", "Value")
-
-      # Set the column names
-      colnames(descr_Table) <- my_column_names
-
-      descr_Table
-
-    } else {
-      "Selected column data is not numeric"
-    }
-  })
-
-
-  ###############################################################
-
-
-  output$data_StatisticsText2 <- renderPrint({
-    req(input$fileData)
-    req(input$colNum)
-
-    df <- data()
-    colData <- df[[input$colNum]]
-
-    # Ensure the selected column data is numeric
-    if(is.numeric(colData)) {
-      #stat.desc(colData )
-
-      # Compute descriptive statistics
-      stats_output <- stat.desc(colData)
-
-      # Extract the statistics names and values
-      stat_names <- names(stats_output)
-      stat_values <- unname(stats_output)
-
-      # Print the formatted output
-      cat("Descriptive Statistics \n")
-      cat("data_Statistics   \n")
-      cat(" \n")
-      cat(" \n")
-      cat("         data_Statistics\n")
-      cat("-------  -----------------\n")
-      for (i in seq_along(stat_names)) {
-        cat(sprintf("%-10s %s\n", stat_names[i], stat_values[i]))
-      }
-
-
-    } else {
-      "Selected column data is not numeric"
-    }
-  })
-
-
-
-
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
-
-
-
-
-  # Output for the forecasting model based on the user's selection
-  output$modelOutput <- renderPrint({
-    req(input$Model)  # Ensure 'Select the Model' input is provided
-    col_data <- selected_column_data() # The column data as vector
-    frequency <- 1 # Placeholder for frequency, adjust as needed
-    ts_data <- ts(col_data, frequency = frequency) # Convert to ts
-
-    # Fit the model based on selection
-    model_selected <- input$Model
-    fit <- switch(model_selected,
-                  "ARIMA" = auto.arima(ts_data),
-                  "Holt-Winters Additive" = HoltWinters(ts_data, seasonal = "additive"),
-                  "Holt-Winters Multiplicative" = HoltWinters(ts_data, seasonal = "multiplicative"),
-                  stop("Invalid model selection.")
+    req(selected_column_data())
+    
+    # Calculate stats and convert to a clean data frame
+    ds <- summarytools::descr(selected_column_data())
+    ds_df <- as.data.frame(as.matrix(ds))
+    
+    # Create a clean table with named columns
+    final_table <- data.frame(
+      Statistic = rownames(ds_df),
+      Value = ds_df[[1]]
     )
-    # Output the summary or forecast
-    summary(fit)  # Or use forecast::forecast(fit) if we want to forecast
+    return(final_table)
+  }, digits = 4)
+  
+  # 3. Detailed Statistics (pastecs::stat.desc)
+  output$data_StatisticsText2 <- renderPrint({
+    req(selected_column_data())
+    
+    # Compute descriptive statistics using pastecs
+    stats_output <- pastecs::stat.desc(selected_column_data(), norm = TRUE)
+    
+    cat("Detailed Descriptive Statistics\n")
+    cat("-------------------------------\n")
+    
+    # Format as a named list for cleaner print output
+    print(as.data.frame(stats_output))
   })
+  
+  # 4. Integrated Model Output (ARIMA & Holt-Winters)
+  output$modelOutput <- renderPrint({
+    req(input$Model, tsData())
+    
+    # Use the reactive tsData which already has the correct frequency
+    data_to_fit <- tsData()
+    
+    # Fit the model based on selection using the forecast package for consistency
+    fit <- tryCatch({
+      switch(input$Model,
+             "ARIMA" = forecast::auto.arima(data_to_fit),
+             "Holt-Winters Additive" = forecast::hw(data_to_fit, seasonal = "additive"),
+             "Holt-Winters Multiplicative" = {
+               # Multiplicative check
+               validate(need(all(data_to_fit > 0), "Multiplicative model requires all data values > 0"))
+               forecast::hw(data_to_fit, seasonal = "multiplicative")
+             },
+             stop("Invalid model selection."))
+    }, error = function(e) {
+      stop(safeError(e$message))
+    })
+    
+    # Return the summary of the fitted model
+    summary(fit)
+  })
+  
+  
+  
+  
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # #
+  # #       t(s) plot + ACF + PACF
+  # #
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # 
+  # output$tsPlot <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  # 
+  #   plot(tsData(),main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l',lwd = 2)
+  # })
+  # 
+  # 
+  # output$StACF <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  # 
+  #   plot(Acf(tsData()), lwd = 2, main = userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$StPACF <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  # 
+  #   plot(Pacf(tsData()), lwd = 2, main = userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$StACFPACF <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  # 
+  #   acf2(tsData(), lwd = 3,main = userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$tsDisplay2 <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  # 
+  #   ggtsdisplay(tsData(), plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
+  # })
+  # 
+  # 
+  # output$teststationariteSt <- renderPrint({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   helpADF()
+  # 
+  #   adf.test(tsData(), alternative =input$alternSt, k=input$LagOrderADFSt)
+  # })
+  # 
+  # output$teststationariteSt <- renderPrint({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   helpADF()
+  # 
+  #   adf.test(tsData(), alternative =input$alternSt, k=input$LagOrderADFSt)
+  # })
 
 
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
+
+  ######## ######## ######## ######## ######## ######## ######## ########
   #
-  #       t(s) plot + ACF + PACF
+  #           Time Series Plots, ACF/PACF & Stationarity Tests
   #
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  
 
+  
+  # # 1. Main Time Series Plot [S(t)]
+  # output$tsPlot <- renderPlot({
+  #   req(tsData())
+  #   
+  #   autoplot(tsData(), size = 1, colour = "steelblue") +
+  #     labs(
+  #       title = userData$mainTitle, 
+  #       x = userData$xLabel, 
+  #       y = userData$yLabel
+  #     ) +
+  #     apply_user_theme()
+  # })
+  
+  
+  # 1. Main Time Series Plot [S(t)]
   output$tsPlot <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
+    req(tsData())
+    
+    autoplot(tsData(), size = 1, colour = "steelblue") +
+      labs(
+        title = userData$mainTitle, 
+        x = userData$xLabel, 
+        y = userData$yLabel
+      ) +
+      apply_user_theme() 
+  }, 
+  # Dynamic dimensions from your sliders
+  width = function() as.numeric(gsub("[^0-9]", "", userData$plotWidth)),
+  height = function() as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+  )
 
-    plot(tsData(),main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l',lwd = 2)
-  })
-
-
+  
+  # 2. Individual ACF Plot
   output$StACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-
-    plot(Acf(tsData()), lwd = 2, main = userData$mainTitle)
-  })
-
-
+    req(tsData())
+    
+    forecast::ggAcf(tsData()) + 
+      labs(title = paste("ACF:", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  # Dynamic dimensions from your sliders
+  width = function() as.numeric(gsub("[^0-9]", "", userData$plotWidth)),
+  height = function() as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+  )
+  
+  # 3. Individual PACF Plot
   output$StPACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-
-    plot(Pacf(tsData()), lwd = 2, main = userData$mainTitle)
-  })
-
-
+    req(tsData())
+    
+    forecast::ggPacf(tsData()) + 
+      labs(title = paste("PACF:", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  # Dynamic dimensions from your sliders
+  width = function() as.numeric(gsub("[^0-9]", "", userData$plotWidth)),
+  height = function() as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+  )
+  
+  # 4. Combined ACF + PACF 
+  # Note: astsa::acf2 is a base R plot. For theme consistency, 
+  # we use a ggplot-based approach here.
   output$StACFPACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-
-    acf2(tsData(), lwd = 3,main = userData$mainTitle)
-  })
-
-
+    req(tsData())
+    
+    p1 <- forecast::ggAcf(tsData()) + apply_user_theme() + labs(title = "ACF")
+    p2 <- forecast::ggPacf(tsData()) + apply_user_theme() + labs(title = "PACF")
+    
+    # Arrange them vertically for the combined view
+    gridExtra::grid.arrange(p1, p2, ncol = 1, top = userData$mainTitle)
+  }, 
+  # Dynamic dimensions from your sliders
+  width = function() as.numeric(gsub("[^0-9]", "", userData$plotWidth)),
+  height = function() as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+  )
+  
+  # 5. Diagnostic Ts Display
   output$tsDisplay2 <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-
-    ggtsdisplay(tsData(), plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-  })
-
-
+    req(tsData(), input$plot_type)
+    
+    forecast::ggtsdisplay(
+      tsData(), 
+      plot.type = input$plot_type, 
+      main = userData$mainTitle,
+      xlab = userData$xLabel, 
+      ylab = userData$yLabel
+    ) + apply_user_theme()
+  }, 
+  # Dynamic dimensions from your sliders
+  width = function() as.numeric(gsub("[^0-9]", "", userData$plotWidth)),
+  height = function() as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+  )
+  
+  # 6. Augmented Dickey-Fuller (ADF) Test
   output$teststationariteSt <- renderPrint({
-    req(tsData()) # Ensure tsData is not NULL
-    helpADF()
-
-    adf.test(tsData(), alternative =input$alternSt, k=input$LagOrderADFSt)
+    req(tsData(), input$alternSt, input$LagOrderADFSt)
+    
+    cat("--- Augmented Dickey-Fuller (ADF) Test Results ---\n\n")
+    
+    # Safe execution to prevent crash on invalid lag orders
+    tryCatch({
+      res <- tseries::adf.test(
+        tsData(), 
+        alternative = input$alternSt, 
+        k = as.numeric(input$LagOrderADFSt)
+      )
+      print(res)
+      
+      cat("\n-------------------------------------------------\n")
+      cat("Decision: ")
+      if(res$p.value < 0.05) {
+        cat("Reject H0. The series is stationary (p < 0.05).\n")
+      } else {
+        cat("Fail to reject H0. The series is non-stationary.\n")
+      }
+    }, error = function(e) {
+      cat("Error: ", e$message, "\n")
+      cat("Suggestion: Try reducing the 'Lag' value.")
+    })
   })
-
-  output$teststationariteSt <- renderPrint({
-    req(tsData()) # Ensure tsData is not NULL
-    helpADF()
-
-    adf.test(tsData(), alternative =input$alternSt, k=input$LagOrderADFSt)
-  })
-
-
-
+  
+  
+  
+  
+  
   ########  ########  ########  ########  ########  ########  ########  ########
   ########  ########  ########  ########  ########  ########  ########  ########
   #
@@ -996,503 +1223,1104 @@ server <- function(input, output, session) {
   #
   ########  ########  ########  ########  ########  ########  ########  ########
   ########  ########  ########  ########  ########  ########  ########  ########
+  
+  
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  #
+  #        log(St) Analysis: Plots + ACF + PACF (Dynamic Scaling)
+  #
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  
+  # 1. Centralized Reactive for Log Transformation
+  logTsData <- reactive({
+    req(tsData())
+    # Validation: Log requires strictly positive data
+    validate(
+      need(all(tsData() > 0), "Error: Log transformation requires all values to be greater than zero.")
+    )
+    log(tsData())
+  })
+  
 
-
+  # 2. Log-Transformed Plot
   output$plotLogSt <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    log_st <- log(tsData())
-
-    plot(log_st, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
-  })
-
-
+    req(logTsData())
+    
+    autoplot(logTsData(), size = 1, colour = "darkgreen") +
+      labs(
+        title = paste("Log-Transformed:", userData$mainTitle),
+        x = userData$xLabel,
+        y = paste("log(", userData$yLabel, ")")
+      ) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 3. Log ACF Plot
   output$logStACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    log_st <- log(tsData())
-
-    plot(Acf(log_st), lwd = 2, main=userData$mainTitle)
-  })
-
-
+    req(logTsData())
+    forecast::ggAcf(logTsData()) + 
+      labs(title = paste("ACF (Log):", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 4. Log PACF Plot
   output$logStPACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    log_st <- log(tsData())
-
-    plot(Pacf(log_st), lwd = 2, main=userData$mainTitle)
-  })
-
-
+    req(logTsData())
+    forecast::ggPacf(logTsData()) + 
+      labs(title = paste("PACF (Log):", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 5. Combined Log ACF/PACF (Thematic version of acf2)
   output$logStACFPACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    log_st <- log(tsData())
-
-    acf2(log_st, lwd = 3, main=userData$mainTitle)
-  })
-
-
+    req(logTsData())
+    
+    p1 <- forecast::ggAcf(logTsData()) + apply_user_theme() + labs(title = "Log ACF")
+    p2 <- forecast::ggPacf(logTsData()) + apply_user_theme() + labs(title = "Log PACF")
+    
+    gridExtra::grid.arrange(p1, p2, ncol = 1)
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 6. Integrated Log Diagnostic Display
   output$log_ts_Display <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    log_st <- log(tsData())
-
-    ggtsdisplay(log_st, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-  })
-
-
+    req(logTsData(), input$plot_type)
+    
+    forecast::ggtsdisplay(
+      logTsData(), 
+      plot.type = input$plot_type, 
+      main = paste("Log Display:", userData$mainTitle),
+      xlab = userData$xLabel, 
+      ylab = userData$yLabel
+    ) + apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 7. Stationarity Test on Log Series
   output$teststationariteLogSt <- renderPrint({
-    req(tsData()) # Ensure tsData is not NULL
-    log_st <- log(tsData())
-    helpADF()
-
-    adf.test(log_st, alternative =input$alternLogSt, k=input$LagOrderADFLogSt)
+    req(logTsData(), input$alternLogSt, input$LagOrderADFLogSt)
+    
+    cat("--- ADF Test on Log-Transformed Series ---\n\n")
+    
+    tryCatch({
+      res <- tseries::adf.test(
+        logTsData(), 
+        alternative = input$alternLogSt, 
+        k = as.numeric(input$LagOrderADFLogSt)
+      )
+      print(res)
+      
+      cat("\nInterpretation: ")
+      if(res$p.value < 0.05) {
+        cat("Stationary after log-transform (p < 0.05).")
+      } else {
+        cat("Non-stationary. Consider differencing (d=1).")
+      }
+    }, error = function(e) {
+      cat("Execution Error: ", e$message)
+    })
   })
+  
+
+  # output$plotLogSt <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   log_st <- log(tsData())
+  # 
+  #   plot(log_st, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
+  # })
+  # 
+  # 
+  # output$logStACF <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   log_st <- log(tsData())
+  # 
+  #   plot(Acf(log_st), lwd = 2, main=userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$logStPACF <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   log_st <- log(tsData())
+  # 
+  #   plot(Pacf(log_st), lwd = 2, main=userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$logStACFPACF <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   log_st <- log(tsData())
+  # 
+  #   acf2(log_st, lwd = 3, main=userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$log_ts_Display <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   log_st <- log(tsData())
+  # 
+  #   ggtsdisplay(log_st, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
+  # })
+  # 
+  # 
+  # output$teststationariteLogSt <- renderPrint({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   log_st <- log(tsData())
+  #   helpADF()
+  # 
+  #   adf.test(log_st, alternative =input$alternLogSt, k=input$LagOrderADFLogSt)
+  # })
 
 
 
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
+
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
   #
-  #       d[1]       difference order 1        plot + ACF + PACF
+  #        d[1] Analysis: Ordinary Differencing (Dynamic Scaling)
   #
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
-
-
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  
+  # 1. Centralized Reactive for First Difference
+  # This calculates the difference once and caches it for all 6 outputs below
+  diff1TsData <- reactive({
+    req(tsData())
+    diff(tsData(), differences = 1)
+  })
+  
+  # 2. Difference Plot (d=1)
   output$difference1 <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    d1_St <- diff(tsData())
-
-    plot(d1_St, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
-  })
-
-
+    req(diff1TsData())
+    
+    autoplot(diff1TsData(), size = 1, colour = "firebrick") +
+      labs(
+        title = paste("First Difference (d=1):", userData$mainTitle),
+        x = userData$xLabel,
+        y = paste0("Δ", userData$yLabel)
+      ) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 3. Difference ACF Plot
   output$d1StACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    d1_St <- diff(tsData())
-
-    plot(Acf(d1_St), lwd = 2, main = userData$mainTitle)
-  })
-
-
+    req(diff1TsData())
+    forecast::ggAcf(diff1TsData()) + 
+      labs(title = paste("ACF (d=1):", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 4. Difference PACF Plot
   output$d1StPACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    d1_St <- diff(tsData())
-
-    plot(Pacf(d1_St), lwd = 2, main = userData$mainTitle)
-  })
-
-
+    req(diff1TsData())
+    forecast::ggPacf(diff1TsData()) + 
+      labs(title = paste("PACF (d=1):", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 5. Combined ACF/PACF (Thematic replacement for acf2)
   output$d1StACFPACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    d1_St <- diff(tsData())
-
-    acf2(d1_St, lwd = 3, main = userData$mainTitle)
-  })
-
-
+    req(diff1TsData())
+    
+    p1 <- forecast::ggAcf(diff1TsData()) + apply_user_theme() + labs(title = "ACF (d=1)")
+    p2 <- forecast::ggPacf(diff1TsData()) + apply_user_theme() + labs(title = "PACF (d=1)")
+    
+    gridExtra::grid.arrange(p1, p2, ncol = 1)
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 6. Integrated Diagnostic Display
   output$d1_ts_Display <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    d1_St <- diff(tsData())
-
-    ggtsdisplay(d1_St, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-  })
-
-
+    req(diff1TsData(), input$plot_type)
+    
+    forecast::ggtsdisplay(
+      diff1TsData(), 
+      plot.type = input$plot_type, 
+      main = paste("Diff Display (d=1):", userData$mainTitle),
+      xlab = userData$xLabel, 
+      ylab = userData$yLabel
+    ) + apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 7. Stationarity Test on Differenced Series
   output$teststationarited1St <- renderPrint({
-    req(tsData()) # Ensure tsData is not NULL
-    d1_St <- diff(tsData())
-    helpADF()
-
-    adf.test(d1_St, alternative =input$alternd1St, k=input$LagOrderADFd1St)
+    req(diff1TsData(), input$alternd1St, input$LagOrderADFd1St)
+    
+    cat("--- ADF Test on First Differenced Series (d=1) ---\n\n")
+    
+    tryCatch({
+      res <- tseries::adf.test(
+        diff1TsData(), 
+        alternative = input$alternd1St, 
+        k = as.numeric(input$LagOrderADFd1St)
+      )
+      print(res)
+      
+      cat("\nInterpretation: ")
+      if(res$p.value < 0.05) {
+        cat("Stationary (p < 0.05). First-order differencing was sufficient.")
+      } else {
+        cat("Non-stationary. Consider a second difference (d=2) or seasonal differencing (D=1).")
+      }
+    }, error = function(e) {
+      cat("Execution Error: ", e$message)
+    })
   })
 
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
-  #
-  #       D[1]         Seasonal difference order 1          plot + ACF + PACF
-  #
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
+  # output$difference1 <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   d1_St <- diff(tsData())
+  # 
+  #   plot(d1_St, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
+  # })
+  # 
+  # 
+  # output$d1StACF <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   d1_St <- diff(tsData())
+  # 
+  #   plot(Acf(d1_St), lwd = 2, main = userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$d1StPACF <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   d1_St <- diff(tsData())
+  # 
+  #   plot(Pacf(d1_St), lwd = 2, main = userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$d1StACFPACF <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   d1_St <- diff(tsData())
+  # 
+  #   acf2(d1_St, lwd = 3, main = userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$d1_ts_Display <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   d1_St <- diff(tsData())
+  # 
+  #   ggtsdisplay(d1_St, plot.type = input$plot_type , main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
+  # })
+  # 
+  # 
+  # output$teststationarited1St <- renderPrint({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   d1_St <- diff(tsData())
+  #   helpADF()
+  # 
+  #   adf.test(d1_St, alternative =input$alternd1St, k=input$LagOrderADFd1St)
+  # })
 
 
+  
+
+  
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  #
+  #        D[1] Analysis: Seasonal Differencing (Dynamic Scaling)
+  #
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  
+  # 1. Centralized Reactive for First Seasonal Difference
+  diffSeasonTsData <- reactive({
+    req(tsData())
+    freq <- as.numeric(currentFrequency())
+    # Seasonal difference: lag = frequency, differences = 1
+    diff(tsData(), lag = freq, differences = 1)
+  })
+  
+  # 2. Seasonal Difference Plot (D=1)
   output$DS1Stplot <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    D1_St <- diff(tsData(), frequency)
-
-    plot(D1_St, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
-  })
-
-
+    req(diffSeasonTsData())
+    
+    autoplot(diffSeasonTsData(), size = 1, colour = "purple") +
+      labs(
+        title = paste("Seasonal Difference (D=1):", userData$mainTitle),
+        x = userData$xLabel,
+        y = paste0("Δs", userData$yLabel)
+      ) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 3. Seasonal ACF Plot
   output$DS1StACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    D1_St <- diff(tsData(), frequency)
-
-    plot(Acf(D1_St), lwd = 2, main = userData$mainTitle)
-  })
-
-
+    req(diffSeasonTsData())
+    forecast::ggAcf(diffSeasonTsData()) + 
+      labs(title = paste("Seasonal ACF (D=1):", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 4. Seasonal PACF Plot
   output$DS1StPACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    D1_St <- diff(tsData(), frequency)
-
-    plot(Pacf(D1_St), lwd = 2, main = userData$mainTitle)
-  })
-
-
+    req(diffSeasonTsData())
+    forecast::ggPacf(diffSeasonTsData()) + 
+      labs(title = paste("Seasonal PACF (D=1):", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 5. Combined Seasonal ACF/PACF (Thematic replacement for acf2)
   output$DS1StACFPACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    D1_St <- diff(tsData(), frequency)
-
-    acf2(D1_St, lwd = 3, main = userData$mainTitle)
-  })
-
-
+    req(diffSeasonTsData())
+    
+    p1 <- forecast::ggAcf(diffSeasonTsData()) + apply_user_theme() + labs(title = "Seasonal ACF")
+    p2 <- forecast::ggPacf(diffSeasonTsData()) + apply_user_theme() + labs(title = "Seasonal PACF")
+    
+    gridExtra::grid.arrange(p1, p2, ncol = 1)
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 6. Integrated Seasonal Diagnostic Display
   output$Ds1_ts_Display <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    D1_St <- diff(tsData(), frequency)
-
-    ggtsdisplay(D1_St, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-  })
-
-
+    req(diffSeasonTsData(), input$plot_type)
+    
+    forecast::ggtsdisplay(
+      diffSeasonTsData(), 
+      plot.type = input$plot_type, 
+      main = paste("Seasonal Display (D=1):", userData$mainTitle),
+      xlab = userData$xLabel, 
+      ylab = userData$yLabel
+    ) + apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 7. Stationarity Test on Seasonally Differenced Series
   output$teststationariteDs1St <- renderPrint({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    D1_St <- diff(tsData(), frequency)
-    helpADF()
-
-    adf.test(D1_St, alternative =input$alternDs1St, k=input$LagOrderADFDs1St)
+    req(diffSeasonTsData(), input$alternDs1St, input$LagOrderADFDs1St)
+    
+    cat("--- ADF Test on Seasonal Differenced Series (D=1) ---\n\n")
+    
+    tryCatch({
+      res <- tseries::adf.test(
+        diffSeasonTsData(), 
+        alternative = input$alternDs1St, 
+        k = as.numeric(input$LagOrderADFDs1St)
+      )
+      print(res)
+      
+      cat("\nInterpretation: ")
+      if(res$p.value < 0.05) {
+        cat("Stationary (p < 0.05). Seasonal differencing removed the seasonal unit root.")
+      } else {
+        cat("Non-stationary. You may also need an ordinary difference (d=1).")
+      }
+    }, error = function(e) {
+      cat("Execution Error: ", e$message)
+    })
   })
+  
+
+  # output$DS1Stplot <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   frequency = as.numeric(currentFrequency())
+  #   D1_St <- diff(tsData(), frequency)
+  # 
+  #   plot(D1_St, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
+  # })
+  # 
+  # 
+  # output$DS1StACF <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   frequency = as.numeric(currentFrequency())
+  #   D1_St <- diff(tsData(), frequency)
+  # 
+  #   plot(Acf(D1_St), lwd = 2, main = userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$DS1StPACF <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   frequency = as.numeric(currentFrequency())
+  #   D1_St <- diff(tsData(), frequency)
+  # 
+  #   plot(Pacf(D1_St), lwd = 2, main = userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$DS1StACFPACF <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   frequency = as.numeric(currentFrequency())
+  #   D1_St <- diff(tsData(), frequency)
+  # 
+  #   acf2(D1_St, lwd = 3, main = userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$Ds1_ts_Display <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   frequency = as.numeric(currentFrequency())
+  #   D1_St <- diff(tsData(), frequency)
+  # 
+  #   ggtsdisplay(D1_St, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
+  # })
+  # 
+  # 
+  # output$teststationariteDs1St <- renderPrint({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   frequency = as.numeric(currentFrequency())
+  #   D1_St <- diff(tsData(), frequency)
+  #   helpADF()
+  # 
+  #   adf.test(D1_St, alternative =input$alternDs1St, k=input$LagOrderADFDs1St)
+  # })
 
 
 
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
+  
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
   #
-  #            D[1] (log(St))       plot + ACF + PACF
+  #        d[1] (log(St)): Ordinary Difference of Log Series
   #
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
-
-
-  output$Dlogplot <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    D1_log_St <- diff(log(tsData()), frequency)
-
-    plot(D1_log_St, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  
+  # 1. Centralized Reactive for First Difference of Log
+  diff1LogTsData <- reactive({
+    req(logTsData()) # Inherits log validation (strictly positive values)
+    diff(logTsData(), differences = 1)
   })
-
-
-  output$DlogplotACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    D1_log_St <- diff(log(tsData()), frequency)
-
-    plot(Acf(D1_log_St), lwd = 2, main = userData$mainTitle)
-  })
-
-  output$DlogplotPACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    D1_log_St <- diff(log(tsData()), frequency)
-
-    plot(Pacf(D1_log_St), lwd = 2, main = userData$mainTitle)
-  })
-
-
-  output$DlogplotACFPACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    D1_log_St <- diff(log(tsData()), frequency)
-
-    acf2(D1_log_St , lwd = 3, main = userData$mainTitle)
-  })
-
-
-  output$Ds1_log_ts_Display <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    D1_log_St <- diff(log(tsData()), frequency)
-
-    ggtsdisplay(D1_log_St , plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-  })
-
-
-  output$teststationariteDs1LogSt <- renderPrint({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    D1_log_St <- diff(log(tsData()), frequency)
-    helpADF()
-
-    adf.test(D1_log_St, alternative =input$alternDs1LogSt, k=input$LagOrderADFDs1LogSt)
-  })
-
-
-
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
-  #
-  #             d[1] ( D[1] ( log(St) ) )
-  #
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
-
-
-
-  output$dDlogplot <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    d1_D1_log_St <- diff(diff(log(tsData()), frequency))
-
-    plot(d1_D1_log_St, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, lwd = 2)
-  })
-
-  output$dDlogplotACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    d1_D1_log_St <- diff(diff(log(tsData()), frequency))
-
-    plot(Acf(d1_D1_log_St), lwd = 2, main = userData$mainTitle)
-  })
-
-  output$dDlogplotPACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    d1_D1_log_St <- diff(diff(log(tsData()), frequency))
-
-    plot(Pacf(d1_D1_log_St), lwd = 2, main = userData$mainTitle)
-  })
-
-
-  output$dDlogplotACFPACF <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    d1_D1_log_St <- diff(diff(log(tsData()), frequency))
-
-    acf2(d1_D1_log_St , lwd = 3, main = userData$mainTitle)
-  })
-
-
-  output$d1_Ds1_log_ts_Display <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    d1_D1_log_St <- diff(diff(log(tsData()), frequency))
-
-    ggtsdisplay(d1_D1_log_St, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-  })
-
-  output$teststationarited1Ds1LogSt <- renderPrint({
-    req(tsData()) # Ensure tsData is not NULL
-    frequency = as.numeric(currentFrequency())
-    d1_D1_log_St <- diff(diff(log(tsData()), frequency))
-    helpADF()
-
-    adf.test(d1_D1_log_St, alternative =input$alternd1Ds1LogSt, k=input$LagOrderADFd1Ds1LogSt)
-  })
-
-
-
-
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
-  #
-  #         d[1] ( log (S(t)) )
-  #
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
-
-
+  
+  # 2. Difference of Log Plot
   output$plotd1Log <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    d1_log_st <- diff(log(tsData()))
-
-    plot(d1_log_st, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
-  })
-
-
+    req(diff1LogTsData())
+    
+    autoplot(diff1LogTsData(), size = 1, colour = "darkcyan") +
+      labs(
+        title = paste("First Diff of Log:", userData$mainTitle),
+        x = userData$xLabel,
+        y = paste0("Δ log(", userData$yLabel, ")")
+      ) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 3. Difference of Log ACF
   output$d1LogStACFa <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    d1_log_st <- diff(log(tsData()))
-
-    plot(Acf(d1_log_st), lwd = 2, main = userData$mainTitle)
-  })
-
-
+    req(diff1LogTsData())
+    forecast::ggAcf(diff1LogTsData()) + 
+      labs(title = paste("ACF (d=1, Log):", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 4. Difference of Log PACF
   output$d1LogStPACFa <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    d1_log_st <- diff(log(tsData()))
-
-    plot(Pacf(d1_log_st), lwd = 2, main = userData$mainTitle)
-  })
-
-
+    req(diff1LogTsData())
+    forecast::ggPacf(diff1LogTsData()) + 
+      labs(title = paste("PACF (d=1, Log):", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 5. Combined Difference of Log ACF/PACF
   output$d1LogStACFPACFa <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    d1_log_st <- diff(log(tsData()))
-
-    acf2(d1_log_st, lwd = 3, main = userData$mainTitle)
-  })
-
-
+    req(diff1LogTsData())
+    
+    p1 <- forecast::ggAcf(diff1LogTsData()) + apply_user_theme() + labs(title = "Diff-Log ACF")
+    p2 <- forecast::ggPacf(diff1LogTsData()) + apply_user_theme() + labs(title = "Diff-Log PACF")
+    
+    gridExtra::grid.arrange(p1, p2, ncol = 1)
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 6. Integrated Diagnostic Display (Log + Diff)
   output$d1_log_ts_Display <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    d1_log_st <- diff(log(tsData()))
-
-    ggtsdisplay(d1_log_st, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-  })
-
-
+    req(diff1LogTsData(), input$plot_type)
+    
+    forecast::ggtsdisplay(
+      diff1LogTsData(), 
+      plot.type = input$plot_type, 
+      main = paste("Diagnostic Display (d=1, Log):", userData$mainTitle),
+      xlab = userData$xLabel, 
+      ylab = userData$yLabel
+    ) + apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 7. Stationarity Test on First Difference of Log
   output$teststationarited1LogSt <- renderPrint({
-    req(tsData()) # Ensure tsData is not NULL
-    d1_log_st <- diff(log(tsData()))
-    helpADF()
+    req(diff1LogTsData(), input$alternd1LogSt, input$LagOrderADFd1LogSt)
+    
+    cat("--- ADF Test: First Difference of Log Series ---\n\n")
+    
+    tryCatch({
+      res <- tseries::adf.test(
+        diff1LogTsData(), 
+        alternative = input$alternd1LogSt, 
+        k = as.numeric(input$LagOrderADFd1LogSt)
+      )
+      print(res)
+      
+      cat("\nInterpretation: ")
+      if(res$p.value < 0.05) {
+        cat("Stationary (p < 0.05). Variance and trend stabilized.")
+      } else {
+        cat("Non-stationary. Consider further differencing or seasonal analysis.")
+      }
+    }, error = function(e) {
+      cat("Execution Error: ", e$message)
+    })
+  })
+  
+  # output$plotd1Log <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   d1_log_st <- diff(log(tsData()))
+  #   
+  #   plot(d1_log_st, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
+  # })
+  # 
+  # 
+  # output$d1LogStACFa <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   d1_log_st <- diff(log(tsData()))
+  #   
+  #   plot(Acf(d1_log_st), lwd = 2, main = userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$d1LogStPACFa <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   d1_log_st <- diff(log(tsData()))
+  #   
+  #   plot(Pacf(d1_log_st), lwd = 2, main = userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$d1LogStACFPACFa <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   d1_log_st <- diff(log(tsData()))
+  #   
+  #   acf2(d1_log_st, lwd = 3, main = userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$d1_log_ts_Display <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   d1_log_st <- diff(log(tsData()))
+  #   
+  #   ggtsdisplay(d1_log_st, plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
+  # })
+  # 
+  # 
+  # output$teststationarited1LogSt <- renderPrint({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   d1_log_st <- diff(log(tsData()))
+  #   helpADF()
+  #   
+  #   adf.test(d1_log_st, alternative =input$alternd1LogSt, k=input$LagOrderADFd1LogSt)
+  # })
+  
+  
 
-    adf.test(d1_log_st, alternative =input$alternd1LogSt, k=input$LagOrderADFd1LogSt)
+
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  #
+  #        D[1] (log(St)): Seasonal Difference of Log Series
+  #
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  
+  # 1. Centralized Reactive for Seasonal Difference of Log
+  diffSeasonLogTsData <- reactive({
+    req(logTsData()) # Inherits safety checks for positive values
+    freq <- as.numeric(currentFrequency())
+    diff(logTsData(), lag = freq, differences = 1)
+  })
+  
+  # 2. Seasonal Log Difference Plot
+  output$Dlogplot <- renderPlot({
+    req(diffSeasonLogTsData())
+    
+    autoplot(diffSeasonLogTsData(), size = 1, colour = "darkorchid") +
+      labs(
+        title = paste("Seasonal Diff of Log:", userData$mainTitle),
+        x = userData$xLabel,
+        y = paste0("Δs log(", userData$yLabel, ")")
+      ) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 3. Seasonal Log ACF
+  output$DlogplotACF <- renderPlot({
+    req(diffSeasonLogTsData())
+    forecast::ggAcf(diffSeasonLogTsData()) + 
+      labs(title = paste("ACF (D=1, Log):", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 4. Seasonal Log PACF
+  output$DlogplotPACF <- renderPlot({
+    req(diffSeasonLogTsData())
+    forecast::ggPacf(diffSeasonLogTsData()) + 
+      labs(title = paste("PACF (D=1, Log):", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 5. Combined Seasonal Log ACF/PACF
+  output$DlogplotACFPACF <- renderPlot({
+    req(diffSeasonLogTsData())
+    
+    p1 <- forecast::ggAcf(diffSeasonLogTsData()) + apply_user_theme() + labs(title = "Seasonal Log ACF")
+    p2 <- forecast::ggPacf(diffSeasonLogTsData()) + apply_user_theme() + labs(title = "Seasonal Log PACF")
+    
+    gridExtra::grid.arrange(p1, p2, ncol = 1)
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 6. Integrated Diagnostic Display (Log + Seasonal Diff)
+  output$Ds1_log_ts_Display <- renderPlot({
+    req(diffSeasonLogTsData(), input$plot_type)
+    
+    forecast::ggtsdisplay(
+      diffSeasonLogTsData(), 
+      plot.type = input$plot_type, 
+      main = paste("Diagnostic Display (D=1, Log):", userData$mainTitle),
+      xlab = userData$xLabel, 
+      ylab = userData$yLabel
+    ) + apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 7. Stationarity Test on Seasonal Log Series
+  output$teststationariteDs1LogSt <- renderPrint({
+    req(diffSeasonLogTsData(), input$alternDs1LogSt, input$LagOrderADFDs1LogSt)
+    
+    cat("--- ADF Test: Seasonal Difference of Log Series ---\n\n")
+    
+    tryCatch({
+      res <- tseries::adf.test(
+        diffSeasonLogTsData(), 
+        alternative = input$alternDs1LogSt, 
+        k = as.numeric(input$LagOrderADFDs1LogSt)
+      )
+      print(res)
+      
+      cat("\nInterpretation: ")
+      if(res$p.value < 0.05) {
+        cat("Stationary (p < 0.05). Both variance and seasonality appear stabilized.")
+      } else {
+        cat("Non-stationary. Consider adding an ordinary difference (d=1).")
+      }
+    }, error = function(e) {
+      cat("Execution Error: ", e$message)
+    })
+  })
+
+  # output$Dlogplot <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   frequency = as.numeric(currentFrequency())
+  #   D1_log_St <- diff(log(tsData()), frequency)
+  # 
+  #   plot(D1_log_St, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l', lwd = 2)
+  # })
+  # 
+  # 
+  # output$DlogplotACF <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   frequency = as.numeric(currentFrequency())
+  #   D1_log_St <- diff(log(tsData()), frequency)
+  # 
+  #   plot(Acf(D1_log_St), lwd = 2, main = userData$mainTitle)
+  # })
+  # 
+  # output$DlogplotPACF <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   frequency = as.numeric(currentFrequency())
+  #   D1_log_St <- diff(log(tsData()), frequency)
+  # 
+  #   plot(Pacf(D1_log_St), lwd = 2, main = userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$DlogplotACFPACF <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   frequency = as.numeric(currentFrequency())
+  #   D1_log_St <- diff(log(tsData()), frequency)
+  # 
+  #   acf2(D1_log_St , lwd = 3, main = userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$Ds1_log_ts_Display <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   frequency = as.numeric(currentFrequency())
+  #   D1_log_St <- diff(log(tsData()), frequency)
+  # 
+  #   ggtsdisplay(D1_log_St , plot.type = input$plot_type, main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
+  # })
+  # 
+  # 
+  # output$teststationariteDs1LogSt <- renderPrint({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   frequency = as.numeric(currentFrequency())
+  #   D1_log_St <- diff(log(tsData()), frequency)
+  #   helpADF()
+  # 
+  #   adf.test(D1_log_St, alternative =input$alternDs1LogSt, k=input$LagOrderADFDs1LogSt)
+  # })
+
+
+
+
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  #
+  #    d[1] ( D[1] ( log(St) ) ): Double Difference of Log Series
+  #
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  
+  # 1. Centralized Reactive for First + Seasonal Difference of Log
+  diff1LogSeasonTsData <- reactive({
+    # Starts with logTsData (includes positivity check)
+    # Then applies seasonal difference (D=1)
+    # Then applies ordinary difference (d=1)
+    req(diffSeasonLogTsData()) 
+    diff(diffSeasonLogTsData(), differences = 1)
+  })
+  
+  # 2. Double Difference Log Plot
+  output$dDlogplot <- renderPlot({
+    req(diff1LogSeasonTsData())
+    
+    autoplot(diff1LogSeasonTsData(), size = 1, colour = "firebrick4") +
+      labs(
+        title = paste("d=1, D=1 Log:", userData$mainTitle),
+        x = userData$xLabel,
+        y = paste0("Δ Δs log(", userData$yLabel, ")")
+      ) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 3. Double Difference Log ACF
+  output$dDlogplotACF <- renderPlot({
+    req(diff1LogSeasonTsData())
+    forecast::ggAcf(diff1LogSeasonTsData()) + 
+      labs(title = paste("ACF (d=1, D=1, Log):", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 4. Double Difference Log PACF
+  output$dDlogplotPACF <- renderPlot({
+    req(diff1LogSeasonTsData())
+    forecast::ggPacf(diff1LogSeasonTsData()) + 
+      labs(title = paste("PACF (d=1, D=1, Log):", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 5. Combined Double Difference Log ACF/PACF
+  output$dDlogplotACFPACF <- renderPlot({
+    req(diff1LogSeasonTsData())
+    
+    p1 <- forecast::ggAcf(diff1LogSeasonTsData()) + apply_user_theme() + labs(title = "Double Diff Log ACF")
+    p2 <- forecast::ggPacf(diff1LogSeasonTsData()) + apply_user_theme() + labs(title = "Double Diff Log PACF")
+    
+    gridExtra::grid.arrange(p1, p2, ncol = 1)
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 6. Integrated Diagnostic Display (d=1, D=1, Log)
+  output$d1_Ds1_log_ts_Display <- renderPlot({
+    req(diff1LogSeasonTsData(), input$plot_type)
+    
+    forecast::ggtsdisplay(
+      diff1LogSeasonTsData(), 
+      plot.type = input$plot_type, 
+      main = paste("Diagnostic Display (d=1, D=1, Log):", userData$mainTitle),
+      xlab = userData$xLabel, 
+      ylab = userData$yLabel
+    ) + apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 7. Stationarity Test on Double Differenced Log Series
+  output$teststationarited1Ds1LogSt <- renderPrint({
+    req(diff1LogSeasonTsData(), input$alternd1Ds1LogSt, input$LagOrderADFd1Ds1LogSt)
+    
+    cat("--- ADF Test: Double Difference of Log (d=1, D=1) ---\n\n")
+    
+    tryCatch({
+      res <- tseries::adf.test(
+        diff1LogSeasonTsData(), 
+        alternative = input$alternd1Ds1LogSt, 
+        k = as.numeric(input$LagOrderADFd1Ds1LogSt)
+      )
+      print(res)
+      
+      cat("\nInterpretation: ")
+      if(res$p.value < 0.05) {
+        cat("Stationary (p < 0.05). This is usually the final step before model fitting.")
+      } else {
+        cat("Non-stationary. Check if the series is over-differenced or needs a different transformation.")
+      }
+    }, error = function(e) {
+      cat("Execution Error: ", e$message)
+    })
   })
 
 
-
-
-
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
+  
+ 
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
   #
-  #        d[?] D[?] (log[?] (S((t)))
+  #        d[?] D[?] (log[?] (S(t))): User-Defined Transformations
   #
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  
+  # 1. Centralized Reactive for User-Selected Transformations
+  myData_Choice <- reactive({
+    req(tsData())
+    getMyData(
+      tsData(),
+      currentFrequency(),
+      values$islog,
+      input$d_n,
+      input$DS_n
+    )
+  })
+  
 
-
+  
+  # 2. Main Choice Diagnostic Display
   output$d_D_Log_ts_Choice_UI <- renderUI({
-    plotOutput("d_D_Log_ts_Choice", width = userData$plotWidth, height = userData$plotHeight)
+    plotOutput("d_D_Log_ts_Choice", 
+               width = getPlotDim(userData$plotWidth), 
+               height = getPlotDim(userData$plotHeight))
   })
+  
 
   output$d_D_Log_ts_Choice <- renderPlot({
-    # expression to get myData
-    myData <- getMyData(tsData(),
-                        currentFrequency(),
-                        values$islog,
-                        input$d_n,
-                        input$DS_n)
+    req(myData_Choice(), input$plot_type)
 
-
-    ggtsdisplay(myData,
+    ggtsdisplay(myData_Choice(),
                 plot.type = input$plot_type ,
                 main = userData$mainTitle,
                 xlab = userData$xLabel,
                 ylab = userData$yLabel)
   })
-
-
+  
+  
+  # 3. Main Choice Time Plot
   output$tsPlot_Choice_UI <- renderUI({
-    plotOutput("tsPlot_Choice", width = userData$plotWidth, height = userData$plotHeight)
+    plotOutput("tsPlot_Choice", 
+               width = getPlotDim(userData$plotWidth), 
+               height = getPlotDim(userData$plotHeight))
   })
+  
+  
+  output$ts_color_ui <- renderUI({
+    tagList(
+      tags$input(type = "color", id = "ts_line_color", value = "#2C7FB8"),
+      tags$label("Series color", style = "color: #2C7FB8;"),
+      br(), br(),
+      
+      # Plot Colors Picker
+      tags$script(HTML("
+      $(document).ready(function() {
+        var el = document.getElementById('ts_line_color');
+        if (el) Shiny.setInputValue('ts_line_color', el.value);
 
+        $(document).on('input', '#ts_line_color', function() {
+          Shiny.setInputValue(this.id, this.value);
+        });
+      });
+    "))
+    )
+    
+  })
+  
   output$tsPlot_Choice <- renderPlot({
-    # expression to get myData
-    myData <- getMyData(tsData(),
-                        currentFrequency(),
-                        values$islog,
-                        input$d_n,
-                        input$DS_n)
-
-    # plot(myData,main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel, type = 'l',lwd = 2)
-
-    # Convert to a dataframe for ggplot2
-    df <- data.frame(Time = time(myData), Value = as.numeric(myData))
-
-    # Apply selected theme, or default theme if none selected
-    plot_theme <- if (is.null(input$theme) || input$theme == "") theme_light() else get(input$theme)()
-
-    # Create ggplot
-    ggplot_ts <- ggplot(df, aes(x = Time, y = Value)) +
-      geom_line(size = 1) + # Line width set to 2
-      labs(title = userData$mainTitle,
-           x = userData$xLabel,
-           y = userData$yLabel) +plot_theme
-
-
-    # Add the theme to the ggplot
-    # ggplot_ts + theme(axis.text = element_text(size = userData$labelsize))
-    ggplot_ts + theme(axis.text = element_text(size = input$tickSize))
-
-
+    req(myData_Choice(), input$ts_line_color)
+    
+    autoplot(myData_Choice(), size = 1, colour = input$ts_line_color) +
+      labs(
+        title = userData$mainTitle,
+        x = userData$xLabel,
+        y = userData$yLabel
+      ) +
+      apply_user_theme() +
+      theme(
+        axis.text  = element_text(size = input$tickSize),
+        axis.title = element_text(size = input$tickSize + 2)
+      )
   })
-
-
-
-  output$difference2ACF <- renderPlot({
-    # expression to get myData
-    myData <- getMyData(tsData(),
-                        currentFrequency(),
-                        values$islog,
-                        input$d_n,
-                        input$DS_n)
-
-    plot(Acf(myData), lwd = 2, main = userData$mainTitle)
-  })
-
-
-  output$difference2PACF <- renderPlot({
-    # expression to get myData
-    myData <- getMyData(tsData(),
-                        currentFrequency(),
-                        values$islog,
-                        input$d_n,
-                        input$DS_n)
-
-    plot(Pacf(myData), lwd = 2, main = userData$mainTitle)
-  })
-
+  
+  
 
   
+  # 4. Choice ACF/PACF Individual Plots
+  output$difference2ACF <- renderPlot({
+    req(myData_Choice())
+    forecast::ggAcf(myData_Choice()) + 
+      labs(title = paste("ACF:", userData$mainTitle)) + 
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  output$difference2PACF <- renderPlot({
+    req(myData_Choice())
+    forecast::ggPacf(myData_Choice()) + 
+      labs(title = paste("PACF:", userData$mainTitle)) + 
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 5. Combined Choice ACF/PACF
   output$difference2ACFPACF_UI <- renderUI({
-    plotOutput("difference2ACFPACF", width = userData$plotWidth, height = userData$plotHeight)
+    plotOutput("difference2ACFPACF", 
+               width = getPlotDim(userData$plotWidth), 
+               height = getPlotDim(userData$plotHeight))
   })
   
   output$difference2ACFPACF <- renderPlot({
-    # expression to get myData
-    myData <- getMyData(tsData(),
-                        currentFrequency(),
-                        values$islog,
-                        input$d_n,
-                        input$DS_n)
-
-    acf2(myData , lwd = 3, main=input$Main_title)
+    req(myData_Choice())
+    
+    p1 <- forecast::ggAcf(myData_Choice()) + apply_user_theme() + labs(title = "ACF")
+    p2 <- forecast::ggPacf(myData_Choice()) + apply_user_theme() + labs(title = "PACF")
+    
+    gridExtra::grid.arrange(p1, p2, ncol = 1, top = userData$mainTitle)
   })
-
-
+  
+  # 6. Choice Stationarity Test with Interpretation
   output$teststationarited2St <- renderPrint({
-    # expression to get myData
-    myData <- getMyData(tsData(),
-                        currentFrequency(),
-                        values$islog,
-                        input$d_n,
-                        input$DS_n)
-
+    req(myData_Choice(), input$alternd2St, input$LagOrderADFd2St)
+    
+    cat("--- ADF Test: Custom Transformation ---\n\n")
     helpADF2()
-
-    adf.test(myData, alternative =input$alternd2St, k=input$LagOrderADFd2St)
+    
+    tryCatch({
+      res <- tseries::adf.test(
+        myData_Choice(), 
+        alternative = input$alternd2St, 
+        k = as.numeric(input$LagOrderADFd2St)
+      )
+      print(res)
+      
+      cat("\nInterpretation: ")
+      if(res$p.value < 0.05) {
+        cat("Stationary (p-value =", round(res$p.value, 4), "< 0.05). \n")
+        cat("   - The null hypothesis of a unit root is rejected. \n")
+        cat("   - The current combination of transformations is sufficient. \n \n")
+      } else {
+        cat("Non-stationary (p-value =", round(res$p.value, 4), ">= 0.05). \n")
+        cat("   - The null hypothesis cannot be rejected. \n")
+        cat("   - You may need more differencing or a different transformation. \n \n")
+      }
+    }, error = function(e) {
+      cat("Error: ", e$message)
+    })
   })
-
-
+  
+  # 7. Auto-ARIMA on Selected Transformation
   output$ARIMA_d_D_log <- renderPrint({
-    # expression to get myData
-    myData <- getMyData(tsData(),
-                        currentFrequency(),
-                        values$islog,
-                        input$d_n,
-                        input$DS_n)
-
-    model_dDLog <- auto.arima(myData, trace = FALSE, allowdrift = TRUE)
-
+    req(myData_Choice())
+    
+    cat("--- Automatic ARIMA Model Selection (Selected Transformation) ---\n\n")
+    
+    model_dDLog <- forecast::auto.arima(
+      myData_Choice(), 
+      trace = FALSE, 
+      allowdrift = TRUE,
+      stepwise = FALSE, 
+      approximation = FALSE
+    )
+    
     summary(model_dDLog)
   })
+
+ 
+  
+  
   ########  ########  ########  ########  ########  ########  ########  ########
   ########  ########  ########  ########  ########  ########  ########  ########
   #
@@ -1658,510 +2486,1498 @@ server <- function(input, output, session) {
   ########  ########  ########  ########  ########  ########  ########  ########
   ########  ########  ########  ########  ########  ########  ########  ########
 
-
-
+  #
+  #           Decomposition: Classical Seasonal Decomposition
+  #
+  
   output$decompose <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    myData <- tsData()
+    req(tsData(), input$model1)
+    
+    # Perform classical decomposition (Additive or Multiplicative)
+    # input$model1 should be "additive" or "multiplicative"
+    decomp_res <- stats::decompose(tsData(), type = input$model1)
+    
+    # Use plot to allow ggplot2 theming
+    plot(decomp_res, size = 1) +
+      labs(
+        title = paste(tools::toTitleCase(input$model1), "Decomposition:", userData$mainTitle),
+        x = userData$xLabel
+      ) +
+      apply_user_theme()
+  }, 
+  # Dynamic dimensions from your sliders
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
 
-    decompose_time_Series <- decompose(myData,input$model1)
-    plot(decompose_time_Series, lwd = 2)
-  })
+  # output$decompose <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   myData <- tsData()
+  # 
+  #   decompose_time_Series <- decompose(myData,input$model1)
+  #   plot(decompose_time_Series, lwd = 2)
+  # })
 
 
   output$decompose2 <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    myData <- tsData()
+    req(tsData(), input$model1)
+    
+    # Perform classical decomposition (Additive or Multiplicative)
+    # input$model1 should be "additive" or "multiplicative"
+    decomp_res <- stats::decompose(tsData(), type = input$model1)
+    
+    # Use autoplot to allow ggplot2 theming
+    autoplot(decomp_res, size = 1) +
+      labs(
+        title = paste(tools::toTitleCase(input$model1), "Decomposition:", userData$mainTitle),
+        x = userData$xLabel
+      ) +
+      apply_user_theme()
+  }, 
+  # Dynamic dimensions from your sliders
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
 
-    myData %>% decompose(type=input$model1) %>%
-      autoplot() +
-      ggtitle("Title")
-  })
-
-
+  #
+  #           Decomposition: Seasonal Coefficients (dFactors)
+  #
 
   output$dFactors <- renderPrint({
-    req(tsData()) # Ensure tsData is not NULL
-    myData <- tsData()
-
-    myData %>% decompose(type=input$model1) -> fit
+    req(tsData(), input$model1)
+    
+    # Perform decomposition
+    fit <- stats::decompose(tsData(), type = input$model1)
+    
+    # Extract seasonal figures (one for each period in the cycle)
+    seasonal_coeffs <- fit$figure
+    freq <- frequency(tsData())
+    
+    # Header logic
     cat(".......................................................\n")
-    cat("\n")
-    cat("            Coefficients saisonnier                    ")
-    cat("\n")
-    cat("\n")
-    cat(".......................................................\n")
-    cat("\n")
-    cat("\n")
-
-    cat(round(fit$figure, 2))
-    # cat(format(fit$figure, nsmall = 2))
-
-    cat("\n")
-    cat("\n")
-
-  })
-
-
-  output$X11decompose <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    myData <- tsData()
-
-    myData %>% seas(x11="") -> fit
-    autoplot(fit) +
-      ggtitle("X11 decomposition")
-  })
-
-
-
-  output$SEATSdecompose <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    myData <- tsData()
-
-    myData %>% seas() %>%
-      autoplot() +
-      ggtitle("SEATS decomposition")
-  })
-
-
-  output$SEATSFactors <- renderPrint({
-    req(tsData()) # Ensure tsData is not NULL
-    myData <- tsData()
-
-    myData %>% seas() -> fit
-    summary(fit)
-  })
-
-  output$X11Factors <- renderPrint({
-    req(tsData()) # Ensure tsData is not NULL
-    myData <- tsData()
-
-    myData %>% seas(x11="") -> fit
-    summary(fit)
-  })
-
-  output$STLdecompose <- renderPlot({
-    req(tsData()) # Ensure tsData is not NULL
-    myData <- tsData()
-
-    myData %>% stl(t.window=13, s.window="periodic", robust=TRUE) %>% autoplot()
-  })
-
-
-  output$STLFactors <- renderPrint({
-    req(tsData()) # Ensure tsData is not NULL
-    myData <- tsData()
-
-    myData %>% stl(t.window=13, s.window="periodic", robust=TRUE) -> fit
-    fit
-  })
-
-
-
-
-
-########  ########  ########  ########  ########  ########  ########  ##########
-########  ########  ########  ########  ########  ########  ########  ##########
-#
-#                      Auto ARIMA   &    H.W.
-#
-########  ########  ########  ########  ########  ########  ########  ##########
-########  ########  ########  ########  ########  ########  ########  ##########
-
-
-  # Cache for forecast results
-  forecastCache <- reactiveValues()
-
-
-
-  # Function to create a unique key based on input parameters
-  createCacheKey <- function(file, col, model,  freq1) {
-    # Check if the file input is valid
-    if (is.null(file) || !is.data.frame(file) || nrow(file) == 0  ) {
-      return(NULL)
-    }
-    # Use the file name and last modification time to create a unique key
-    fileName <- file$name
-    fileModTime <- file$datapath  # or use file$size for an additional layer of uniqueness
-    # Ensure other inputs are non-NULL and convert them to strings
-    if (is.null(col) || is.null(model) ) {
-      return(NULL)
-    }
-    paste0(fileName, "_", fileModTime, "_", as.character(col), "_", as.character(model), "_",  as.character(freq1) )
-  }
-
-
-
-
-  # Reactive expression to compute or fetch the forecast
-  results <- reactive({
-    key <- createCacheKey(input$fileData, input$colNum,  input$Model,  currentFrequency())
-    if (!is.null(forecastCache[[key]])) {
-      forecastCache[[key]]
+    cat("             SEASONAL COEFFICIENTS (", toupper(input$model1), ")\n")
+    cat(".......................................................\n\n")
+    
+    # Information regarding interpretation
+    if(input$model1 == "additive") {
+      cat(" Type: Additive (Values added/subtracted from the trend)\n")
     } else {
-      result <- modelisation(input$Model , input$length)
-      forecastCache[[key]] <- result
-      result
+      cat(" Type: Multiplicative (Factors scaling the trend)\n")
+    }
+    
+    cat(" Frequency:", freq, "observations per cycle\n\n")
+    
+    # Create a named vector for better readability
+    labels <- paste0("Period_", 1:freq)
+    names(seasonal_coeffs) <- labels
+    
+    # Display the rounded coefficients
+    print(round(seasonal_coeffs, 3))
+    
+    cat("\n.......................................................\n")
+    
+    # Optional: Quick check for sum/mean (Additive should sum to ~0, Mult to ~1)
+    if(input$model1 == "additive") {
+      cat(" Sum of coefficients:", round(sum(seasonal_coeffs), 4), "(Target: 0)\n")
+    } else {
+      cat(" Mean of coefficients:", round(mean(seasonal_coeffs), 4), "(Target: 1)\n")
     }
   })
+  
+  # output$dFactors <- renderPrint({
+  #   req(tsData(), input$model1)
+  #   
+  #   myData %>% decompose(type=input$model1) -> fit
+  #   cat(".......................................................\n")
+  #   cat("\n")
+  #   cat("            Coefficients saisonnier                    ")
+  #   cat("\n")
+  #   cat("\n")
+  #   cat(".......................................................\n")
+  #   cat("\n")
+  #   cat("\n")
+  # 
+  #   cat(round(fit$figure, 2))
+  #   # cat(format(fit$figure, nsmall = 2))
+  # 
+  #   cat("\n")
+  #   cat("\n")
+  # 
+  # })
 
-
-####################################################################################
-#
-#   modeling , the result is accessed via : results()$modelOutput
-#
-####################################################################################
-
-  modelisation <- function(  modelType,  forecastLength  ) {
-
+  
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  #
+  #       Advanced Decomposition: X11, SEATS, and STL Methods
+  #
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  
+  # 1. X11 Decomposition Plot
+  output$X11decompose <- renderPlot({
     req(tsData())
+    
+    # seasonal::seas is required for X11
+    fit <- seasonal::seas(tsData(), x11 = "")
+    
+    autoplot(fit) +
+      labs(title = paste("X11 Decomposition:", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 2. SEATS Decomposition Plot
+  output$SEATSdecompose <- renderPlot({
+    req(tsData())
+    
+    # seasonal::seas default is SEATS
+    fit <- seasonal::seas(tsData())
+    
+    autoplot(fit) +
+      labs(title = paste("SEATS Decomposition:", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 3. SEATS Numerical Summary
+  output$SEATSFactors <- renderPrint({
+    req(tsData())
+    cat("--- SEATS (X-13ARIMA-SEATS) Diagnostic Summary ---\n\n")
+    fit <- seasonal::seas(tsData())
+    summary(fit)
+  })
+  
+  # 4. X11 Numerical Summary
+  output$X11Factors <- renderPrint({
+    req(tsData())
+    cat("--- X11 (X-13ARIMA-SEATS) Diagnostic Summary ---\n\n")
+    fit <- seasonal::seas(tsData(), x11 = "")
+    summary(fit)
+  })
+  
+  # 5. STL Decomposition Plot (Seasonal-Trend LOESS)
+  output$STLdecompose <- renderPlot({
+    req(tsData())
+    
+    # Using periodic window and robust fitting for outliers
+    fit <- stl(tsData(), t.window = 13, s.window = "periodic", robust = TRUE)
+    
+    autoplot(fit) +
+      labs(title = paste("STL Decomposition:", userData$mainTitle)) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 6. STL Numerical Components
+  output$STLFactors <- renderPrint({
+    req(tsData())
+    cat("--- STL Decomposition Components (Seasonal-Trend LOESS) ---\n\n")
+    fit <- stl(tsData(), t.window = 13, s.window = "periodic", robust = TRUE)
+    
+    # Displaying the first few components for brevity
+    print(head(fit$time.series, 24))
+    cat("\n... (showing first 24 periods)")
+  }) 
+  
 
-    # the time series data
-    timeSeriesData <- tsData()
-    if (is.null(timeSeriesData)) {
-      stop("Error in processing time series data")
+  # output$X11decompose <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   myData <- tsData()
+  # 
+  #   myData %>% seas(x11="") -> fit
+  #   autoplot(fit) +
+  #     ggtitle("X11 decomposition")
+  # })
+  # 
+  # 
+  # 
+  # output$SEATSdecompose <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   myData <- tsData()
+  # 
+  #   myData %>% seas() %>%
+  #     autoplot() +
+  #     ggtitle("SEATS decomposition")
+  # })
+  # 
+  # 
+  # output$SEATSFactors <- renderPrint({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   myData <- tsData()
+  # 
+  #   myData %>% seas() -> fit
+  #   summary(fit)
+  # })
+  # 
+  # output$X11Factors <- renderPrint({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   myData <- tsData()
+  # 
+  #   myData %>% seas(x11="") -> fit
+  #   summary(fit)
+  # })
+  # 
+  # output$STLdecompose <- renderPlot({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   myData <- tsData()
+  # 
+  #   myData %>% stl(t.window=13, s.window="periodic", robust=TRUE) %>% autoplot()
+  # })
+  # 
+  # 
+  # output$STLFactors <- renderPrint({
+  #   req(tsData()) # Ensure tsData is not NULL
+  #   myData <- tsData()
+  # 
+  #   myData %>% stl(t.window=13, s.window="periodic", robust=TRUE) -> fit
+  #   fit
+  # })
+
+
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  #
+  #           Modeling: Auto ARIMA & Holt-Winters (Dynamic)
+  #
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  
+  # 1. Forecast Result Cache
+  forecastCache <- reactiveValues()
+  
+  createCacheKey <- function(file, col, model, freq1, h) {
+    if (is.null(file) || is.null(col) || is.null(model)) return(NULL)
+    # Include forecast length (h) in the key to refresh if the user changes it
+    paste0(file$name, "_", file$size, "_", col, "_", model, "_", freq1, "_h", h)
+  }
+  
+  # 2. Centralized Model Calculation
+  results <- reactive({
+    req(tsData(), input$Model, input$length)
+    
+    key <- createCacheKey(input$fileData, input$colNum, input$Model, currentFrequency(), input$length)
+    
+    if (!is.null(forecastCache[[key]])) {
+      return(forecastCache[[key]])
+    } else {
+      # Call the modeling function
+      res <- modelisation(input$Model, input$length)
+      forecastCache[[key]] <- res
+      return(res)
     }
-
-    # Choose the model based on input
+  })
+  
+  modelisation <- function(modelType, forecastLength) {
+    timeSeriesData <- tsData()
+    
+    # 3. Model Selection
     fittedModel <- switch(modelType,
-                          "ARIMA" = auto.arima(timeSeriesData, trace = TRUE, allowdrift = TRUE),
-                          "Holt-Winters Additive" = hw(timeSeriesData, "additive", h = forecastLength)$model,
-                          "Holt-Winters Multiplicative" = hw(timeSeriesData, "multiplicative", h = forecastLength)$model,
-                          holt(timeSeriesData, h = forecastLength)$model)  # Default case
-
-    # Forecasting to delete keep just fittedModel
-    forecastedValues <- forecast(fittedModel, level = c(80, 95), h = forecastLength)
-    plotForecast <- plot(forecastedValues, lwd = 2)
-    forecastDataFrame <- as.data.frame(forecastedValues)
-    forecastTable <- data.frame(date = row.names(forecastDataFrame), forecastDataFrame)
-
-    modelResiduals <- fittedModel$resid
-    modelResidualsDataFrame <- as.data.frame(modelResiduals)
-
-
-    # Return a list of outputs
+                          "ARIMA" = forecast::auto.arima(timeSeriesData, stepwise = FALSE, approximation = FALSE, allowdrift = TRUE),
+                          "Holt-Winters Additive" = forecast::hw(timeSeriesData, seasonal = "additive", h = forecastLength)$model,
+                          "Holt-Winters Multiplicative" = forecast::hw(timeSeriesData, seasonal = "multiplicative", h = forecastLength)$model,
+                          forecast::holt(timeSeriesData, h = forecastLength)$model # Default
+    )
+    
+    # 4. Generate Forecasts
+    forecastedValues <- forecast::forecast(fittedModel, level = c(80, 95), h = forecastLength)
+    
     list(
       modelOutput = fittedModel,
-      plot = plotForecast,
       forecast = forecastedValues,
-      forecastTable = forecastTable,
-      modelResiduals = modelResidualsDataFrame
+      residuals = fittedModel$residuals
     )
   }
-
-####################################################################################
-####################################################################################
-
-
-  # Render function to display ARIMA model summary
+  
+  # 5. Output: Model Summary
+  # output$autoForecast <- renderPrint({
+  #   req(results())
+  #   summary(results()$modelOutput)
+  # })
+  
+  
   output$autoForecast <- renderPrint({
-    results()$modelOutput
-    })
-
-
+    # 1. Essential inputs
+    req(input$fileData, input$colNum, input$Model)
+    
+    # 2. Generate the Cache Key to check if we need a progress bar
+    # Note: Ensure createCacheKey and forecastCache are defined in your global/server scope
+    key <- createCacheKey(input$fileData, input$colNum, input$Model, currentFrequency(), input$length)
+    is_cached <- !is.null(forecastCache[[key]])
+    
+    # 3. Show Modal ONLY if the CPU needs to work (not cached)
+    if (!is_cached) {
+      showModal(modalDialog(
+        title = "Automated Modeling in Progress",
+        tags$div(
+          style = "text-align: center;",
+          tags$p(paste("Please wait while the algorithm optimizes the", input$Model, "parameters...")),
+          tags$div(class = "progress progress-striped active",
+                   tags$div(class = "progress-bar progress-bar-info", 
+                            style = "width: 100%;"))
+        ),
+        footer = NULL, 
+        easyClose = FALSE
+      ))
+    }
+    
+    # 4. Trigger/Retrieve the results
+    # If is_cached is FALSE, this line does the heavy lifting
+    res_data <- results()
+    
+    # 5. Close the modal immediately after calculation finishes
+    if (!is_cached) {
+      removeModal()
+    }
+    
+    # 6. PRINTING THE RESULTS (Explicitly)
+    cat("================================================================\n")
+    cat("                DETAILED AUTOMATED MODEL SUMMARY                \n")
+    cat("================================================================\n\n")
+    
+    # We must explicitly print the summary of the model object
+    if (!is.null(res_data$modelOutput)) {
+      print(summary(res_data$modelOutput))
+    } else {
+      cat("No model output available for the current selection.\n")
+    }
+    
+    cat("\n================================================================\n")
+    cat("                     STATISTICAL INTERPRETATION                 \n")
+    cat("================================================================\n")
+    cat("The summary above displays the optimal coefficients and training\n")
+    cat("set accuracy measures. Information Criteria (AIC/BIC) provide a\n")
+    cat("mathematical estimate of the relative quality of the model.\n")
+  })
+  
+  
+  
+  
+  # 6. Output: Forecast Plot (Thematic & Dynamic)
   output$autoForecast_plot <- renderPlot({
-    forecastedValues <- forecast(results()$modelOutput, level = c(80, 95), h = input$length)
-    plot(forecastedValues, lwd = 2)
-  })
-
+    req(results())
+    
+    # Use autoplot for theme support and clean visuals
+    autoplot(results()$forecast, size = 1) +
+      labs(
+        title = paste("Forecast:", userData$mainTitle),
+        x = userData$xLabel,
+        y = userData$yLabel
+      ) +
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 7. Output: Numerical Forecast Data
   output$results_forecast <- renderPrint({
-    forecastedValues <- forecast(results()$modelOutput, level = c(80, 95), h = input$length)
-    forecastedValues
+    req(results())
+    results$forecast
   })
-
+  
   output$results_forecastTable <- renderTable({
-    forecastedValues <- forecast(results()$modelOutput, level = c(80, 95), h = input$length)
-    forecastDataFrame <- as.data.frame(forecastedValues)
-    forecastTable <- data.frame(date = row.names(forecastDataFrame), forecastDataFrame)
-    forecastTable
+    req(results())
+    df <- as.data.frame(results()$forecast)
+    # Format date/time row names into a proper column
+    data.frame(Time = row.names(df), df)
   })
-
-
-
-  # Render function to display extracted ARIMA parameters
+  
+  # 8. Output: ARIMA Parameter Extraction
   output$arimaParams <- renderPrint({
-    # get the model
-    fittedModel <- results()$modelOutput
-    # Extract ARIMA parameters
-    bm_p <- fittedModel$arma[1]
-    bm_d <- fittedModel$arma[6]
-    bm_q <- fittedModel$arma[2]
-    bm_P <- fittedModel$arma[3]
-    bm_D <- fittedModel$arma[7]
-    bm_Q <- fittedModel$arma[4]
-    bm_s <- fittedModel$arma[5]
-    bm_AICc <- fittedModel$aicc
-
-    cat("ARIMA Parameters:\n",
-        "p:", bm_p, "\n",
-        "d:", bm_d, "\n",
-        "q:", bm_q, "\n",
-        "P:", bm_P, "\n",
-        "D:", bm_D, "\n",
-        "Q:", bm_Q, "\n",
-        "S:", bm_s, "\n",
-        "AICc:", bm_AICc, "\n")
+    req(results())
+    fit <- results()$modelOutput
+    
+    if(inherits(fit, "Arima")) {
+      # ARMA structure: p, q, P, Q, s, d, D
+      p <- fit$arma[1]; q <- fit$arma[2]
+      P <- fit$arma[3]; Q <- fit$arma[4]
+      s <- fit$arma[5]; d <- fit$arma[6]; D <- fit$arma[7]
+      
+      cat("ARIMA Structure (p,d,q)(P,D,Q)[s]:\n")
+      cat(sprintf("Non-seasonal: (%d, %d, %d)\n", p, d, q))
+      cat(sprintf("Seasonal:     (%d, %d, %d)[%d]\n", P, D, Q, s))
+      cat("AICc:        ", round(fit$aicc, 2), "\n")
+    } else {
+      cat("Model is not ARIMA (Holt-Winters/ETS selected).")
+    }
   })
-
-
-
-  ########  ########  ########  ########  ########  ########  ########  ########
-  #
-  #             Output the SARIMA Coefficient
-  #
-  ########  ########  ########  ########  ########  ########  ########  ########
-
-
-  # Render the model details
+  
+  # 9. Output: Detailed Coefficients
   output$modelDetails <- renderPrint({
-
-    fittedModel <- results()$modelOutput
-
-    # Extracting the components
-    arimaOrder <- fittedModel$arma
-
-    # AR components
-    arOrder <- arimaOrder[1]
-    arParameters <- fittedModel$coef[1:arOrder]
-
-    # MA components
-    maOrder <- arimaOrder[6]
-    maParameters <- fittedModel$coef[(arOrder + 1):(arOrder + maOrder)]
-
-    # Seasonal components
-    sarOrder <- arimaOrder[2]
-    sarParameters <- fittedModel$coef[(arOrder + maOrder + 1):(arOrder + maOrder + sarOrder)]
-    smaOrder <- arimaOrder[7]
-    smaParameters <- fittedModel$coef[(arOrder + maOrder + sarOrder + 1):(arOrder + maOrder + sarOrder + smaOrder)]
-
-    # Drift component
-    drift <- ifelse(fittedModel$arma[9] == 1, fittedModel$coef[length(fittedModel$coef)], "No drift")
-
-    # Print the components
-    list(
-      AR_Order = arOrder,
-      AR_Parameters = arParameters,
-      MA_Order = maOrder,
-      MA_Parameters = maParameters,
-      SAR_Order = sarOrder,
-      SAR_Parameters = sarParameters,
-      SMA_Order = smaOrder,
-      SMA_Parameters = smaParameters,
-      Drift = drift
-    )
+    req(results())
+    fit <- results()$modelOutput
+    
+    cat("--- Model Coefficients ---\n\n")
+    print(fit$coef)
+    
+    if(!is.null(fit$sigma2)) {
+      cat("\nSigma^2 (Residual Variance):", round(fit$sigma2, 4))
+    }
   })
 
 
+# ########  ########  ########  ########  ########  ########  ########  ##########
+# ########  ########  ########  ########  ########  ########  ########  ##########
+# #
+# #                      Auto ARIMA   &    H.W.
+# #
+# ########  ########  ########  ########  ########  ########  ########  ##########
+# ########  ########  ########  ########  ########  ########  ########  ##########
+# 
+# 
+#   # Cache for forecast results
+#   forecastCache <- reactiveValues()
+# 
+# 
+# 
+#   # Function to create a unique key based on input parameters
+#   createCacheKey <- function(file, col, model,  freq1) {
+#     # Check if the file input is valid
+#     if (is.null(file) || !is.data.frame(file) || nrow(file) == 0  ) {
+#       return(NULL)
+#     }
+#     # Use the file name and last modification time to create a unique key
+#     fileName <- file$name
+#     fileModTime <- file$datapath  # or use file$size for an additional layer of uniqueness
+#     # Ensure other inputs are non-NULL and convert them to strings
+#     if (is.null(col) || is.null(model) ) {
+#       return(NULL)
+#     }
+#     paste0(fileName, "_", fileModTime, "_", as.character(col), "_", as.character(model), "_",  as.character(freq1) )
+#   }
+# 
+# 
+# 
+# 
+#   # Reactive expression to compute or fetch the forecast
+#   results <- reactive({
+#     key <- createCacheKey(input$fileData, input$colNum,  input$Model,  currentFrequency())
+#     if (!is.null(forecastCache[[key]])) {
+#       forecastCache[[key]]
+#     } else {
+#       result <- modelisation(input$Model , input$length)
+#       forecastCache[[key]] <- result
+#       result
+#     }
+#   })
+# 
+# 
+# ####################################################################################
+# #
+# #   modeling , the result is accessed via : results()$modelOutput
+# #
+# ####################################################################################
+# 
+#   modelisation <- function(  modelType,  forecastLength  ) {
+# 
+#     req(tsData())
+# 
+#     # the time series data
+#     timeSeriesData <- tsData()
+#     if (is.null(timeSeriesData)) {
+#       stop("Error in processing time series data")
+#     }
+# 
+#     # Choose the model based on input
+#     fittedModel <- switch(modelType,
+#                           "ARIMA" = auto.arima(timeSeriesData, trace = TRUE, allowdrift = TRUE),
+#                           "Holt-Winters Additive" = hw(timeSeriesData, "additive", h = forecastLength)$model,
+#                           "Holt-Winters Multiplicative" = hw(timeSeriesData, "multiplicative", h = forecastLength)$model,
+#                           holt(timeSeriesData, h = forecastLength)$model)  # Default case
+# 
+#     # Forecasting to delete keep just fittedModel
+#     forecastedValues <- forecast(fittedModel, level = c(80, 95), h = forecastLength)
+#     plotForecast <- plot(forecastedValues, lwd = 2)
+#     forecastDataFrame <- as.data.frame(forecastedValues)
+#     forecastTable <- data.frame(date = row.names(forecastDataFrame), forecastDataFrame)
+# 
+#     modelResiduals <- fittedModel$resid
+#     modelResidualsDataFrame <- as.data.frame(modelResiduals)
+# 
+# 
+#     # Return a list of outputs
+#     list(
+#       modelOutput = fittedModel,
+#       plot = plotForecast,
+#       forecast = forecastedValues,
+#       forecastTable = forecastTable,
+#       modelResiduals = modelResidualsDataFrame
+#     )
+#   }
+# 
+# ####################################################################################
+# ####################################################################################
+# 
+# 
+#   # Render function to display ARIMA model summary
+#   output$autoForecast <- renderPrint({
+#     results()$modelOutput
+#     })
+# 
+# 
+#   output$autoForecast_plot <- renderPlot({
+#     forecastedValues <- forecast(results()$modelOutput, level = c(80, 95), h = input$length)
+#     plot(forecastedValues, lwd = 2)
+#   })
+# 
+#   output$results_forecast <- renderPrint({
+#     forecastedValues <- forecast(results()$modelOutput, level = c(80, 95), h = input$length)
+#     forecastedValues
+#   })
+# 
+#   output$results_forecastTable <- renderTable({
+#     forecastedValues <- forecast(results()$modelOutput, level = c(80, 95), h = input$length)
+#     forecastDataFrame <- as.data.frame(forecastedValues)
+#     forecastTable <- data.frame(date = row.names(forecastDataFrame), forecastDataFrame)
+#     forecastTable
+#   })
+# 
+# 
+# 
+#   # Render function to display extracted ARIMA parameters
+#   output$arimaParams <- renderPrint({
+#     # get the model
+#     fittedModel <- results()$modelOutput
+#     # Extract ARIMA parameters
+#     bm_p <- fittedModel$arma[1]
+#     bm_d <- fittedModel$arma[6]
+#     bm_q <- fittedModel$arma[2]
+#     bm_P <- fittedModel$arma[3]
+#     bm_D <- fittedModel$arma[7]
+#     bm_Q <- fittedModel$arma[4]
+#     bm_s <- fittedModel$arma[5]
+#     bm_AICc <- fittedModel$aicc
+# 
+#     cat("ARIMA Parameters:\n",
+#         "p:", bm_p, "\n",
+#         "d:", bm_d, "\n",
+#         "q:", bm_q, "\n",
+#         "P:", bm_P, "\n",
+#         "D:", bm_D, "\n",
+#         "Q:", bm_Q, "\n",
+#         "S:", bm_s, "\n",
+#         "AICc:", bm_AICc, "\n")
+#   })
+# 
+# 
+# 
+#   ########  ########  ########  ########  ########  ########  ########  ########
+#   #
+#   #             Output the SARIMA Coefficient
+#   #
+#   ########  ########  ########  ########  ########  ########  ########  ########
+# 
+# 
+#   # Render the model details
+#   output$modelDetails <- renderPrint({
+# 
+#     fittedModel <- results()$modelOutput
+# 
+#     # Extracting the components
+#     arimaOrder <- fittedModel$arma
+# 
+#     # AR components
+#     arOrder <- arimaOrder[1]
+#     arParameters <- fittedModel$coef[1:arOrder]
+# 
+#     # MA components
+#     maOrder <- arimaOrder[6]
+#     maParameters <- fittedModel$coef[(arOrder + 1):(arOrder + maOrder)]
+# 
+#     # Seasonal components
+#     sarOrder <- arimaOrder[2]
+#     sarParameters <- fittedModel$coef[(arOrder + maOrder + 1):(arOrder + maOrder + sarOrder)]
+#     smaOrder <- arimaOrder[7]
+#     smaParameters <- fittedModel$coef[(arOrder + maOrder + sarOrder + 1):(arOrder + maOrder + sarOrder + smaOrder)]
+# 
+#     # Drift component
+#     drift <- ifelse(fittedModel$arma[9] == 1, fittedModel$coef[length(fittedModel$coef)], "No drift")
+# 
+#     # Print the components
+#     list(
+#       AR_Order = arOrder,
+#       AR_Parameters = arParameters,
+#       MA_Order = maOrder,
+#       MA_Parameters = maParameters,
+#       SAR_Order = sarOrder,
+#       SAR_Parameters = sarParameters,
+#       SMA_Order = smaOrder,
+#       SMA_Parameters = smaParameters,
+#       Drift = drift
+#     )
+#   })
+# 
 
 
-
-  ########  ########  ########  ########  ########  ########  ########  ########
+  ######## ######## ######## ######## ######## ######## ######## ########
   #
-  #      Auto-Forecast             -  Tests   -
+  #        Auto-Forecast Tests: Stationarity, Trend, and Residuals
   #
-  ########  ########  ########  ########  ########  ########  ########  ########
-
+  ######## ######## ######## ######## ######## ######## ######## ########
+  
+  # 1. Mann-Kendall Trend Test
   output$testTrendMK <- renderPrint({
-    myData <- tsData()
+    req(tsData())
+    cat("--- Mann-Kendall Trend Test ---\n")
     helpMK()
-
-    MannKendall(myData)
+    
+    res <- Kendall::MannKendall(tsData())
+    print(res)
+    
+    cat("\nInterpretation: ")
+    if(res$sl < 0.05) {
+      cat("Significant monotonic trend detected (p < 0.05).")
+    } else {
+      cat("No significant monotonic trend detected (p >= 0.05).")
+    }
   })
-
-
+  
+  # 2. Augmented Dickey-Fuller (ADF) Test
   output$test_ADF <- renderPrint({
-    myData <- tsData()
+    req(tsData(), input$altern, input$LagOrderADF)
+    cat("--- Augmented Dickey-Fuller (ADF) Test ---\n")
     helpADF()
-
-    adf.test(myData, alternative =input$altern, k=input$LagOrderADF)
+    
+    tryCatch({
+      res <- tseries::adf.test(tsData(), alternative = input$altern, k = as.numeric(input$LagOrderADF))
+      print(res)
+      
+      cat("\nInterpretation: ")
+      if(res$p.value < 0.05) {
+        cat("Stationary (p < 0.05). Reject Null Hypothesis: The series does not have a unit root.")
+      } else {
+        cat("Non-stationary (p >= 0.05). Fail to reject Null: The series has a unit root.")
+      }
+    }, error = function(e) cat("Error:", e$message))
   })
-
-
+  
+  # 3. KPSS Test (Stationarity)
   output$test_KPSS <- renderPrint({
-    myData <- tsData()
+    req(tsData())
+    cat("--- KPSS Unit Root Test ---\n")
     helpKPSS()
-
-    kpss.test(myData, null = "Trend")
+    
+    # Null: Stationary | Alternative: Unit Root
+    res <- tseries::kpss.test(tsData(), null = "Trend")
+    print(res)
+    
+    cat("\nInterpretation: ")
+    if(res$p.value < 0.05) {
+      cat("Non-stationary (p < 0.05). Reject Null: The series likely has a unit root.")
+    } else {
+      cat("Stationary (p >= 0.05). Fail to reject Null: The series is trend-stationary.")
+    }
   })
-
-
+  
+  # 4. Ljung-Box Test (Model Residuals)
   output$testLBn <- renderPrint({
-    # tsData <- tsData()
-    fittedModel <- results()$modelOutput
-    model_Residuals <- fittedModel$resid
-
+    req(results()$modelOutput, input$lagorder, input$typeBoxTest)
+    
+    # Access residuals from the centralized reactive
+    model_Residuals <- results()$modelOutput$residuals
+    
+    cat("--- Ljung-Box / Box-Pierce Test on Residuals ---\n")
+    cat("Model used:", input$Model, "\n")
     helpLjungBox()
-
-    Box.test(model_Residuals, lag=input$lagorder, type=input$typeBoxTest)
-
+    
+    res <- Box.test(model_Residuals, lag = input$lagorder, type = input$typeBoxTest)
+    print(res)
+    
+    cat("\nInterpretation: ")
+    if(res$p.value > 0.05) {
+      cat("White Noise (p > 0.05). Residuals are independent; the model has captured the data's structure.")
+    } else {
+      cat("Autocorrelation Present (p <= 0.05). The residuals are not white noise; the model may be improved.")
+    }
   })
 
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # #
+  # #      Auto-Forecast             -  Tests   -
+  # #
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # 
+  # output$testTrendMK <- renderPrint({
+  #   myData <- tsData()
+  #   helpMK()
+  # 
+  #   MannKendall(myData)
+  # })
+  # 
+  # 
+  # output$test_ADF <- renderPrint({
+  #   myData <- tsData()
+  #   helpADF()
+  # 
+  #   adf.test(myData, alternative =input$altern, k=input$LagOrderADF)
+  # })
+  # 
+  # 
+  # output$test_KPSS <- renderPrint({
+  #   myData <- tsData()
+  #   helpKPSS()
+  # 
+  #   kpss.test(myData, null = "Trend")
+  # })
+  # 
+  # 
+  # output$testLBn <- renderPrint({
+  #   # tsData <- tsData()
+  #   fittedModel <- results()$modelOutput
+  #   model_Residuals <- fittedModel$resid
+  # 
+  #   helpLjungBox()
+  # 
+  #   Box.test(model_Residuals, lag=input$lagorder, type=input$typeBoxTest)
+  # 
+  # })
 
-  ########  ########  ########  ########  ########  ########  ########  ########
+
+  
+  ######## ######## ######## ######## ######## ######## ######## ########
   #
-  #   Auto-Forecast  -  Residuals Panels   ,  ACF  ,  PACF  ,  Unit Circle
+  #    Auto-Forecast: Residuals Panels, ACF, PACF, & Unit Circle
   #
-  ########  ########  ########  ########  ########  ########  ########  ########
-
-
+  ######## ######## ######## ######## ######## ######## ######## ########
+  
+  # 1. Standard Residual Check (Time plot, ACF, and Histogram)
   output$chkRes <- renderPlot({
-    fittedModel <- results()$modelOutput
-    myData <- fittedModel
-    checkresiduals(myData)
-  })
-
-
+    req(results()$modelOutput)
+    # checkresiduals is a wrapper; we can't easily ggplotify the whole panel 
+    # but we can apply the theme to its components via ggcheckresiduals if available, 
+    # or stick to the forecast version which is very robust.
+    forecast::checkresiduals(results()$modelOutput)
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 2. GG-style Diagnostic Panel
+  # output$tsdiag <- renderPlot({
+  #   req(results()$modelOutput)
+  #   # Note: ggtsdiag provides a cleaner ggplot version of diagnostics
+  #   forecast::ggtsdiag(results()$modelOutput) 
+  # }, 
+  # 
+  # )
+  
   output$tsdiag <- renderPlot({
+    req(results()$modelOutput)
     fittedModel <- results()$modelOutput
     myData <- fittedModel
     ggtsdiag(myData)
-  })
-
-
+    
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 3. Residual ACF
   output$plotACFRes <- renderPlot({
-    fittedModel <- results()$modelOutput
-    model_Residuals <- fittedModel$resid
-    plot(Acf(model_Residuals), lwd = 2)
-  })
-
-
+    req(results()$modelOutput)
+    forecast::ggAcf(results()$modelOutput$residuals) + 
+      labs(title = "ACF of Residuals") + 
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 4. Residual PACF
   output$plotPACFRes <- renderPlot({
-    fittedModel <- results()$modelOutput
-    model_Residuals <- fittedModel$resid
-    plot(Pacf(model_Residuals), lwd = 2)
-  })
-
-
+    req(results()$modelOutput)
+    forecast::ggPacf(results()$modelOutput$residuals) + 
+      labs(title = "PACF of Residuals") + 
+      apply_user_theme()
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 5. Combined ACF/PACF Residuals
   output$plot_ACF_PACF_Res <- renderPlot({
-    fittedModel <- results()$modelOutput
-    model_Residuals <- fittedModel$resid
-    acf2(model_Residuals, lwd = 3,main = userData$mainTitle)
-  })
+    req(results()$modelOutput)
+    resids <- results()$modelOutput$residuals
+    
+    p1 <- forecast::ggAcf(resids) + apply_user_theme() + labs(title = "Residual ACF")
+    p2 <- forecast::ggPacf(resids) + apply_user_theme() + labs(title = "Residual PACF")
+    
+    gridExtra::grid.arrange(p1, p2, ncol = 1)
+  }, 
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  # 6. Inverse AR/MA Roots (Unit Circle)
+  # output$unitCercle <- renderPlot({
+  #   req(results()$modelOutput)
+  #   fit <- results()$modelOutput
+  #   
+  #   # autoplot on an Arima object displays the unit circle roots
+  #   autoplot(fit) + 
+  #     labs(title = "Inverse AR/MA Roots", subtitle = "Roots must lie inside the unit circle for stability/invertibility") +
+  #     apply_user_theme()
+  # }, 
+  # width = function() getPlotDim(userData$plotWidth),
+  # height = function() getPlotDim(userData$plotHeight)
+  # )
+  
+ 
+   # 6. Inverse AR/MA Roots (Unit Circle)
+    output$unitCercle <- renderPlot({
+    # 1. Ensure the model exists
+    req(results()$modelOutput)
+    fit <- results()$modelOutput
+
+    # 2. Use the base plot method for Arima objects
+    # This is the most reliable way to get the actual unit circle grid
+    plot(fit)
+
+  },
+  # Maintain your dynamic scaling
+  width = function() getPlotDim(userData$plotWidth),
+  height = function() getPlotDim(userData$plotHeight)
+  )
+  
+  
+
+  
+  
+  
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # #
+  # #   Auto-Forecast  -  Residuals Panels   ,  ACF  ,  PACF  ,  Unit Circle
+  # #
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # 
+  # 
+  # output$chkRes <- renderPlot({
+  #   fittedModel <- results()$modelOutput
+  #   myData <- fittedModel
+  #   checkresiduals(myData)
+  # })
+  # 
+  # 
+  # output$tsdiag <- renderPlot({
+  #   fittedModel <- results()$modelOutput
+  #   myData <- fittedModel
+  #   ggtsdiag(myData)
+  # })
+  # 
+  # 
+  # output$plotACFRes <- renderPlot({
+  #   fittedModel <- results()$modelOutput
+  #   model_Residuals <- fittedModel$resid
+  #   plot(Acf(model_Residuals), lwd = 2)
+  # })
+  # 
+  # 
+  # output$plotPACFRes <- renderPlot({
+  #   fittedModel <- results()$modelOutput
+  #   model_Residuals <- fittedModel$resid
+  #   plot(Pacf(model_Residuals), lwd = 2)
+  # })
+  # 
+  # 
+  # output$plot_ACF_PACF_Res <- renderPlot({
+  #   fittedModel <- results()$modelOutput
+  #   model_Residuals <- fittedModel$resid
+  #   acf2(model_Residuals, lwd = 3,main = userData$mainTitle)
+  # })
+  # 
+  # 
+  # output$unitCercle <- renderPlot({
+  #   fittedModel <- results()$modelOutput
+  # 
+  #   plot(fittedModel)
+  # 
+  # })
 
 
-  output$unitCercle <- renderPlot({
-    fittedModel <- results()$modelOutput
 
-    plot(fittedModel)
-
-  })
-
-
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
+  
+  ######## ######## ######## ######## ######## ######## ######## ########
   #
-  #                     Slow   ARIMA
+  #       Comprehensive SARIMA: Animated Progress & Full Interpretations
   #
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
-
-  output$Pslow <- renderPrint({
-      myData <- tsData()
-
-      sarima_model <- auto.arima(myData,
-                              max.p = input$maxp,
-                              max.d = input$maxd,
-                              max.q = input$maxq,
-                              max.P = input$maxPs,
-                              max.D = input$maxDs,
-                              max.Q = input$maxQs,
-                              max.order = input$maxorder,
-                              stepwise=FALSE,
-                              approximation=FALSE,
-                              trace=TRUE,
-                              allowdrift=TRUE,
-                              test = c("kpss", "adf", "pp")
-      )
-
-      sarima_model
+  ######## ######## ######## ######## ######## ######## ######## ########
+    
+    
+    # 1. Create a reactive object that ONLY triggers when the button is clicked
+    slowArimaResults <- eventReactive(input$startSlowArima, {
+      req(tsData())
+      
+      # 1. Show Modal with an Animated 'Indeterminate' Progress Bar
+      showModal(modalDialog(
+        title = "Advanced Exhaustive Search in Progress",
+        tags$div(
+          style = "text-align: center;",
+          tags$p("The algorithm is testing hundreds of ARIMA combinations using exact likelihood."),
+          tags$p("This ensures the mathematically optimal model is found. Please wait..."),
+          tags$div(class = "progress progress-striped active",
+                   tags$div(class = "progress-bar progress-bar-primary", 
+                            style = "width: 100%;"))
+        ),
+        footer = NULL, 
+        easyClose = FALSE
+      ))
+      
+      # 2. Start Computation Logic
+      result_text <- tryCatch({
+        
+        # 2a. Anomaly Detection
+        outliers <- forecast::tsoutliers(tsData())
+        
+        # 2b. The Exhaustive Search (stepwise=FALSE, approx=FALSE)
+        # Using isolate() here ensures we take the values currently in the numeric inputs
+        trace_log <- capture.output({
+          sarima_model <- forecast::auto.arima(
+            tsData(),
+            max.p = as.numeric(input$maxp), max.d = as.numeric(input$maxd), max.q = as.numeric(input$maxq),
+            max.P = as.numeric(input$maxPs), max.D = as.numeric(input$maxDs), max.Q = as.numeric(input$maxQs),
+            max.order = as.numeric(input$maxorder),
+            stepwise = FALSE,      # Check all combinations
+            approximation = FALSE, # Use exact MLE for precision
+            trace = TRUE,          # Show the work
+            allowdrift = TRUE
+          )
+        })
+        
+        # 2c. Statistical Validation Calculations
+        resids <- residuals(sarima_model)
+        lb_test <- Box.test(resids, lag = 24, type = "Ljung-Box")
+        jb_test <- tseries::jarque.bera.test(resids)
+        
+        # 2d. Backtesting (Time Series Cross-Validation)
+        cv_error <- tryCatch({
+          mean(abs(forecast::tsCV(tsData(), forecast::Arima, 
+                                  order=sarima_model$arma[c(1,6,2)], 
+                                  seasonal=sarima_model$arma[c(3,7,4)])))
+        }, error = function(e) return(NA))
+        
+        # 3. Construct the Unified Professional Report
+        output_content <- capture.output({
+          cat("================================================================\n")
+          cat("                 I. DATA QUALITY & OUTLIER SCAN                 \n")
+          cat("================================================================\n")
+          if(length(outliers$index) > 0) {
+            cat("ANOMALIES DETECTED: Significant outliers found at indices:", outliers$index, ".\n")
+            cat("Interpretation: These points represent shocks or errors that deviate from\n")
+            cat("the normal trend. The model has attempted to stay robust despite these points.\n")
+          } else { 
+            cat("The data quality check is complete: No significant outliers were detected.\n") 
+          }
+          
+          cat("\n================================================================\n")
+          cat("                 II. EXHAUSTIVE SEARCH HISTORY                  \n")
+          cat("   [ Candidate Model ]                 [ Selection Metric (AICs) ]   \n")
+          cat("================================================================\n")
+          cat(paste(trace_log, collapse = "\n"))
+          
+          cat("\n\n================================================================\n")
+          cat("                 III. MODEL SELECTION LOGIC                     \n")
+          cat("================================================================\n")
+          cat("BEST MODEL IDENTIFIED: ", forecast:::arima.string(sarima_model), "\n\n")
+          cat("Why is this the optimal model?\n")
+          cat("1. AICc Minimization: This model yielded the lowest Corrected Akaike\n")
+          cat("   Information Criterion (AICc) among all candidates in the trace above.\n")
+          cat("2. Information Balance: It provides the best fit to the historical data\n")
+          cat("   while remaining simple enough to avoid 'overfitting' (Parsimony).\n")
+          cat("3. Convergence: The model successfully reached a global maximum for\n")
+          cat("   the log-likelihood function using exact MLE methods.\n")
+          
+          cat("\n================================================================\n")
+          cat("                 IV. ESTIMATED MODEL COEFFICIENTS               \n")
+          cat("================================================================\n")
+          print(sarima_model$coef)
+          cat("\nInterpretation: These coefficients represent the mathematical weights of the\n")
+          cat("Auto-Regressive (AR) and Moving Average (MA) lags. If a coefficient is close\n")
+          cat("to zero, that specific lag has minimal predictive power for the series.\n")
+          
+          cat("\n================================================================\n")
+          cat("                 V. GOODNESS-OF-FIT METRICS                     \n")
+          cat("================================================================\n")
+          cat("Sigma^2 (Residual Variance): ", round(sarima_model$sigma2, 4), "\n")
+          cat("Log Likelihood:             ", round(sarima_model$loglik, 2), "\n")
+          cat("AIC (Akaike):               ", round(sarima_model$aic, 2), "\n")
+          cat("AICc (AIC Corrected):       ", round(sarima_model$aicc, 2), "\n")
+          cat("BIC (Bayesian):             ", round(sarima_model$bic, 2), "\n")
+          
+          cat("\nInterpretation:\n")
+          cat("- Sigma^2: Measures the variance of the errors; lower is more precise.\n")
+          cat("- AIC/BIC: Information criteria used to compare models. Smaller values\n")
+          cat("           indicate a better balance between accuracy and simplicity.\n")
+          
+          cat("\n================================================================\n")
+          cat("                 VI. STATISTICAL VALIDATION TESTS               \n")
+          cat("================================================================\n")
+          
+          cat("[1] LJUNG-BOX TEST FOR INDEPENDENCE\n")
+          cat("    Purpose: To confirm the residuals (errors) are purely random.\n")
+          cat("    H0 (Null): Residuals are White Noise (No remaining patterns).\n")
+          cat("    Result: The test returned a p-value of", round(lb_test$p.value, 4), ".\n")
+          if(lb_test$p.value > 0.05) {
+            cat("    Decision: We fail to reject the null hypothesis. The residuals are\n")
+            cat("              independent; the model has successfully captured all data structure.\n")
+          } else {
+            cat("    Decision: We reject the null hypothesis. Autocorrelation remains in the\n")
+            cat("              residuals, meaning the model is missing key information.\n")
+          }
+          
+          cat("\n[2] JARQUE-BERA TEST FOR NORMALITY\n")
+          cat("    Purpose: To check if the error distribution is symmetric (Bell Curve).\n")
+          cat("    H0 (Null): Residuals follow a Normal Distribution.\n")
+          cat("    Result: The test returned a p-value of", round(jb_test$p.value, 4), ".\n")
+          if(jb_test$p.value > 0.05) {
+            cat("    Decision: We fail to reject the null hypothesis. Residuals are normal,\n")
+            cat("              validating the reliability of our forecast confidence intervals.\n")
+          } else {
+            cat("    Decision: We reject the null hypothesis. Residuals are non-normal;\n")
+            cat("              prediction intervals may be biased or overly optimistic.\n")
+          }
+          
+          cat("\n================================================================\n")
+          cat("                 VII. PREDICTIVE ACCURACY (BACKTEST)            \n")
+          cat("================================================================\n")
+          if(!is.na(cv_error)) {
+            cat("Mean Absolute Error (CV): ", round(cv_error, 4), "\n")
+            cat("Interpretation: This error rate was calculated via rolling-window cross-validation,\n")
+            cat("                simulating how the model performs on 'unseen' future data.\n")
+          }
+          
+          cat("\n================================================================\n")
+          cat("                 VIII. FINAL MODEL VERDICT                      \n")
+          cat("================================================================\n")
+          if(lb_test$p.value > 0.05 && jb_test$p.value > 0.05) {
+            cat("FINAL VERDICT: Statistically Excellent. The model is fully validated\n")
+            cat("and ready for production-level forecasting.\n")
+          } else if (lb_test$p.value > 0.05) {
+            cat("FINAL VERDICT: Statistically Acceptable. All information is captured,\n")
+            cat("               though the error distribution is non-standard.\n")
+          } else {
+            cat("FINAL VERDICT: Statistically Sub-optimal. High risk of forecast error\n")
+            cat("               due to remaining patterns in the residuals.\n \n \n")
+          }
+        })
+        
+        removeModal() 
+        return(output_content)
+        
+      }, error = function(e) {
+        removeModal()
+        return(paste("Critical error during analysis:", e$message))
+      })
     })
+    
+    # 2. Render the output ONLY when the reactive is triggered
+    output$Pslow <- renderPrint({
+      # If button hasn't been clicked yet, give a friendly instruction
+      if (input$startSlowArima == 0) {
+        cat("Click 'Run Exhaustive Search' in the sidebar to begin the analysis.")
+      } else {
+        # Call the reactive result
+        cat(paste(slowArimaResults(), collapse = "\n"))
+      }
+    }) 
+    
+  
+  # output$Pslow <- renderPrint({
+  #   req(tsData())
+  #   
+  #   # 1. Show Modal with an Animated 'Indeterminate' Progress Bar
+  #   showModal(modalDialog(
+  #     title = "Advanced Exhaustive Search in Progress",
+  #     tags$div(
+  #       style = "text-align: center;",
+  #       tags$p("The algorithm is testing hundreds of ARIMA combinations using exact likelihood."),
+  #       tags$p("This ensures the mathematically optimal model is found. Please wait..."),
+  #       tags$div(class = "progress progress-striped active",
+  #                tags$div(class = "progress-bar progress-bar-primary", 
+  #                         style = "width: 100%;"))
+  #     ),
+  #     footer = NULL, 
+  #     easyClose = FALSE
+  #   ))
+  #   
+  #   # 2. Start Computation Logic
+  #   result_text <- tryCatch({
+  #     
+  #     # 2a. Anomaly Detection
+  #     outliers <- forecast::tsoutliers(tsData())
+  #     
+  #     # 2b. The Exhaustive Search (stepwise=FALSE, approx=FALSE)
+  #     # We capture the trace to show the "Competition" between models
+  #     trace_log <- capture.output({
+  #       sarima_model <- forecast::auto.arima(
+  #         tsData(),
+  #         max.p = as.numeric(input$maxp), max.d = as.numeric(input$maxd), max.q = as.numeric(input$maxq),
+  #         max.P = as.numeric(input$maxPs), max.D = as.numeric(input$maxDs), max.Q = as.numeric(input$maxQs),
+  #         max.order = as.numeric(input$maxorder),
+  #         stepwise = FALSE,      # Check all combinations
+  #         approximation = FALSE, # Use exact MLE for precision
+  #         trace = TRUE,          # Show the work
+  #         allowdrift = TRUE
+  #       )
+  #     })
+  #     
+  #     # 2c. Statistical Validation Calculations
+  #     resids <- residuals(sarima_model)
+  #     lb_test <- Box.test(resids, lag = 24, type = "Ljung-Box")
+  #     jb_test <- tseries::jarque.bera.test(resids)
+  #     
+  #     # 2d. Backtesting (Time Series Cross-Validation)
+  #     cv_error <- tryCatch({
+  #       mean(abs(forecast::tsCV(tsData(), forecast::Arima, 
+  #                               order=sarima_model$arma[c(1,6,2)], 
+  #                               seasonal=sarima_model$arma[c(3,7,4)])))
+  #     }, error = function(e) return(NA))
+  #     
+  #     # 3. Construct the Unified Professional Report
+  #     output_content <- capture.output({
+  #       cat("================================================================\n")
+  #       cat("                 I. DATA QUALITY & OUTLIER SCAN                 \n")
+  #       cat("================================================================\n")
+  #       if(length(outliers$index) > 0) {
+  #         cat("ANOMALIES DETECTED: Significant outliers found at indices:", outliers$index, ".\n")
+  #         cat("Interpretation: These points represent shocks or errors that deviate from\n")
+  #         cat("the normal trend. The model has attempted to stay robust despite these points.\n")
+  #       } else { 
+  #         cat("The data quality check is complete: No significant outliers were detected.\n") 
+  #       }
+  #       
+  #       cat("\n================================================================\n")
+  #       cat("                 II. EXHAUSTIVE SEARCH HISTORY                  \n")
+  #       cat("   [ Candidate Model ]                 [ Selection Metric (AICs) ]  \n")
+  #       cat("================================================================\n")
+  #       cat(paste(trace_log, collapse = "\n"))
+  #       
+  #       cat("\n\n================================================================\n")
+  #       cat("                 III. MODEL SELECTION LOGIC                     \n")
+  #       cat("================================================================\n")
+  #       cat("BEST MODEL IDENTIFIED: ", forecast:::arima.string(sarima_model), "\n\n")
+  #       cat("Why is this the optimal model?\n")
+  #       cat("1. AICc Minimization: This model yielded the lowest Corrected Akaike\n")
+  #       cat("   Information Criterion (AICc) among all candidates in the trace above.\n")
+  #       cat("2. Information Balance: It provides the best fit to the historical data\n")
+  #       cat("   while remaining simple enough to avoid 'overfitting' (Parsimony).\n")
+  #       cat("3. Convergence: The model successfully reached a global maximum for\n")
+  #       cat("   the log-likelihood function using exact MLE methods.\n")
+  #       
+  #       cat("\n================================================================\n")
+  #       cat("                 IV. ESTIMATED MODEL COEFFICIENTS               \n")
+  #       cat("================================================================\n")
+  #       print(sarima_model$coef)
+  #       cat("\nInterpretation: These coefficients represent the mathematical weights of the\n")
+  #       cat("Auto-Regressive (AR) and Moving Average (MA) lags. If a coefficient is close\n")
+  #       cat("to zero, that specific lag has minimal predictive power for the series.\n")
+  #       
+  #       cat("\n================================================================\n")
+  #       cat("                 V. GOODNESS-OF-FIT METRICS                     \n")
+  #       cat("================================================================\n")
+  #       cat("Sigma^2 (Residual Variance): ", round(sarima_model$sigma2, 4), "\n")
+  #       cat("Log Likelihood:             ", round(sarima_model$loglik, 2), "\n")
+  #       cat("AIC (Akaike):               ", round(sarima_model$aic, 2), "\n")
+  #       cat("AICc (AIC Corrected):       ", round(sarima_model$aicc, 2), "\n")
+  #       cat("BIC (Bayesian):             ", round(sarima_model$bic, 2), "\n")
+  #       
+  #       cat("\nInterpretation:\n")
+  #       cat("- Sigma^2: Measures the variance of the errors; lower is more precise.\n")
+  #       cat("- AIC/BIC: Information criteria used to compare models. Smaller values\n")
+  #       cat("           indicate a better balance between accuracy and simplicity.\n")
+  #       
+  #       cat("\n================================================================\n")
+  #       cat("                 VI. STATISTICAL VALIDATION TESTS               \n")
+  #       cat("================================================================\n")
+  #       
+  #       # Ljung-Box Analysis
+  #       cat("[1] LJUNG-BOX TEST FOR INDEPENDENCE\n")
+  #       cat("    Purpose: To confirm the residuals (errors) are purely random.\n")
+  #       cat("    H0 (Null): Residuals are White Noise (No remaining patterns).\n")
+  #       cat("    Result: The test returned a p-value of", round(lb_test$p.value, 4), ".\n")
+  #       if(lb_test$p.value > 0.05) {
+  #         cat("    Decision: We fail to reject the null hypothesis. The residuals are\n")
+  #         cat("              independent; the model has successfully captured all data structure.\n")
+  #       } else {
+  #         cat("    Decision: We reject the null hypothesis. Autocorrelation remains in the\n")
+  #         cat("              residuals, meaning the model is missing key information.\n")
+  #       }
+  #       
+  #       # Jarque-Bera Analysis
+  #       cat("\n[2] JARQUE-BERA TEST FOR NORMALITY\n")
+  #       cat("    Purpose: To check if the error distribution is symmetric (Bell Curve).\n")
+  #       cat("    H0 (Null): Residuals follow a Normal Distribution.\n")
+  #       cat("    Result: The test returned a p-value of", round(jb_test$p.value, 4), ".\n")
+  #       if(jb_test$p.value > 0.05) {
+  #         cat("    Decision: We fail to reject the null hypothesis. Residuals are normal,\n")
+  #         cat("              validating the reliability of our forecast confidence intervals.\n")
+  #       } else {
+  #         cat("    Decision: We reject the null hypothesis. Residuals are non-normal;\n")
+  #         cat("              prediction intervals may be biased or overly optimistic.\n")
+  #       }
+  #       
+  #       cat("\n================================================================\n")
+  #       cat("                 VII. PREDICTIVE ACCURACY (BACKTEST)            \n")
+  #       cat("================================================================\n")
+  #       if(!is.na(cv_error)) {
+  #         cat("Mean Absolute Error (CV): ", round(cv_error, 4), "\n")
+  #         cat("Interpretation: This error rate was calculated via rolling-window cross-validation,\n")
+  #         cat("                simulating how the model performs on 'unseen' future data.\n")
+  #       }
+  #       
+  #       cat("\n================================================================\n")
+  #       cat("                 VIII. FINAL MODEL VERDICT                      \n")
+  #       cat("================================================================\n")
+  #       if(lb_test$p.value > 0.05 && jb_test$p.value > 0.05) {
+  #         cat("FINAL VERDICT: Statistically Excellent. The model is fully validated\n")
+  #         cat("and ready for production-level forecasting.\n")
+  #       } else if (lb_test$p.value > 0.05) {
+  #         cat("FINAL VERDICT: Statistically Acceptable. All information is captured,\n")
+  #         cat("               though the error distribution is non-standard.\n")
+  #       } else {
+  #         cat("FINAL VERDICT: Statistically Sub-optimal. High risk of forecast error\n")
+  #         cat("               due to remaining patterns in the residuals.\n \n \n")
+  #       }
+  #     })
+  #     
+  #     removeModal() 
+  #     output_content
+  #     
+  #   }, error = function(e) {
+  #     removeModal()
+  #     return(paste("Critical error during analysis:", e$message))
+  #   })
+  #   
+  #   # Print the final result to the renderPrint output
+  #   cat(paste(result_text, collapse = "\n"))
+  # })
+  
+  # output$Pslow <- renderPrint({
+  #   req(tsData())
+  #   
+  #   # Use Shiny progress notification since stepwise=FALSE can take significant time
+  #   withProgress(message = 'Performing Exhaustive Search...', 
+  #                detail = 'This may take a few minutes for complex data...', value = 0, {
+  #                  
+  #                  # Capture the trace output to display it in the UI
+  #                  trace_output <- capture.output({
+  #                    sarima_model <- forecast::auto.arima(
+  #                      tsData(),
+  #                      max.p = as.numeric(input$maxp),
+  #                      max.d = as.numeric(input$maxd),
+  #                      max.q = as.numeric(input$maxq),
+  #                      max.P = as.numeric(input$maxPs),
+  #                      max.D = as.numeric(input$maxDs),
+  #                      max.Q = as.numeric(input$maxQs),
+  #                      max.order = as.numeric(input$maxorder),
+  #                      stepwise = FALSE,         # Exhaustive search
+  #                      approximation = FALSE,    # Use exact likelihood
+  #                      trace = TRUE,             # Capture search steps
+  #                      allowdrift = TRUE,
+  #                      test = "kpss"             # Standard unit root test
+  #                    )
+  #                  })
+  #                  
+  #                  setProgress(1) # Complete progress
+  #                  
+  #                  # Print the trace first, then the final model summary
+  #                  cat("--- SEARCH TRACE (Exhaustive) ---\n")
+  #                  cat(paste(trace_output, collapse = "\n"))
+  #                  cat("\n\n--- FINAL OPTIMAL MODEL ---\n")
+  #                  print(sarima_model)
+  #                  cat("\n")
+  #                  summary(sarima_model)
+  #                })
+  # })
+  
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # #
+  # #                     Slow   ARIMA
+  # #
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # ########  ########  ########  ########  ########  ########  ########  ########
+  # 
+  # output$Pslow <- renderPrint({
+  #     myData <- tsData()
+  # 
+  #     sarima_model <- auto.arima(myData,
+  #                             max.p = input$maxp,
+  #                             max.d = input$maxd,
+  #                             max.q = input$maxq,
+  #                             max.P = input$maxPs,
+  #                             max.D = input$maxDs,
+  #                             max.Q = input$maxQs,
+  #                             max.order = input$maxorder,
+  #                             stepwise=FALSE,
+  #                             approximation=FALSE,
+  #                             trace=TRUE,
+  #                             allowdrift=TRUE,
+  #                             test = c("kpss", "adf", "pp")
+  #     )
+  # 
+  #     sarima_model
+  #   })
 
 
-
-
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
   #
-  #            ARIMA (p, d, q) (P, D, Q) [S]
+  #        Manual SARIMA: (p, d, q) (P, D, Q) [S]
   #
-  ########  ########  ########  ########  ########  ########  ########  ########
-  ########  ########  ########  ########  ########  ########  ########  ########
-
-  ####################################################################################
-  ####################################################################################
-  ####################################################################################
-  ####################################################################################
-  ####################################################################################
-  ####################################################################################
-
-
-  # Cache for forecast results
-  forecastCache_autoARIMA <- reactiveValues()
-
-  # Function to create a unique key based on input parameters
-  createCacheKey_autoARIMA <- function(file, freq, model, col,  v_p, v_d, v_q, vP, vD, VQ, drift ) {
-    # Check if the file input is valid
-    if (is.null(file) || !is.data.frame(file) || nrow(file) == 0  ) {
-      return(NULL)
-    }
-    # Use the file name and last modification time to create a unique key
-    fileName <- file$name
-    fileModTime <- file$datapath  # or use file$size for an additional layer of uniqueness
-    # Ensure other inputs are non-NULL and convert them to strings
-    if (is.null(col) || is.null(model)) {
-      return(NULL)
-    }
-
- paste0(fileName, "_", fileModTime, "_",
-        as.character(col), "_", as.character(model),
-        "_", as.character(freq), "_", as.character(v_p),
-        as.character(v_d), as.character(v_q), as.character(vP),
-        as.character(vD), as.character(VQ), as.character(drift))  }
-
-
-  # Reactive expression to compute or fetch the forecast
+  ######## ######## ######## ######## ######## ######## ######## ########
+  ######## ######## ######## ######## ######## ######## ######## ########
+  
+  # 1. Specialized Cache for Manual ARIMA results
+  forecastCache_manualARIMA <- reactiveValues()
+  
+  # 2. Comprehensive Cache Key for Manual Inputs
+  createCacheKey_manualARIMA <- function(file, freq, col, p, d, q, P, D, Q, drift) {
+    if (is.null(file) || is.null(col)) return(NULL)
+    
+    paste0(file$name, "_", file$size, "_", col, "_freq", freq, 
+           "_nonS", p, d, q, "_S", P, D, Q, "_drift", drift)
+  }
+  
+  # 3. Reactive to fetch or calculate manual model
   results_ARIMA_pdPD_drift <- reactive({
-    key <- createCacheKey_autoARIMA(input$fileData, currentFrequency() , input$Model,  input$colNum, input$ARIMAp, input$ARIMAd, input$ARIMAq, input$ARIMAps, input$ARIMAds, input$ARIMAqs, input$driftYN )
-    if (!is.null(forecastCache_autoARIMA[[key]])) {
-      forecastCache_autoARIMA[[key]]
+    # Generate key based on all manual parameters
+    key <- createCacheKey_manualARIMA(
+      input$fileData, 
+      currentFrequency(), 
+      input$colNum, 
+      input$ARIMAp, input$ARIMAd, input$ARIMAq, 
+      input$ARIMAps, input$ARIMAds, input$ARIMAqs, 
+      input$driftYN
+    )
+    
+    if (!is.null(forecastCache_manualARIMA[[key]])) {
+      return(forecastCache_manualARIMA[[key]])
     } else {
-      result <- modelisation_Auto_SARIMA(input$Model , input$length)
-      forecastCache_autoARIMA[[key]] <- result
-      result
+      # Calculate model
+      result <- modelisation_Manual_SARIMA()
+      forecastCache_manualARIMA[[key]] <- result
+      return(result)
     }
   })
-
-
-
-  modelisation_Auto_SARIMA <- function(  modelType,  forecastLength  ) {
-
+  
+  # 4. Manual Model Fitting Function
+  modelisation_Manual_SARIMA <- function() {
     req(tsData())
-
-    # the time series data
-    timeSeriesData <- tsData()
-    if (is.null(timeSeriesData)) {
-      stop("Error in processing time series data")
-    }
-
-    if (input$driftYN == "TRUE") {
-      driftConsideration =TRUE
-    }
-    else {
-      driftConsideration =FALSE
-    }
-
-    myData <- tsData()
-
-    fittedModel<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
-
-    list(
-      modelOutput = fittedModel
-    )
+    
+    # Convert UI input to logical
+    drift_bool <- as.logical(input$driftYN)
+    
+    # Fit the user-specified model
+    # Arima (capital A) from forecast package is preferred for manual fitting
+    fittedModel <- tryCatch({
+      forecast::Arima(
+        tsData(), 
+        order = c(as.numeric(input$ARIMAp), as.numeric(input$ARIMAd), as.numeric(input$ARIMAq)),
+        seasonal = list(
+          order = c(as.numeric(input$ARIMAps), as.numeric(input$ARIMAds), as.numeric(input$ARIMAqs)),
+          period = as.numeric(currentFrequency())
+        ),
+        include.drift = drift_bool
+      )
+    }, error = function(e) {
+      # Return NULL or error message if the model is mathematically impossible
+      return(NULL)
+    })
+    
+    list(modelOutput = fittedModel)
   }
+  
+  # 5. Output: Manual Model Summary
+  output$ManualARIMASummary <- renderPrint({
+    req(results_ARIMA_pdPD_drift()$modelOutput)
+    summary(results_ARIMA_pdPD_drift()$modelOutput)
+  })
+  
 
-
-
-
+ #  ########  ########  ########  ########  ########  ########  ########  ########
+ #  ########  ########  ########  ########  ########  ########  ########  ########
+ #  #
+ #  #            ARIMA (p, d, q) (P, D, Q) [S]
+ #  #
+ #  ########  ########  ########  ########  ########  ########  ########  ########
+ #  ########  ########  ########  ########  ########  ########  ########  ########
+ # 
+ # 
+ #  # Cache for forecast results
+ #  forecastCache_autoARIMA <- reactiveValues()
+ # 
+ #  # Function to create a unique key based on input parameters
+ #  createCacheKey_autoARIMA <- function(file, freq, model, col,  v_p, v_d, v_q, vP, vD, VQ, drift ) {
+ #    # Check if the file input is valid
+ #    if (is.null(file) || !is.data.frame(file) || nrow(file) == 0  ) {
+ #      return(NULL)
+ #    }
+ #    # Use the file name and last modification time to create a unique key
+ #    fileName <- file$name
+ #    fileModTime <- file$datapath  # or use file$size for an additional layer of uniqueness
+ #    # Ensure other inputs are non-NULL and convert them to strings
+ #    if (is.null(col) || is.null(model)) {
+ #      return(NULL)
+ #    }
+ # 
+ # paste0(fileName, "_", fileModTime, "_",
+ #        as.character(col), "_", as.character(model),
+ #        "_", as.character(freq), "_", as.character(v_p),
+ #        as.character(v_d), as.character(v_q), as.character(vP),
+ #        as.character(vD), as.character(VQ), as.character(drift))  }
+ # 
+ # 
+ #  # Reactive expression to compute or fetch the forecast
+ #  results_ARIMA_pdPD_drift <- reactive({
+ #    key <- createCacheKey_autoARIMA(input$fileData, currentFrequency() , input$Model,  input$colNum, input$ARIMAp, input$ARIMAd, input$ARIMAq, input$ARIMAps, input$ARIMAds, input$ARIMAqs, input$driftYN )
+ #    if (!is.null(forecastCache_autoARIMA[[key]])) {
+ #      forecastCache_autoARIMA[[key]]
+ #    } else {
+ #      result <- modelisation_Auto_SARIMA(input$Model , input$length)
+ #      forecastCache_autoARIMA[[key]] <- result
+ #      result
+ #    }
+ #  })
+ # 
+ # 
+ # 
+ #  modelisation_Auto_SARIMA <- function(  modelType,  forecastLength  ) {
+ # 
+ #    req(tsData())
+ # 
+ #    # the time series data
+ #    timeSeriesData <- tsData()
+ #    if (is.null(timeSeriesData)) {
+ #      stop("Error in processing time series data")
+ #    }
+ # 
+ #    if (input$driftYN == "TRUE") {
+ #      driftConsideration =TRUE
+ #    }
+ #    else {
+ #      driftConsideration =FALSE
+ #    }
+ # 
+ #    myData <- tsData()
+ # 
+ #    fittedModel<-Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
+ # 
+ #    list(
+ #      modelOutput = fittedModel
+ #    )
+ #  }
+ # 
+ # 
+ # 
+ # 
 
 
 
