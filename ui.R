@@ -118,11 +118,18 @@ shinyUI(
                               tabPanel("Ts Display", plotOutput("tsDisplay2",width=900,height = 630 )),
                               tabPanel("stationary [ADF]",
                                        sidebarLayout(
-                                         sidebarPanel(width=3,
-                                            selectInput("alternSt", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                            numericInput("LagOrderADFSt", label = "Lag",  min=0, value=12),
+                                         sidebarPanel(width = 3,
+                                                      selectInput("alternSt", label = "Stationary or Explosive", 
+                                                                  choices = c("stationary", "explosive"), selected = "stationary"),
+                                                      numericInput("LagOrderADFSt", label = "Lag", min = 0, value = 12),
+                                                      # New Alpha selection
+                                                      selectInput("alphaSt", label = "Significance Level (Alpha)", 
+                                                                  choices = c("1%" = 0.01, "5%" = 0.05, "10%" = 0.10), 
+                                                                  selected = 0.05)
                                          ),
-                                         tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteSt")),
+                                         mainPanel( # Added mainPanel for proper layout
+                                           verbatimTextOutput("teststationariteSt")
+                                         )
                                        )),
                             )),
 
@@ -269,6 +276,36 @@ shinyUI(
                                                     tabPanel("PACF", plotOutput("difference2PACF",width=750,height = 500)),
                                                     tabPanel("ACF+PACF (*)", uiOutput("difference2ACFPACF_UI")),
                                                     # tabPanel("ACF+PACF", plotOutput("difference2ACFPACF",width=620,height = 500)),
+                                                    
+                                                    
+                                                    
+                                                    # tabPanel("stationary[ADF]",
+                                                    #          sidebarLayout(
+                                                    #            sidebarPanel(width=3,
+                                                    #                         selectInput("alternd2St", label = "Stationary or Explosive",
+                                                    #                                     choices=c("stationary","explosive"),
+                                                    #                                     selected="stationary"),
+                                                    #                         
+                                                    #                         # New: ADF Model Type Selection
+                                                    #                         selectInput("adfTypeSt2", label = "ADF Model Type",
+                                                    #                                     choices = c("No Intercept" = "none", 
+                                                    #                                                 "Intercept Only" = "drift", 
+                                                    #                                                 "Intercept + Trend" = "trend"),
+                                                    #                                     selected = "trend"),
+                                                    #                         
+                                                    #                         numericInput("LagOrderADFd2St", label = "Lag", min=0, value=12),
+                                                    #                         
+                                                    #                         selectInput("alphaSt2", label = "Significance Level (Alpha)", 
+                                                    #                                     choices = c("1%" = 0.01, "5%" = 0.05, "10%" = 0.10), 
+                                                    #                                     selected = 0.05)
+                                                    #            ),
+                                                    #            mainPanel(
+                                                    #              tabPanel("stationary [Augmented Dickey-Fuller]",
+                                                    #                       verbatimTextOutput("teststationarited2St"))
+                                                    #            )
+                                                    #          )
+                                                    # ),
+                                                    
                                                     tabPanel("stationary[ADF]",
                                                              sidebarLayout(
                                                                sidebarPanel(width=3,
@@ -277,18 +314,20 @@ shinyUI(
                                                                                         selected="stationary"),
                                                                             numericInput("LagOrderADFd2St", label = "Lag", min=0, value=12),
                                                                             #submitButton("Submit ==>"),
+                                                                            # New Alpha selection
+                                                                            selectInput("alphaSt2", label = "Significance Level (Alpha)",
+                                                                                        choices = c("1%" = 0.01, "5%" = 0.05, "10%" = 0.10),
+                                                                                        selected = 0.05)
                                                                ),
                                                                tabPanel("stationary [Augmented Dickey-Fuller]",
                                                                         verbatimTextOutput("teststationarited2St"))
                                                              )),
+                                                    
                                                     tabPanel("Auto-ARIMA", verbatimTextOutput("ARIMA_d_D_log" ))
                                         )
                               )
                             )
                    )
-                   
-
-
                  )),
 
 
