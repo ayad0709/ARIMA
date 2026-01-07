@@ -272,12 +272,100 @@ shinyUI(
                                                     # tabPanel("d?D?log?(St)", plotOutput("d_D_Log_ts_Choice",width=750,height = 500 )),
                                                     tabPanel("Plot (*)", uiOutput("tsPlot_Choice_UI")),
                                                     # tabPanel("Plot",plotOutput("tsPlot_Choice",width=750,height = 500)),
-                                                    tabPanel("ACF", plotOutput("difference2ACF",width=750,height = 500)),
-                                                    tabPanel("PACF", plotOutput("difference2PACF",width=750,height = 500)),
+                                                    # tabPanel("ACF", plotOutput("difference2ACF",width=750,height = 500)),
+                                                    # tabPanel("PACF", plotOutput("difference2PACF",width=750,height = 500)),
                                                     tabPanel("ACF+PACF (*)", uiOutput("difference2ACFPACF_UI")),
                                                     # tabPanel("ACF+PACF", plotOutput("difference2ACFPACF",width=620,height = 500)),
                                                     
                                                     
+                                                    tabPanel("Stationary [ ADF & + ]",
+                                                             sidebarLayout(
+                                                               sidebarPanel(width = 3,
+                                                                            selectInput("alternd2St", label = "Stationary or Explosive",
+                                                                                        choices = c("stationary", "explosive"),
+                                                                                        selected = "stationary"),
+                                                                            
+                                                                            # Selection for ADF Model types (None, Drift, Trend)
+                                                                            selectInput("adfTypeSt2", label = "ADF Model Type",
+                                                                                        choices = c("No Intercept (none)" = "none",
+                                                                                                    "Intercept Only (drift)" = "drift",
+                                                                                                    "Intercept + Trend (trend)" = "trend"),
+                                                                                        selected = "trend"),
+                                                                            
+                                                                            numericInput("LagOrderADFd2St", label = "Lag", min = 0, value = 12),
+                                                                            
+                                                                            selectInput("alphaSt2", label = "Significance Level (Alpha)",
+                                                                                        choices = c("1%" = 0.01, "5%" = 0.05, "10%" = 0.10),
+                                                                                        selected = 0.05)
+                                                               ),
+                                                               mainPanel(
+                                                                 # --- Custom CSS to enlarge the output window ---
+                                                                 tags$head(
+                                                                   tags$style(HTML("
+                                                                     #teststationarited3St {
+                                                                       height: 745px !important;
+                                                                       max-height: 800px;
+                                                                       
+                                                                       width: 140% !important;   /* This makes it fill the main panel width */
+                                                                       max-width: 1200px;        /* Optional: caps the width on very large monitors */
+                                                                       white-space: pre;         /* Keeps the 'cat' formatting exactly as is */
+
+                                                                       overflow-y: auto;
+                                                                       border: 2px solid #cccccc;
+                                                                       font-size: 13px;
+                                                                     }
+                                                                   "))
+                                                                 ),
+                                                                 # The enlarged output window
+                                                                 verbatimTextOutput("teststationarited3St")
+                                                               )
+                                                             )
+                                                    ),
+                                                    
+                                                    tabPanel("CHECKLIST & STEPS",
+                                                             sidebarLayout(
+                                                               sidebarPanel(width = 3,
+                                                                            selectInput("alternd2St", label = "Stationary or Explosive",
+                                                                                        choices = c("stationary", "explosive"),
+                                                                                        selected = "stationary"),
+                                                                            
+                                                                            # Selection for ADF Model types (None, Drift, Trend)
+                                                                            selectInput("adfTypeSt2", label = "ADF Model Type",
+                                                                                        choices = c("No Intercept (none)" = "none",
+                                                                                                    "Intercept Only (drift)" = "drift",
+                                                                                                    "Intercept + Trend (trend)" = "trend"),
+                                                                                        selected = "trend"),
+                                                                            
+                                                                            numericInput("LagOrderADFd2St", label = "Lag", min = 0, value = 12),
+                                                                            
+                                                                            selectInput("alphaSt2", label = "Significance Level (Alpha)",
+                                                                                        choices = c("1%" = 0.01, "5%" = 0.05, "10%" = 0.10),
+                                                                                        selected = 0.05)
+                                                               ),
+                                                               mainPanel(
+                                                                 # --- Custom CSS to enlarge the output window ---
+                                                                 tags$head(
+                                                                   tags$style(HTML("
+                                                                     #CHECKLIST {
+                                                                       height: 745px !important;
+                                                                       max-height: 800px;
+                                                                       
+                                                                       width: 140% !important;   /* This makes it fill the main panel width */
+                                                                       max-width: 1200px;        /* Optional: caps the width on very large monitors */
+                                                                       white-space: pre;         /* Keeps the 'cat' formatting exactly as is */
+
+                                                                       overflow-y: auto;
+                                                                       border: 2px solid #cccccc;
+                                                                       font-size: 13px;
+                                                                     }
+                                                                   "))
+                                                                 ),
+                                                                 # The enlarged output window
+                                                                 verbatimTextOutput("CHECKLIST")
+                                                                 
+                                                               )
+                                                             )
+                                                    ),
                                                     
                                                     # tabPanel("stationary[ADF]",
                                                     #          sidebarLayout(
@@ -285,18 +373,18 @@ shinyUI(
                                                     #                         selectInput("alternd2St", label = "Stationary or Explosive",
                                                     #                                     choices=c("stationary","explosive"),
                                                     #                                     selected="stationary"),
-                                                    #                         
+                                                    # 
                                                     #                         # New: ADF Model Type Selection
                                                     #                         selectInput("adfTypeSt2", label = "ADF Model Type",
-                                                    #                                     choices = c("No Intercept" = "none", 
-                                                    #                                                 "Intercept Only" = "drift", 
+                                                    #                                     choices = c("No Intercept" = "none",
+                                                    #                                                 "Intercept Only" = "drift",
                                                     #                                                 "Intercept + Trend" = "trend"),
                                                     #                                     selected = "trend"),
-                                                    #                         
+                                                    # 
                                                     #                         numericInput("LagOrderADFd2St", label = "Lag", min=0, value=12),
-                                                    #                         
-                                                    #                         selectInput("alphaSt2", label = "Significance Level (Alpha)", 
-                                                    #                                     choices = c("1%" = 0.01, "5%" = 0.05, "10%" = 0.10), 
+                                                    # 
+                                                    #                         selectInput("alphaSt2", label = "Significance Level (Alpha)",
+                                                    #                                     choices = c("1%" = 0.01, "5%" = 0.05, "10%" = 0.10),
                                                     #                                     selected = 0.05)
                                                     #            ),
                                                     #            mainPanel(
@@ -306,22 +394,22 @@ shinyUI(
                                                     #          )
                                                     # ),
                                                     
-                                                    tabPanel("stationary[ADF]",
-                                                             sidebarLayout(
-                                                               sidebarPanel(width=3,
-                                                                            selectInput("alternd2St", label = "stationary or explosive",
-                                                                                        choices=c("stationary","explosive"),
-                                                                                        selected="stationary"),
-                                                                            numericInput("LagOrderADFd2St", label = "Lag", min=0, value=12),
-                                                                            #submitButton("Submit ==>"),
-                                                                            # New Alpha selection
-                                                                            selectInput("alphaSt2", label = "Significance Level (Alpha)",
-                                                                                        choices = c("1%" = 0.01, "5%" = 0.05, "10%" = 0.10),
-                                                                                        selected = 0.05)
-                                                               ),
-                                                               tabPanel("stationary [Augmented Dickey-Fuller]",
-                                                                        verbatimTextOutput("teststationarited2St"))
-                                                             )),
+                                                    # tabPanel("stationary[ADF]",
+                                                    #          sidebarLayout(
+                                                    #            sidebarPanel(width=3,
+                                                    #                         selectInput("alternd2St", label = "stationary or explosive",
+                                                    #                                     choices=c("stationary","explosive"),
+                                                    #                                     selected="stationary"),
+                                                    #                         numericInput("LagOrderADFd2St", label = "Lag", min=0, value=12),
+                                                    #                         #submitButton("Submit ==>"),
+                                                    #                         # New Alpha selection
+                                                    #                         selectInput("alphaSt2", label = "Significance Level (Alpha)",
+                                                    #                                     choices = c("1%" = 0.01, "5%" = 0.05, "10%" = 0.10),
+                                                    #                                     selected = 0.05)
+                                                    #            ),
+                                                    #            tabPanel("stationary [Augmented Dickey-Fuller]",
+                                                    #                     verbatimTextOutput("teststationarited2St"))
+                                                    #          )),
                                                     
                                                     tabPanel("Auto-ARIMA", verbatimTextOutput("ARIMA_d_D_log" ))
                                         )
@@ -533,14 +621,94 @@ shinyUI(
                      tabPanel("tests",
                               tabsetPanel(
                                 tabPanel("Trend [Mann-Kendall]", verbatimTextOutput("testTrendMK2")),
+                                
+                                
                                 tabPanel("stationary [Augmented Dickey-Fuller]",
                                          sidebarLayout(
-                                           sidebarPanel(width=3,
-                                                        selectInput("altern2", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
-                                                        numericInput("LagOrderADF2", label = "Lag",  min=0, value=12),
+                                           sidebarPanel(width = 3,
+                                                        # 1. Test Alternative
+                                                        selectInput("altern2", 
+                                                                    label = "Hypothesis Alternative", 
+                                                                    choices = c("Stationary" = "stationary", "Explosive" = "explosive"), 
+                                                                    selected = "stationary"),
+                                                        
+                                                        hr(), # Horizontal line for visual separation
+                                                        
+                                                        # 2. Select ADF Test Specification (The underlying regression model)
+                                                        selectInput("adfType2", 
+                                                                    label = "ADF Model Specification",
+                                                                    choices = c("No Intercept" = "none", 
+                                                                                "Intercept Only" = "drift", 
+                                                                                "Intercept + Trend" = "trend"),
+                                                                    selected = "trend"),
+                                                        
+                                                        # 3. Lag Order (Important for White Noise Residuals)
+                                                        numericInput("LagOrderADF2", 
+                                                                     label = "Lag Order (k)", 
+                                                                     min = 0, 
+                                                                     max = 50, 
+                                                                     value = 12),
+                                                        
+                                                        helpText("Tip: Increase lags if residuals show correlation."),
+                                                        
+                                                        hr(),
+                                                        
+                                                        # 4. Significance Level for the Decision Logic
+                                                        selectInput("alphaSt_ARIMA", 
+                                                                    label = "Significance Level (Alpha)", 
+                                                                    choices = c("1% (Strict)" = 0.01, 
+                                                                                "5% (Standard)" = 0.05, 
+                                                                                "10% (Relaxed)" = 0.10), 
+                                                                    selected = 0.05)
                                            ),
-                                           tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteARIMApdq")),
-                                         )),
+                                           
+                                           mainPanel(
+                                             # Display the professional interpretation report
+                                             wellPanel(
+                                               style = "background-color: #ffffff; border: 1px solid #d3d3d3;",
+                                               verbatimTextOutput("teststationariteARIMApdq")
+                                             )
+                                           )
+                                         )
+                                ),
+                                
+                                
+                                
+                                # tabPanel("stationary [Augmented Dickey-Fuller]",
+                                #          sidebarLayout(
+                                #            sidebarPanel(width=3,
+                                #                         selectInput("altern2", label = "Stationary or Explosive", 
+                                #                                     choices=c("stationary","explosive"), selected="stationary"),
+                                #                         
+                                #                         # New: Select ADF Test Specification
+                                #                         selectInput("adfType2", label = "ADF Model Type",
+                                #                                     choices = c("No Intercept (none)" = "none", 
+                                #                                                 "Intercept Only (drift)" = "drift", 
+                                #                                                 "Intercept + Trend (trend)" = "trend"),
+                                #                                     selected = "trend"),
+                                #                         
+                                #                         numericInput("LagOrderADF2", label = "Lag", min=0, value=12),
+                                #                         
+                                #                         # Significance level for the decision logic
+                                #                         selectInput("alphaSt_ARIMA", label = "Significance Level", 
+                                #                                     choices = c("1%" = 0.01, "5%" = 0.05, "10%" = 0.10), 
+                                #                                     selected = 0.05)
+                                #            ),
+                                #            mainPanel(
+                                #              verbatimTextOutput("teststationariteARIMApdq")
+                                #            )
+                                #          )),
+                                
+                                # tabPanel("stationary [Augmented Dickey-Fuller]",
+                                #          sidebarLayout(
+                                #            sidebarPanel(width=3,
+                                #                         selectInput("altern2", label = "stationary or explosive", choices=c("stationary","explosive"),selected="stationary"),
+                                #                         numericInput("LagOrderADF2", label = "Lag",  min=0, value=12),
+                                #            ),
+                                #            tabPanel("stationary [Augmented Dickey-Fuller]", verbatimTextOutput("teststationariteARIMApdq")),
+                                #          )),
+                                
+                                
                                 tabPanel("KPSS", verbatimTextOutput("kpssTest2")),
                                 tabPanel("DF-GLS", verbatimTextOutput("test_DFGLS")),
                                 tabPanel("Ljung-Box lag(n)", br(),

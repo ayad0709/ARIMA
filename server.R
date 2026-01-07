@@ -1038,174 +1038,7 @@ server <- function(input, output, session) {
   
   
   
-  # # 6. Augmented Dickey-Fuller (ADF) Test
-  # output$teststationariteSt <- renderPrint({
-  #   req(tsData(), input$alternSt, input$LagOrderADFSt)
-  #   
-  #   cat("==========================================================================\n")
-  #   cat("               AUGMENTED DICKEY-FULLER (ADF) TEST                         \n")
-  #   cat("==========================================================================\n")
-  #   cat(" This test is used to determine if a time series is stationary.           \n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   cat(" DECISION RULE:\n")
-  #   cat(" • H0: The series has a unit root (Non-Stationary).\n")
-  #   cat(" • H1: The series is Stationary (Desired for most models).\n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   cat(" - Alpha (Significance Level): 0.05\n")
-  #   cat(" - If Tau (Observed) < Tau (Critical): Reject H0 (Stationary).\n")
-  #   cat(" - If p-value < 0.05: Reject H0 (Stationary).\n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   tryCatch({
-  #     # 1. Standard ADF Test for p-values
-  #     res <- tseries::adf.test(
-  #       tsData(), 
-  #       alternative = input$alternSt, 
-  #       k = as.numeric(input$LagOrderADFSt)
-  #     )
-  #     
-  #     # 2. Advanced ADF Test for Critical Values (Tau)
-  #     # We use 'trend' type as it matches the default tseries::adf.test behavior
-  #     res_urca <- urca::ur.df(tsData(), type = "trend", lags = as.numeric(input$LagOrderADFSt))
-  #     crit_vals <- res_urca@cval
-  #     
-  #     # Extract values
-  #     tau_obs <- res$statistic
-  #     # Tau Critical for 5% (Column 2 in urca output for 'tau3')
-  #     tau_crit <- crit_vals["tau3", "5pct"] 
-  #     p_val <- res$p.value
-  #     
-  #     cat(" RESULT DETAILS:\n")
-  #     cat(paste(" • Tau (Observed Value)  :", round(tau_obs, 4), "\n"))
-  #     cat(paste(" • Tau (Critical Value)  :", round(tau_crit, 4), " (at 5% level)\n"))
-  #     cat(paste(" • p-value (One-tailed)  :", round(p_val, 4), "\n"))
-  #     cat(paste(" • Alpha                 : 0.05\n"))
-  #     cat("--------------------------------------------------------------------------\n")
-  #     
-  #     cat(" DECISION:\n")
-  #     # A series is stationary if the observed Tau is more negative than the critical Tau
-  #     if(p_val <= 0.05) {
-  #       cat("  • The p-value is", round(p_val, 4), "(<= 0.05).\n")
-  #       cat(paste("  • Tau Observed (", round(tau_obs, 2), ") is less than Critical (", round(tau_crit, 2), ").\n"))
-  #       cat("  • DECISION: Reject H0. The series is Stationary.\n")
-  #     } else {
-  #       cat("  • The p-value is", round(p_val, 4), "(> 0.05).\n")
-  #       cat(paste("  • Tau Observed (", round(tau_obs, 2), ") is greater than Critical (", round(tau_crit, 2), ").\n"))
-  #       cat("  • DECISION: Fail to reject H0. The series is Non-Stationary.\n")
-  #     }
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE:\n")
-  #     if(p_val <= 0.05) {
-  #       cat("  • Your data is stationary. You can proceed with ARMA/ARIMA modeling.\n")
-  #     } else {
-  #       cat("  • Your data is non-stationary.\n")
-  #       cat("  • ACTION: Apply Differencing (d=1) or a Log transformation to stabilize.\n")
-  #     }
-  #     
-  #   }, error = function(e) {
-  #     cat(" ERROR: ", e$message, "\n")
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE: Ensure the 'urca' package is installed for Critical Values. \n")
-  #     cat(" Reduce the 'Lag' value if the sample size is small.\n")
-  #   })
-  #   cat("==========================================================================\n")
-  # })
-  # 
-  
-  
-  
-  
-  
-  # # 6. Augmented Dickey-Fuller (ADF) Test
-  # output$teststationariteSt <- renderPrint({
-  #   req(tsData(), input$alternSt, input$LagOrderADFSt)
-  #   
-  #   cat("==========================================================================\n")
-  #   cat("               AUGMENTED DICKEY-FULLER (ADF) TEST                         \n")
-  #   cat("==========================================================================\n")
-  #   cat(" This test is used to determine if a time series is stationary.           \n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   cat(" DECISION RULE:\n")
-  #   cat(" • H0: The series has a unit root (Non-Stationary).\n")
-  #   cat(" • H1: The series is Stationary (Desired for most models).\n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   cat(" - If p-value < 0.05: Reject H0 (Stationary).\n")
-  #   cat(" - If p-value >= 0.05: Fail to reject H0 (Non-Stationary).\n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   # Safe execution to prevent crash on invalid lag orders
-  #   tryCatch({
-  #     res <- tseries::adf.test(
-  #       tsData(), 
-  #       alternative = input$alternSt, # stat
-  #       k = as.numeric(input$LagOrderADFSt)
-  #     )
-  #     
-  #     cat(" RESULT:\n")
-  #     print(res)
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" DECISION:\n")
-  #     p_val <- res$p.value
-  #     
-  #     if(p_val <= 0.05) {
-  #       cat("  • The p-value is", round(p_val, 4), "(<= 0.05).\n")
-  #       cat("  • DECISION: Reject H0. The series is Stationary.\n")
-  #     } else {
-  #       cat("  • The p-value is", round(p_val, 4), "(> 0.05).\n")
-  #       cat("  • DECISION: Fail to reject H0. The series is Non-Stationary.\n")
-  #     }
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE:\n")
-  #     if(p_val <= 0.05) {
-  #       cat("  • Your data is stationary. You can proceed with ARMA/ARIMA modeling.\n")
-  #     } else {
-  #       cat("  • Your data is non-stationary.\n")
-  #       cat("  • ACTION: Apply Differencing (d=1) or a Log transformation to stabilize.\n")
-  #       cat("  • Note: Check if non-stationarity is due to Trend or Seasonality.\n")
-  #     }
-  #     
-  #   }, error = function(e) {
-  #     cat(" ERROR: ", e$message, "\n")
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE: \n")
-  #     cat("  • Try reducing the 'Lag' value (too many lags for the sample size).\n")
-  #     cat("  • Ensure your time series has no missing (NA) values.\n")
-  #   })
-  #   cat("==========================================================================\n")
-  # })
-  
-  # output$teststationariteSt <- renderPrint({
-  #   req(tsData(), input$alternSt, input$LagOrderADFSt)
-  #   
-  #   cat("--- Augmented Dickey-Fuller (ADF) Test Results ---\n\n")
-  #   
-  #   # Safe execution to prevent crash on invalid lag orders
-  #   tryCatch({
-  #     res <- tseries::adf.test(
-  #       tsData(), 
-  #       alternative = input$alternSt, 
-  #       k = as.numeric(input$LagOrderADFSt)
-  #     )
-  #     print(res)
-  #     
-  #     cat("\n-------------------------------------------------\n")
-  #     cat("Decision: ")
-  #     if(res$p.value < 0.05) {
-  #       cat("Reject H0. The series is stationary (p < 0.05).\n")
-  #     } else {
-  #       cat("Fail to reject H0. The series is non-stationary.\n")
-  #     }
-  #   }, error = function(e) {
-  #     cat("Error: ", e$message, "\n")
-  #     cat("Suggestion: Try reducing the 'Lag' value.")
-  #   })
-  # })
-  
+
   
   
 
@@ -1376,64 +1209,7 @@ server <- function(input, output, session) {
     cat("==========================================================================\n")
   })
   
-  # # 7. Stationarity Test on Log Series
-  # output$teststationariteLogSt <- renderPrint({
-  #   req(logTsData(), input$alternLogSt, input$LagOrderADFLogSt)
-  #   
-  #   cat("==========================================================================\n")
-  #   cat("        ADF TEST ON LOG-TRANSFORMED SERIES (Variance Stabilized)          \n")
-  #   cat("==========================================================================\n")
-  #   cat(" This test checks stationarity after applying a Natural Log transformation.\n")
-  #   cat(" Log transforms are typically used to stabilize non-constant variance.    \n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   cat(" DECISION RULE:\n")
-  #   cat(" • H0: The log-transformed series is Non-Stationary.\n")
-  #   cat(" • H1: The log-transformed series is Stationary.\n")
-  #   cat("--------------------------------------------------------------------------\n")
-    # cat(" - If p-value < 0.05: Reject H0 (Stationary).\n")
-    # cat(" - If p-value >= 0.05: Fail to reject H0 (Non-Stationary).\n")
-    # cat("--------------------------------------------------------------------------\n")
-  #   
-  #   tryCatch({
-  #     res <- tseries::adf.test(
-  #       logTsData(), 
-  #       alternative = input$alternLogSt, 
-  #       k = as.numeric(input$LagOrderADFLogSt)
-  #     )
-  #     
-  #     cat(" RESULT:\n")
-  #     print(res)
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" DECISION:\n")
-  #     p_val <- res$p.value
-  #     if(p_val < 0.05) {
-  #       cat("  • The p-value is", round(p_val, 4), "(< 0.05).\n")
-  #       cat("  • DECISION: Reject H0. The Log-Series is Stationary.\n")
-  #     } else {
-  #       cat("  • The p-value is", round(p_val, 4), "(>= 0.05).\n")
-  #       cat("  • DECISION: Fail to reject H0. The Log-Series is Non-Stationary.\n")
-  #     }
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE:\n")
-  #     if(p_val < 0.05) {
-  #       cat("  • The Log transformation was sufficient to achieve stationarity.\n")
-  #       cat("  • You may proceed with ARIMA models where d = 0 (on log data).\n")
-  #     } else {
-  #       cat("  • The series is still non-stationary even after the Log transform.\n")
-  #       cat("  • ADVICE: Apply first-order differencing (d=1) to the log-series.\n")
-  #       cat("  • This is equivalent to modeling the 'percentage growth rate'.\n")
-  #     }
-  #     
-  #   }, error = function(e) {
-  #     cat(" EXECUTION ERROR: ", e$message, "\n")
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE: Try a smaller Lag order or ensure the Log series has no -Inf values.\n")
-  #   })
-  #   cat("==========================================================================\n")
-  # })
+
   
 
 
@@ -1606,65 +1382,7 @@ server <- function(input, output, session) {
   })
   
   
-  # # 7. Stationarity Test on Differenced Series
-  # output$teststationarited1St <- renderPrint({
-  #   req(diff1TsData(), input$alternd1St, input$LagOrderADFd1St)
-  #   
-  #   cat("==========================================================================\n")
-  #   cat("      ADF TEST ON FIRST DIFFERENCED SERIES (d=1)                          \n")
-  #   cat("==========================================================================\n")
-  #   cat(" This test checks if removing the trend via first-order differencing      \n")
-  #   cat(" has rendered the time series stationary.                                 \n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   cat(" DECISION RULE:\n")
-  #   cat(" • H0: The differenced series is Non-Stationary (has a unit root).\n")
-  #   cat(" • H1: The differenced series is Stationary.\n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   cat(" - If p-value < 0.05: Reject H0 (Stationary).\n")
-  #   cat(" - If p-value >= 0.05: Fail to reject H0 (Non-Stationary).\n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   tryCatch({
-  #     res <- tseries::adf.test(
-  #       diff1TsData(), 
-  #       alternative = input$alternd1St, 
-  #       k = as.numeric(input$LagOrderADFd1St)
-  #     )
-  #     
-  #     cat(" RESULT:\n")
-  #     print(res)
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" DECISION:\n")
-  #     p_val <- res$p.value
-  #     if(p_val < 0.05) {
-  #       cat("  • The p-value is", round(p_val, 4), "(< 0.05).\n")
-  #       cat("  • DECISION: Reject H0. The Differenced Series is Stationary.\n")
-  #     } else {
-  #       cat("  • The p-value is", round(p_val, 4), "(>= 0.05).\n")
-  #       cat("  • DECISION: Fail to reject H0. The Differenced Series is Non-Stationary.\n")
-  #     }
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE:\n")
-  #     if(p_val < 0.05) {
-  #       cat("  • First-order differencing (d=1) was sufficient to achieve stationarity.\n")
-  #       cat("  • Your ARIMA model should likely use d = 1.\n")
-  #     } else {
-  #       cat("  • The series is still non-stationary after one difference.\n")
-  #       cat("  • ADVICE: Consider second-order differencing (d=2) or check for\n")
-  #       cat("    strong seasonal patterns that require seasonal differencing (D=1).\n")
-  #     }
-  #     
-  #   }, error = function(e) {
-  #     cat(" EXECUTION ERROR: ", e$message, "\n")
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE: Ensure the differenced series has enough observations after the \n")
-  #     cat(" lag removal. Try reducing the 'Lag' value.\n")
-  #   })
-  #   cat("==========================================================================\n")
-  # })
+
 
   
 
@@ -1838,66 +1556,7 @@ server <- function(input, output, session) {
   })
   
   
-  # # 7. Stationarity Test on Seasonally Differenced Series
-  # output$teststationariteDs1St <- renderPrint({
-  #   req(diffSeasonTsData(), input$alternDs1St, input$LagOrderADFDs1St)
-  #   
-  #   cat("==========================================================================\n")
-  #   cat("      ADF TEST ON SEASONAL DIFFERENCED SERIES (D=1)                       \n")
-  #   cat("==========================================================================\n")
-  #   cat(" This test evaluates if removing the seasonal component (subtracting      \n")
-  #   cat(" the previous year's value) has made the series stationary.               \n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   cat(" DECISION RULE:\n")
-  #   cat(" • H0: The seasonally differenced series is Non-Stationary.               \n")
-  #   cat(" • H1: The seasonally differenced series is Stationary.                   \n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   cat(" - If p-value < 0.05: Reject H0 (Stationary).\n")
-  #   cat(" - If p-value >= 0.05: Fail to reject H0 (Non-Stationary).\n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   tryCatch({
-  #     res <- tseries::adf.test(
-  #       diffSeasonTsData(), 
-  #       alternative = input$alternDs1St, 
-  #       k = as.numeric(input$LagOrderADFDs1St)
-  #     )
-  #     
-  #     cat(" RESULT:\n")
-  #     print(res)
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" DECISION:\n")
-  #     p_val <- res$p.value
-  #     if(p_val < 0.05) {
-  #       cat("  • The p-value is", round(p_val, 4), "(< 0.05).\n")
-  #       cat("  • DECISION: Reject H0. The Seasonal Differenced Series is Stationary.  \n")
-  #     } else {
-  #       cat("  • The p-value is", round(p_val, 4), "(>= 0.05).\n")
-  #       cat("  • DECISION: Fail to reject H0. The series remains Non-Stationary.      \n")
-  #     }
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE:\n")
-  #     if(p_val < 0.05) {
-  #       cat("  • Seasonal differencing (D=1) successfully removed the unit root.      \n")
-  #       cat("  • Your SARIMA model should likely include the D = 1 component.         \n")
-  #     } else {
-  #       cat("  • The series is still non-stationary after seasonal differencing.       \n")
-  #       cat("  • ADVICE: You may need to apply an ordinary difference (d=1) in        \n")
-  #       cat("    addition to the seasonal one, or check for a stronger trend.         \n")
-  #     }
-  #     
-  #   }, error = function(e) {
-  #     cat(" EXECUTION ERROR: ", e$message, "\n")
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE: Seasonal differencing reduces the sample size significantly.    \n")
-  #     cat(" Try reducing the 'Lag' value to accommodate the smaller dataset.        \n")
-  #   })
-  #   cat("==========================================================================\n")
-  # })
-  
+
 
 
   
@@ -2069,67 +1728,7 @@ server <- function(input, output, session) {
   
   
   
-  # # 7. Stationarity Test on First Difference of Log
-  # output$teststationarited1LogSt <- renderPrint({
-  #   req(diff1LogTsData(), input$alternd1LogSt, input$LagOrderADFd1LogSt)
-  #   
-  #   cat("==========================================================================\n")
-  #   cat("      ADF TEST ON FIRST DIFFERENCE OF LOG SERIES                          \n")
-  #   cat("==========================================================================\n")
-  #   cat(" This test evaluates the series after both a Log transform (for variance)  \n")
-  #   cat(" and First Differencing (for trend). This often represents growth rates.   \n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   cat(" DECISION RULE:\n")
-  #   cat(" • H0: The Log-Differenced series is Non-Stationary.                      \n")
-  #   cat(" • H1: The Log-Differenced series is Stationary.                          \n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   cat(" - If p-value < 0.05: Reject H0 (Stationary).\n")
-  #   cat(" - If p-value >= 0.05: Fail to reject H0 (Non-Stationary).\n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   tryCatch({
-  #     res <- tseries::adf.test(
-  #       diff1LogTsData(), 
-  #       alternative = input$alternd1LogSt, 
-  #       k = as.numeric(input$LagOrderADFd1LogSt)
-  #     )
-  #     
-  #     cat(" RESULT:\n")
-  #     print(res)
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" DECISION:\n")
-  #     p_val <- res$p.value
-  #     if(p_val < 0.05) {
-  #       cat("  • The p-value is", round(p_val, 4), "(< 0.05).\n")
-  #       cat("  • DECISION: Reject H0. The Log-Differenced Series is Stationary.       \n")
-  #     } else {
-  #       cat("  • The p-value is", round(p_val, 4), "(>= 0.05).\n")
-  #       cat("  • DECISION: Fail to reject H0. The series remains Non-Stationary.      \n")
-  #     }
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE:\n")
-  #     if(p_val < 0.05) {
-  #       cat("  • The combination of Log + Differencing (d=1) has achieved stationarity.\n")
-  #       cat("  • This suggests your model should use d=1 and potentially a Log transform.\n")
-  #     } else {
-  #       cat("  • Even after Log and d=1, the series is not stationary.\n")
-  #       cat("  • ADVICE: Check for a strong seasonal component (requires D=1) or      \n")
-  #       cat("    structural breaks in the data that differencing cannot fix.          \n")
-  #     }
-  #     
-  #   }, error = function(e) {
-  #     cat(" EXECUTION ERROR: ", e$message, "\n")
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE: This double-transformation reduces the number of usable points. \n")
-  #     cat(" Ensure your 'Lag' order is not too high for the remaining data.         \n")
-  #   })
-  #   cat("==========================================================================\n")
-  # })
-  
-  
+
   
 
 
@@ -2302,65 +1901,6 @@ server <- function(input, output, session) {
   })
   
   
-  # # 7. Stationarity Test on Seasonal Log Series
-  # output$teststationariteDs1LogSt <- renderPrint({
-  #   req(diffSeasonLogTsData(), input$alternDs1LogSt, input$LagOrderADFDs1LogSt)
-  #   
-  #   cat("==========================================================================\n")
-  #   cat("      ADF TEST ON SEASONAL DIFFERENCE OF LOG SERIES (D=1)                 \n")
-  #   cat("==========================================================================\n")
-  #   cat(" This test checks if a Log transform (for variance) and a Seasonal         \n")
-  #   cat(" Difference (to remove annual cycles) resulted in a stationary series.    \n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   cat(" DECISION RULE:\n")
-  #   cat(" • H0: The Seasonal-Log series is Non-Stationary (has a unit root).       \n")
-  #   cat(" • H1: The Seasonal-Log series is Stationary.                             \n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   cat(" - If p-value < 0.05: Reject H0 (Stationary).\n")
-  #   cat(" - If p-value >= 0.05: Fail to reject H0 (Non-Stationary).\n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   tryCatch({
-  #     res <- tseries::adf.test(
-  #       diffSeasonLogTsData(), 
-  #       alternative = input$alternDs1LogSt, 
-  #       k = as.numeric(input$LagOrderADFDs1LogSt)
-  #     )
-  #     
-  #     cat(" RESULT:\n")
-  #     print(res)
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" DECISION:\n")
-  #     p_val <- res$p.value
-  #     if(p_val < 0.05) {
-  #       cat("  • The p-value is", round(p_val, 4), "(< 0.05).\n")
-  #       cat("  • DECISION: Reject H0. The Seasonal-Log series is Stationary.          \n")
-  #     } else {
-  #       cat("  • The p-value is", round(p_val, 4), "(>= 0.05).\n")
-  #       cat("  • DECISION: Fail to reject H0. The series remains Non-Stationary.      \n")
-  #     }
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE:\n")
-  #     if(p_val < 0.05) {
-  #       cat("  • Stationarity achieved! Log transformation and Seasonal differencing  \n")
-  #       cat("    are likely necessary components for your final SARIMA model.         \n")
-  #     } else {
-  #       cat("  • The series is still non-stationary after Seasonal-Log transformation. \n")
-  #       cat("  • ADVICE: You may still need to apply an ordinary difference (d=1)    \n")
-  #       cat("    on top of the seasonal difference to remove a remaining trend.       \n")
-  #     }
-  #     
-  #   }, error = function(e) {
-  #     cat(" EXECUTION ERROR: ", e$message, "\n")
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE: Seasonal differencing on log data can result in very small      \n")
-  #     cat(" datasets. Lower the 'Lag' order to allow the test to calculate.         \n")
-  #   })
-  #   cat("==========================================================================\n")
-  # })
 
   
 
@@ -2535,65 +2075,7 @@ server <- function(input, output, session) {
     cat("==========================================================================\n")
   })
   
-  # # 7. Stationarity Test on Double Differenced Log Series
-  # output$teststationarited1Ds1LogSt <- renderPrint({
-  #   req(diff1LogSeasonTsData(), input$alternd1Ds1LogSt, input$LagOrderADFd1Ds1LogSt)
-  #   
-  #   cat("==========================================================================\n")
-  #   cat("      ADF TEST: DOUBLE DIFFERENCE OF LOG SERIES (d=1, D=1)                \n")
-  #   cat("==========================================================================\n")
-  #   cat(" This test evaluates the series after Log transformation, First           \n")
-  #   cat(" Differencing (d=1), and Seasonal Differencing (D=1).                     \n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   cat(" DECISION RULE:\n")
-  #   cat(" • H0: The Double-Differenced Log series is Non-Stationary.               \n")
-  #   cat(" • H1: The Double-Differenced Log series is Stationary.                   \n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   cat(" - If p-value < 0.05: Reject H0 (Stationary).\n")
-  #   cat(" - If p-value >= 0.05: Fail to reject H0 (Non-Stationary).\n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   tryCatch({
-  #     res <- tseries::adf.test(
-  #       diff1LogSeasonTsData(), 
-  #       alternative = input$alternd1Ds1LogSt, 
-  #       k = as.numeric(input$LagOrderADFd1Ds1LogSt)
-  #     )
-  #     
-  #     cat(" RESULT:\n")
-  #     print(res)
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" DECISION:\n")
-  #     p_val <- res$p.value
-  #     if(p_val < 0.05) {
-  #       cat("  • The p-value is", round(p_val, 4), "(< 0.05).\n")
-  #       cat("  • DECISION: Reject H0. The series is now Stationary.                   \n")
-  #     } else {
-  #       cat("  • The p-value is", round(p_val, 4), "(>= 0.05).\n")
-  #       cat("  • DECISION: Fail to reject H0. Series is still Non-Stationary.         \n")
-  #     }
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE:\n")
-  #     if(p_val < 0.05) {
-  #       cat("  • Stationarity achieved with (d=1, D=1). This is usually the final     \n")
-  #       cat("    transformation step before fitting a SARIMA model.                   \n")
-  #     } else {
-  #       cat("  • Warning: The series remains non-stationary after extreme differencing.\n")
-  #       cat("  • ADVICE: Check for structural breaks or 'over-differencing'.          \n")
-  #       cat("    Over-differencing can introduce artificial patterns (negative ACF).  \n")
-  #     }
-  #     
-  #   }, error = function(e) {
-  #     cat(" EXECUTION ERROR: ", e$message, "\n")
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE: Double differencing significantly reduces the number of data    \n")
-  #     cat(" points. Reduce 'Lag' order or check if the sample size is too small.    \n")
-  #   })
-  #   cat("==========================================================================\n")
-  # })
+
 
 
   
@@ -2725,411 +2207,1514 @@ server <- function(input, output, session) {
   })
   
   
-  # 6. Choice ADF Stationarity Test with Interpretation
-  output$teststationarited2St <- renderPrint({
-    # Require all inputs including the new adfTypeSt2
-    req(myData_Choice(), input$alternd2St, input$LagOrderADFd2St, input$alphaSt2, input$adfTypeSt2)
-    
-    alpha_val <- as.numeric(input$alphaSt2)
-    alpha_col <- switch(as.character(alpha_val), "0.01" = "1pct", "0.05" = "5pct", "0.1"  = "10pct")
-    
-    # Map UI selection to urca critical value row names
-    # none -> tau1, drift -> tau2, trend -> tau3
-    tau_row <- switch(input$adfTypeSt2, "none" = "tau1", "drift" = "tau2", "trend" = "tau3")
-    
-    valid_data <- na.omit(myData_Choice())
-    valid_N    <- length(valid_data)
-    current_sd <- sd(valid_data)
-    
-    cat("==========================================================================\n")
-    cat("      ADF TEST: CUSTOM TRANSFORMED SERIES (User Defined)                  \n")
-    cat("==========================================================================\n")
-    cat(paste(" • Model Specification   :", input$adfTypeSt2, "\n"))
-    cat(paste(" • Effective Sample Size :", valid_N, "observations\n"))
-    cat(paste(" • Series Std. Deviation :", round(current_sd, 4), "\n"))
-    cat("--------------------------------------------------------------------------\n")
-    
-    cat(" DECISION RULE:\n")
-    cat(" • H0: The series has a Unit Root (Non-Stationary).\n")
-    cat(" • H1: The series is Stationary.\n")
-    cat("--------------------------------------------------------------------------\n")
-    
-    tryCatch({
-      # 1. Run the test using urca for specific model types
-      res_urca <- urca::ur.df(valid_data, 
-                              type = input$adfTypeSt2, 
-                              lags = as.numeric(input$LagOrderADFd2St))
-      
-      # Extract Results
-      tau_obs  <- res_urca@teststat[1] # The test statistic
-      tau_crit <- res_urca@cval[tau_row, alpha_col]
-      
-      # For p-value estimation, we still use tseries or urca's summary
-      # Note: tseries::adf.test only supports 'trend'. For others, we rely on Tau comparison.
-      
-      cat(" RESULT:\n")
-      cat(paste(" • Tau (Observed Value)  :", round(tau_obs, 4), "\n"))
-      cat(paste(" • Tau (Critical Value)  :", round(tau_crit, 4), "(at", alpha_col, ")\n"))
-      cat("--------------------------------------------------------------------------\n")
-      
-      cat(" DECISION:\n")
-      # Fundamental ADF decision: Tau_obs < Tau_crit
-      if(tau_obs < tau_crit) {
-        cat(paste("  • Tau Observed (", round(tau_obs, 4), ") is less than Critical (", round(tau_crit, 4), ").\n"))
-        cat("  • RESULT: Significant at", (1 - alpha_val)*100, "% confidence level.\n")
-        cat("  • DECISION: Reject H0. The series is Stationary.\n")
-        is_stationary <- TRUE
-      } else {
-        cat(paste("  • Tau Observed (", round(tau_obs, 4), ") is not less than Critical (", round(tau_crit, 4), ").\n"))
-        cat("  • DECISION: Fail to reject H0. The series is Non-Stationary.\n")
-        is_stationary <- FALSE
-      }
-      
-      cat("--------------------------------------------------------------------------\n")
-      cat(" ADVICE & ANALYSIS:\n")
-      
-      if(is_stationary) {
-        cat("  1. DIRECTIVE: Stationarity confirmed for the selected model type.\n")
-        cat("  2. QUALITY CHECK: If the 'Intercept + Trend' was used, check if the trend \n")
-        cat("     coefficient is actually significant in your model. If not, simplify\n")
-        cat("     to 'Intercept Only'.\n")
-        cat("  3. NEXT STEP: Examine ACF/PACF for AR/MA lag identification.\n")
-      } else {
-        cat("  1. DIAGNOSIS: The series still contains a stochastic trend (unit root).\n")
-        cat("\n  2. MODEL SELECTION DIRECTIVES:\n")
-        if(input$adfTypeSt2 == "none") {
-          cat("     • Warning: 'No Intercept' assumes the mean is zero. Try 'Intercept'.\n")
-        }
-        cat("     • If the plot shows a clear upward/downward slope, ensure 'Intercept + \n")
-        cat("       Trend' is selected. Otherwise, the test may lack power.\n")
-        cat("     • If all models fail: Apply/Increase differencing (d=1).\n")
-        
-        cat("\n  3. LAG SENSITIVITY:\n")
-        cat(paste("     • High Lags (", input$LagOrderADFd2St, ") reduce the power to reject H0.\n"))
-        cat("     • DIRECTIVE: Try reducing lags to see if stationarity is detected.\n")
-      }
-      
-    }, error = function(e) {
-      cat(" EXECUTION ERROR: ", e$message, "\n")
-      cat("--------------------------------------------------------------------------\n")
-      cat(" ACTION: Ensure the Lag order is not too large for the number of obs.\n")
-    })
-    cat("==========================================================================\n")
-  })
-  
-  
-  # 6. Choice ADF Stationarity Test with Interpretation
-  output$teststationarited2St <- renderPrint({
-    # Require the data and the test parameters
-    req(myData_Choice(), input$alternd2St, input$LagOrderADFd2St, input$alphaSt2)
 
-    # 1. Prepare Alpha and Critical Value Column Mapping
-    alpha_val <- as.numeric(input$alphaSt2)
-    alpha_col <- switch(as.character(alpha_val),
+
+  
+  
+  
+
+  
+  
+  
+  
+  
+  
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  
+  
+  
+  
+  
+  
+  
+  output$teststationarited3St <- renderPrint({
+    
+    # ============================================================================
+    # 0) SMALL HELPERS (safe input fallback + safe numeric)
+    # ============================================================================
+    `%||%` <- function(a, b) if (!is.null(a) && length(a) > 0 && !all(is.na(a))) a else b
+    
+    to_num_safe <- function(v, default = NA_real_) {
+      out <- suppressWarnings(as.numeric(v))
+      if (length(out) == 0 || all(is.na(out)) || !is.finite(out[1])) default else out[1]
+    }
+    
+    to_int_safe <- function(v, default = 0L) {
+      out <- suppressWarnings(as.integer(v))
+      if (length(out) == 0 || is.na(out[1]) || !is.finite(out[1])) default else out[1]
+    }
+    
+    safe_head_tail <- function(x, n = 5) {
+      x <- as.numeric(x)
+      x <- x[is.finite(x)]
+      if (length(x) == 0) return(list(head = numeric(0), tail = numeric(0)))
+      list(head = head(x, n), tail = tail(x, n))
+    }
+    
+    # helper to safely pick tau row given ur.df type
+    tau_row_for <- function(type_in) {
+      switch(type_in,
+             "none"  = "tau1",
+             "drift" = "tau2",
+             "trend" = "tau3",
+             "tau3")
+    }
+    
+    # --- NEW: robust critical-value extractor for urca objects (fixes KPSS Eta-Crit NA) ---
+    cval_pick_safe <- function(cval_obj, key) {
+      if (is.null(cval_obj)) return(NA_real_)
+      
+      # matrix case
+      if (is.matrix(cval_obj)) {
+        cn <- colnames(cval_obj)
+        rn <- rownames(cval_obj)
+        
+        if (!is.null(cn) && key %in% cn) return(suppressWarnings(as.numeric(cval_obj[1, key, drop = TRUE])))
+        if (!is.null(rn) && key %in% rn) return(suppressWarnings(as.numeric(cval_obj[key, 1, drop = TRUE])))
+        
+        # fallback: first element
+        return(suppressWarnings(as.numeric(cval_obj[1, 1])))
+      }
+      
+      # vector case
+      nm <- names(cval_obj)
+      if (!is.null(nm) && key %in% nm) return(suppressWarnings(as.numeric(cval_obj[[key]])))
+      
+      # unnamed vector fallback (common order in urca: 10pct, 5pct, 1pct)
+      if (length(cval_obj) >= 3) {
+        if (identical(key, "10pct")) return(suppressWarnings(as.numeric(cval_obj[1])))
+        if (identical(key, "5pct"))  return(suppressWarnings(as.numeric(cval_obj[2])))
+        if (identical(key, "1pct"))  return(suppressWarnings(as.numeric(cval_obj[3])))
+      }
+      
+      suppressWarnings(as.numeric(cval_obj[1]))
+    }
+    
+    # ============================================================================
+    # 1) INPUT COLLECTION (supports either naming convention in your UI)
+    # ============================================================================
+    alt_in  <- input$alternd2St %||% input$alternSt
+    lag_in  <- input$LagOrderADFd2St %||% input$LagOrderADFSt
+    a_in    <- input$alphaSt2
+    type_in <- input$adfTypeSt2
+    
+    # OPTIONAL (transformation inputs — we only PRINT them, we don't transform here)
+    # Because the actual transformation must happen inside myData_Choice().
+    d_in   <- input$d_n  %||% input$d  %||% NA
+    D_in   <- input$DS_n %||% input$D  %||% NA
+    log_in <- input$check_box %||% input$islog %||% FALSE
+    
+    # Required data
+    req(myData_Choice())
+    
+    # Required inputs (validated safely)
+    if (is.null(alt_in) || is.null(lag_in) || is.null(a_in) || is.null(type_in)) {
+      cat("==========================================================================\n")
+      cat("                STATE-OF-THE-ART ADF UNIT ROOT DIAGNOSTIC                 \n")
+      cat("==========================================================================\n")
+      cat(" [!] INPUT ERROR: One or more inputs are NULL.\n")
+      cat("     This usually means a UI/server ID mismatch.\n")
+      cat("     Needed inputs (either naming is OK):\n")
+      cat("       - alternative : input$alternd2St OR input$alternSt\n")
+      cat("       - lag         : input$LagOrderADFd2St OR input$LagOrderADFSt\n")
+      cat("       - alpha       : input$alphaSt2\n")
+      cat("       - adf type    : input$adfTypeSt2\n")
+      cat("==========================================================================\n")
+      return(invisible(NULL))
+    }
+    
+    # ============================================================================
+    # 2) DATA PREP (IMPORTANT: we test EXACTLY what myData_Choice() returns)
+    # ============================================================================
+    x_raw <- myData_Choice()   # should already be transformed (log/d/D) in your app
+    na_before <- sum(is.na(x_raw))
+    
+    # keep ts metadata if available (for reporting)
+    x_class <- paste(class(x_raw), collapse = ", ")
+    x_freq  <- NA_integer_
+    if (inherits(x_raw, "ts")) x_freq <- tryCatch(stats::frequency(x_raw), error = function(e) NA_integer_)
+    
+    x <- as.numeric(stats::na.omit(x_raw))
+    valid_N <- length(x)
+    
+    # lag (k) must be integer >= 0
+    k <- to_int_safe(lag_in, default = 0L)
+    if (!is.finite(k) || k < 0) k <- 0L
+    
+    # alpha mapping (robust)
+    alpha_raw <- as.character(a_in)
+    alpha_val <- to_num_safe(alpha_raw, default = 0.05)
+    
+    alpha_col <- switch(alpha_raw,
                         "0.01" = "1pct",
                         "0.05" = "5pct",
-                        "0.1"  = "10pct")
-
-    # Calculate statistics for the Advice section
-    valid_data <- na.omit(myData_Choice())
-    valid_N    <- length(valid_data)
-    current_sd <- sd(valid_data)
-
+                        "0.1"  = "10pct",
+                        "0.10" = "10pct",
+                        "1pct" = "1pct",
+                        "5pct" = "5pct",
+                        "10pct"= "10pct",
+                        "5pct")  # default fallback
+    
+    # tau row mapping (ADF)
+    tau_row <- tau_row_for(type_in)
+    
+    # seasonality resolved flag (based on your UI D input: seasonal differencing)
+    # ONLY reporting; real seasonal differencing must happen in myData_Choice().
+    D_ui <- to_int_safe(D_in, default = 0L)
+    seasonality_resolved <- isTRUE(D_ui > 0L)
+    
+    # ============================================================================
+    # SECTION 1: DATA CONTEXT & SPECIFICATION
+    # ============================================================================
     cat("==========================================================================\n")
-    cat("      ADF TEST: CUSTOM TRANSFORMED SERIES (User Defined)                  \n")
+    cat("                        ADF UNIT ROOT DIAGNOSTIC                          \n")
     cat("==========================================================================\n")
-    cat(" This diagnostic checks if your chosen combination of transformations      \n")
-    cat(" (Log, d, D) has successfully stabilized the time series.                  \n")
-    cat(paste(" • Effective Sample Size :", valid_N, "observations\n"))
-    cat(paste(" • Series Std. Deviation :", round(current_sd, 4), "\n"))
-    cat("--------------------------------------------------------------------------\n")
+    cat(sprintf(" MODEL TYPE : %-10s | SAMPLE SIZE (N) : %d\n", toupper(type_in), valid_N))
+    cat(sprintf(" LAG ORDER  : %-10d | SIGNIFICANCE (α) : %s\n", k, alpha_raw))
+    cat(sprintf(" MOMENTS    : Mean: %.4f | Std.Dev: %.4f\n", mean(x), stats::sd(x)))
 
-    cat(" DECISION RULE:\n")
-    cat(" • H0: The transformed series has a Unit Root (Non-Stationary).           \n")
-    cat(" • H1: The transformed series is Stationary (Ready for Modeling).         \n")
+    # --- Transformation provenance (guarantees “same series for all tests”) ---
     cat("--------------------------------------------------------------------------\n")
-    cat(paste(" - Alpha (Significance Level):", alpha_val, "\n"))
-    cat(paste(" - If Tau (Observed) < Tau (Critical): Reject H0 (Stationary).\n"))
-    cat("--------------------------------------------------------------------------\n")
-
+    cat(" TRANSFORMATION PROVENANCE (what ALL tests use):\n")
+    cat(sprintf(" [ ] Source object class           : %s\n", x_class))
+    cat(sprintf(" [ ] Frequency (if ts)             : %s\n", ifelse(is.finite(x_freq), as.character(x_freq), "NA / not ts")))
+    cat(sprintf(" [ ] NA count before na.omit       : %d\n", na_before))
+    cat(sprintf(" [ ] Transformation inputs (UI)    : log=%s | d=%s | D=%s\n",
+                ifelse(isTRUE(log_in), "ON", "OFF"),
+                ifelse(is.na(d_in), "NA", as.character(d_in)),
+                ifelse(is.na(D_in), "NA", as.character(D_in))))
+    ht <- safe_head_tail(x, n = 5)
+    cat(sprintf(" [ ] First 5 values used in tests  : %s\n", paste(round(ht$head, 4), collapse = ", ")))
+    cat(sprintf(" [ ] Last  5 values used in tests  : %s\n", paste(round(ht$tail, 4), collapse = ", ")))
+    
+    # Basic sanity
+    if (valid_N < 5) {
+      cat("--------------------------------------------------------------------------\n\n")
+      cat(" [!] CRITICAL ERROR: Too few observations (N < 5).\n")
+      cat("     DIRECTIVE: Provide more data points.\n")
+      cat("==========================================================================\n")
+      return(invisible(NULL))
+    }
+    
+    if (!is.finite(stats::sd(x)) || stats::sd(x) == 0) {
+      cat("--------------------------------------------------------------------------\n\n")
+      cat(" [!] CRITICAL ERROR: Series is constant or invalid (sd = 0 / NA).\n")
+      cat("     DIRECTIVE: Check transformation (log/diff) or data quality.\n")
+      cat("==========================================================================\n")
+      return(invisible(NULL))
+    }
+    
+    # Degrees of Freedom Safety Check (conservative)
+    if (valid_N <= (k + 10)) {
+      cat("--------------------------------------------------------------------------\n\n")
+      cat(" [!] WARNING: Sample size is small relative to selected lag.\n")
+      cat("     This can break tseries::adf.test and weaken inference.\n")
+      cat("     DIRECTIVE: Decrease Lag (k) or increase data points.\n\n")
+    }
+    
+    # ============================================================================
+    # 3) PREDECLARE OBJECTS (prevents crashes in post-summary)
+    # ============================================================================
+    res_urca <- NULL
+    
+    tau_obs  <- NA_real_
+    tau_crit <- NA_real_
+    
+    res_tseries <- list(p.value = NA_real_)
+    lb_test     <- list(statistic = NA_real_, p.value = NA_real_)
+    lb_lag      <- NA_integer_
+    
+    # KPSS
+    kpss_type   <- if (type_in == "trend") "Trend" else "Level"
+    res_kpss_ts <- list(statistic = NA_real_, p.value = NA_real_) # tseries
+    res_kpss_uc <- NULL                                           # urca
+    
+    # KPSS ETA extras
+    eta_obs_ts   <- NA_real_
+    eta_p_one    <- NA_real_
+    eta_obs_uc   <- NA_real_
+    eta_crit_uc  <- NA_real_
+    eta_col      <- NA_character_
+    
+    is_stationary    <- FALSE
+    kpss_stationary  <- FALSE
+    
+    # Pettitt placeholders
+    pettitt_res <- list(statistic = NA_real_, p.value = NA_real_, estimate = NULL)
+    
+    # --- NEW: decision-aid objects ---
+    k_reco        <- NA_integer_
+    k_reco_reason <- NA_character_
+    scan_k_tbl    <- NULL
+    scan_type_tbl <- NULL
+    
+    # ============================================================================
+    # 4) COMPUTATIONS (tryCatch keeps UI alive, cats remain)
+    # ============================================================================
     tryCatch({
-      # 2. Standard ADF Test for p-values
-      res <- tseries::adf.test(
-        myData_Choice(),
-        alternative = input$alternd2St,
-        k = as.numeric(input$LagOrderADFd2St)
+      
+      # --- Package checks ---
+      if (!requireNamespace("urca", quietly = TRUE)) {
+        stop("Package 'urca' is not installed. ACTION: install.packages('urca')")
+      }
+      if (!requireNamespace("tseries", quietly = TRUE)) {
+        stop("Package 'tseries' is not installed. ACTION: install.packages('tseries')")
+      }
+      
+      # ==========================================================================
+      # NEW (A): LAG RECOMMENDATION SCAN (choose smallest k with LB p-value > alpha)
+      # ==========================================================================
+      lb_lag_ref <- max(1L, min(10L, floor(valid_N / 5)))
+      
+      # keep scan small/fast
+      k_scan_max <- min(12L, max(0L, floor(valid_N / 5)))
+      k_grid <- 0L:k_scan_max
+      
+      scan_k_tbl <- data.frame(
+        k = k_grid,
+        lb_p = NA_real_,
+        tau = NA_real_,
+        tau_crit = NA_real_,
+        stationary = NA,
+        stringsAsFactors = FALSE
       )
-
-      # 3. Advanced ADF Test for Critical Values (Tau) using urca
-      res_urca <- urca::ur.df(myData_Choice(), type = "trend", lags = as.numeric(input$LagOrderADFd2St))
-      crit_vals <- res_urca@cval
-
-      # Extract values
-      tau_obs  <- res$statistic
-      tau_crit <- crit_vals["tau3", alpha_col]
-      p_val    <- res$p.value
-
-      cat(" RESULT:\n")
-      cat(paste(" • Tau (Observed Value)  :", round(tau_obs, 4), "\n"))
-      cat(paste(" • Tau (Critical Value)  :", round(tau_crit, 4), "(at", alpha_col, ")\n"))
-      cat(paste(" • p-value (One-tailed)  :", round(p_val, 4), "\n"))
-      cat("--------------------------------------------------------------------------\n")
-
-      cat(" DECISION:\n")
-      if(p_val <= alpha_val) {
-        cat(paste("  • The p-value is", round(p_val, 4), "(<=", alpha_val, ").\n"))
-        cat(paste("  • Tau Observed (", round(tau_obs, 2), ") is more negative than Critical (", round(tau_crit, 2), ").\n"))
-        cat("  • DECISION: Reject H0. The current configuration is Stationary.\n")
-      } else {
-        cat(paste("  • The p-value is", round(p_val, 4), "(>", alpha_val, ").\n"))
-        cat(paste("  • Tau Observed (", round(tau_obs, 2), ") is not negative enough.\n"))
-        cat("  • DECISION: Fail to reject H0. The series remains Non-Stationary.\n")
+      
+      for (i in seq_along(k_grid)) {
+        ki <- k_grid[i]
+        tmp <- tryCatch(urca::ur.df(x, type = type_in, lags = ki), error = function(e) NULL)
+        if (!is.null(tmp)) {
+          tr <- tau_row_for(type_in)
+          tau_i <- suppressWarnings(as.numeric(tmp@teststat[tr]))
+          if (!is.finite(tau_i)) tau_i <- suppressWarnings(as.numeric(tmp@teststat[1]))
+          crit_i <- suppressWarnings(as.numeric(tmp@cval[tr, alpha_col]))
+          lb_i <- tryCatch(Box.test(tmp@res, lag = lb_lag_ref, type = "Ljung-Box"),
+                           error = function(e) list(p.value = NA_real_))
+          lbp <- to_num_safe(lb_i$p.value)
+          
+          scan_k_tbl$lb_p[i]      <- lbp
+          scan_k_tbl$tau[i]       <- tau_i
+          scan_k_tbl$tau_crit[i]  <- crit_i
+          scan_k_tbl$stationary[i]<- is.finite(tau_i) && is.finite(crit_i) && (tau_i < crit_i)
+        }
       }
-
-      cat("--------------------------------------------------------------------------\n")
-      cat(" ADVICE & ANALYSIS:\n")
-
-      # --- SCENARIO 1: STATIONARY (SUCCESS) ---
-      if(p_val <= alpha_val) {
-        cat("  1. MODELING DIRECTIVE: The series is integrated of order 0, I(0).\n")
-        cat("     • You may now proceed to identify AR(p) and MA(q) terms using ACF/PACF.\n")
-
-        cat("\n  2. OVER-DIFFERENCING RISK:\n")
-        cat("     • Compare this Std. Dev with the previous differencing level.\n")
-        cat("     • If SD increased, you may have 'over-differenced'. This creates\n")
-        cat("       artificial complexity and high-frequency noise.\n")
-
-        cat("\n  3. WHITE NOISE CHECK:\n")
-        cat("     • If ACF/PACF show no significant spikes, you have reached White Noise.\n")
-        cat("     • Stop differencing; further steps will degrade the model.\n")
-
-        # --- SCENARIO 2: NON-STATIONARY (FAILURE) ---
+      
+      ok_idx <- which(is.finite(scan_k_tbl$lb_p) & (scan_k_tbl$lb_p > alpha_val))
+      if (length(ok_idx) > 0) {
+        k_reco <- scan_k_tbl$k[min(ok_idx)]
+        k_reco_reason <- "smallest k with Ljung-Box p-value > alpha (whiter residuals)"
+      } else if (any(is.finite(scan_k_tbl$lb_p))) {
+        k_reco <- scan_k_tbl$k[which.max(scan_k_tbl$lb_p)]
+        k_reco_reason <- "no k achieved LB p>alpha; chose k that maximizes LB p-value"
       } else {
-        cat("  1. DIAGNOSIS: Persistence or Deterministic Trend remains.\n")
-
-        cat("\n  2. TRANSFORMATION DIRECTIVES:\n")
-        cat("     • STOCHASTIC TREND: If ACF decays very slowly, increase Difference (d).\n")
-        cat("     • SEASONAL UNIT ROOT: If ACF has spikes at lags S, 2S..., increase (D).\n")
-        cat("     • VOLATILITY: If the 'swing' size changes over time, apply Log.\n")
-
-        cat("\n  3. STRUCTURAL BREAK ALERT:\n")
-        cat("     • If the series looks stationary but the test fails, check the plot\n")
-        cat("       for a sudden 'level shift'. ADF tests often fail in the presence\n")
-        cat("       of structural breaks (consider a Zivot-Andrews test).\n")
-
-        cat("\n  4. POWER OF TEST:\n")
-        cat("     • Current Lag (", input$LagOrderADFd2St, ") uses", input$LagOrderADFd2St, "degrees of freedom.\n")
-        cat("     • DIRECTIVE: If N is small, try reducing Lags to increase test power.\n")
+        k_reco <- NA_integer_
+        k_reco_reason <- "lag scan failed (NA Ljung-Box p-values)"
       }
-
+      
+      
+      cat("\n")
+      cat("==========================================================================\n")
+      cat("PHASE 0: DECISION AID (Lag + Spec Sensitivity)\n")
+      cat("==========================================================================\n")
+      cat(sprintf(" • Ljung-Box reference lag used in scan : %d  ; (LB lag = min(10, floor(N/5)) \n", lb_lag_ref))
+      if (is.finite(k_reco)) {
+        tag_k <- if (isTRUE(k_reco == k)) "[✓]" else "[!]"
+        cat(sprintf(" %s Suggested k* (scan)                : %d  (%s)\n", tag_k, k_reco, k_reco_reason))
+        if (isTRUE(k_reco != k)) {
+          cat(sprintf(" [!] You selected k=%d. Consider trying k=%d and re-running.\n", k, k_reco))
+        }
+      } else {
+        cat(" [?] Suggested k* (scan)                : NA (scan inconclusive)\n")
+      }
+      cat("--------------------------------------------------------------------------\n")
+      
+      # ==========================================================================
+      # NEW (B): ADF TYPE SENSITIVITY (none/drift/trend) at k (user) and k* (if exists)
+      # ==========================================================================
+      types_to_try <- c("none", "drift", "trend")
+      k_for_types  <- if (is.finite(k_reco)) c(k, k_reco) else c(k)
+      k_for_types  <- unique(pmax(0L, as.integer(k_for_types)))
+      
+      scan_type_tbl <- data.frame(
+        type = character(0),
+        k = integer(0),
+        tau = numeric(0),
+        tau_crit = numeric(0),
+        adf_stationary = logical(0),
+        lb_p = numeric(0),
+        lb_ok = logical(0),
+        stringsAsFactors = FALSE
+      )
+      
+      for (tt in types_to_try) {
+        for (kk in k_for_types) {
+          tmp <- tryCatch(urca::ur.df(x, type = tt, lags = kk), error = function(e) NULL)
+          if (!is.null(tmp)) {
+            tr <- tau_row_for(tt)
+            tau_i <- suppressWarnings(as.numeric(tmp@teststat[tr]))
+            if (!is.finite(tau_i)) tau_i <- suppressWarnings(as.numeric(tmp@teststat[1]))
+            crit_i <- suppressWarnings(as.numeric(tmp@cval[tr, alpha_col]))
+            lb_i <- tryCatch(Box.test(tmp@res, lag = lb_lag_ref, type = "Ljung-Box"),
+                             error = function(e) list(p.value = NA_real_))
+            lbp <- to_num_safe(lb_i$p.value)
+            scan_type_tbl <- rbind(scan_type_tbl, data.frame(
+              type = tt, k = kk,
+              tau = tau_i, tau_crit = crit_i,
+              adf_stationary = is.finite(tau_i) && is.finite(crit_i) && (tau_i < crit_i),
+              lb_p = lbp,
+              lb_ok = is.finite(lbp) && (lbp > alpha_val),
+              stringsAsFactors = FALSE
+            ))
+          }
+        }
+      }
+      
+      if (nrow(scan_type_tbl) > 0) {
+        cat(" ADF SPEC SENSITIVITY (ur.df):\n")
+        cat("   (Prefer: LB ok + stable decision across types)\n")
+        for (kk in k_for_types) {
+          cat(sprintf("  • k=%d\n", kk))
+          sub <- scan_type_tbl[scan_type_tbl$k == kk, , drop = FALSE]
+          for (ii in seq_len(nrow(sub))) {
+            row <- sub[ii, ]
+            tag_lb <- if (isTRUE(row$lb_ok)) "[✓]" else if (is.finite(row$lb_p)) "[X]" else "[?]"
+            tag_adf <- if (isTRUE(row$adf_stationary)) "STATIONARY" else "NON-STATIONARY"
+            cat(sprintf("     %s type=%-5s | tau=%.4f | crit=%.4f | ADF=%s | LB p=%.4f\n",
+                        tag_lb, row$type, row$tau, row$tau_crit, tag_adf, row$lb_p))
+          }
+        }
+      } else {
+        cat(" [?] ADF spec sensitivity scan failed.\n")
+      }
+      # cat("==========================================================================\n\n")
+      cat("--------------------------------------------------------------------------\n")
+      
+      # ==========================================================================
+      # PRIMARY TEST: ADF via urca::ur.df  (left-tail, stationary alternative)
+      # ==========================================================================
+      res_urca <- urca::ur.df(x, type = type_in, lags = k)
+      
+      tau_obs <- suppressWarnings(as.numeric(res_urca@teststat[tau_row]))
+      if (!is.finite(tau_obs)) {
+        tau_obs_fallback <- suppressWarnings(as.numeric(res_urca@teststat[1]))
+        if (is.finite(tau_obs_fallback)) tau_obs <- tau_obs_fallback
+      }
+      
+      tau_crit <- suppressWarnings(as.numeric(res_urca@cval[tau_row, alpha_col]))
+      
+      # Secondary ADF (p-value reference) — only if feasible
+      if (valid_N > (k + 10)) {
+        res_tseries <- tseries::adf.test(x, alternative = alt_in, k = k)
+      } else {
+        res_tseries <- list(p.value = NA_real_)
+      }
+      
+      # ==========================================================================
+      # QUALITY CHECK: Ljung-Box on ur.df residuals
+      # ==========================================================================
+      lb_lag <- max(1L, min(10L, floor(valid_N / 5)))
+      lb_test <- Box.test(res_urca@res, lag = lb_lag, type = "Ljung-Box")
+      
+      # ==========================================================================
+      # KPSS (H0 = Stationary):
+      #   - tseries: p-value + stat
+      #   - urca: observed + critical (consistent)
+      # ==========================================================================
+      kpss_type <- if (type_in == "trend") "Trend" else "Level"
+      
+      res_kpss_ts <- tseries::kpss.test(x, null = kpss_type)
+      eta_obs_ts  <- to_num_safe(res_kpss_ts$statistic)
+      eta_p_one   <- to_num_safe(res_kpss_ts$p.value)
+      
+      kpss_type_urca <- if (type_in == "trend") "tau" else "mu"
+      res_kpss_uc    <- urca::ur.kpss(x, type = kpss_type_urca)
+      
+      eta_obs_uc <- suppressWarnings(as.numeric(res_kpss_uc@teststat))
+      
+      # --- FIX: choose eta_col robustly + extract critical value robustly (prevents NA) ---
+      eta_col <- if (alpha_val <= 0.01) "1pct" else if (alpha_val <= 0.05) "5pct" else "10pct"
+      eta_crit_uc <- cval_pick_safe(res_kpss_uc@cval, eta_col)
+      
+      # ==========================================================================
+      # Pettitt structural break check (optional)
+      # ==========================================================================
+      if (requireNamespace("trend", quietly = TRUE)) {
+        pettitt_res <- tryCatch(trend::pettitt.test(x),
+                                error = function(e) list(statistic = NA_real_, p.value = NA_real_, estimate = NULL))
+      }
+      
+      # ==========================================================================
+      # SAFE FLAGS
+      # ==========================================================================
+      tau_ok <- is.finite(tau_obs) && is.finite(tau_crit)
+      lb_ok  <- is.finite(to_num_safe(lb_test$p.value))
+      
+      kpss_p_ok   <- is.finite(eta_p_one)
+      kpss_eta_ok <- is.finite(eta_obs_uc) && is.finite(eta_crit_uc)
+      
+      kpss_reject_by_p   <- kpss_p_ok   && (eta_p_one < alpha_val)
+      kpss_reject_by_eta <- kpss_eta_ok && (eta_obs_uc > eta_crit_uc)
+      
+      kpss_ok <- kpss_p_ok || kpss_eta_ok
+      kpss_stationary <- !(kpss_reject_by_p || kpss_reject_by_eta)
+      
+      is_stationary <- isTRUE(tau_ok) && (tau_obs < tau_crit)
+      lb_white_safe <- lb_ok && (to_num_safe(lb_test$p.value) > alpha_val)
+      
+      # ==========================================================================
+      # PHASE 1: ADF
+      # ==========================================================================
+      cat("==========================================================================\n")
+      cat("PHASE 1: ADF UNIT ROOT TEST\n")
+      cat("==========================================================================\n")
+      
+      cat(" • H0: The series has a Unit Root (Non-Stationary).\n")
+      cat(" • Ha: The series is Stationary (Mean Reverting).\n")
+      cat(sprintf(" -> CRITERIA: Reject H0 if Tau-Obs (%.4f) < Tau-Crit (%.4f)\n",
+                  tau_obs, tau_crit))
+      
+      cat("\n RESULT:\n")
+      cat(paste("  - Tau Observed :", round(tau_obs, 4), "\n"))
+      cat(paste("  - Tau Critical :", round(tau_crit, 4), "\n"))
+      cat(paste("  - P-Value (Ref):", round(to_num_safe(res_tseries$p.value), 6), "\n"))
+      
+      cat("\n DECISION:\n")
+      if (isTRUE(tau_ok) && isTRUE(is_stationary)) {
+        cat("  -> REJECT H0: Evidence suggests the series is STATIONARY.\n")
+      } else if (isTRUE(tau_ok) && !isTRUE(is_stationary)) {
+        cat("  -> FAIL TO REJECT H0: Evidence suggests the series is NON-STATIONARY.\n")
+      } else {
+        cat("  -> [!] WARNING: Tau/Critical value is NA/Inf. ADF inference is not valid.\n")
+      }
+      
+      if (identical(as.character(alt_in), "explosive")) {
+        cat("\n [!] NOTE (Explosive mode):\n")
+        cat("     • tseries::adf.test(alternative='explosive') is right-tail oriented.\n")
+        cat("     • urca::ur.df critical values are used here in the usual left-tail rule.\n")
+        cat("     • For explosive detection, prioritize the tseries p-value interpretation.\n")
+      }
+      cat("\n")
+      
+      # ==========================================================================
+      # PHASE 2: Ljung-Box
+      # ==========================================================================
+      cat("==========================================================================\n")
+      cat("PHASE 2: RESIDUAL DIAGNOSTICS (LJUNG-BOX)\n")
+      cat("==========================================================================\n")
+      
+      cat(" • H0: Residuals are White Noise (No Autocorrelation).\n")
+      cat(" • Ha: Residuals are Correlated (Lags are insufficient).\n")
+      cat(sprintf(" -> CRITERIA: Reject H0 if P-Value (%.6f) < α (%.4f)\n",
+                  to_num_safe(lb_test$p.value), alpha_val))
+      
+      cat("\n RESULT:\n")
+      cat(paste("  - LB Statistic :", round(to_num_safe(lb_test$statistic), 6), "\n"))
+      cat(paste("  - LB P-Value   :", round(to_num_safe(lb_test$p.value), 6), "\n"))
+      cat(paste("  - LB Lag used  :", lb_lag, "\n"))
+      cat(paste("    it’s normal to choose LB lag by a rule-of-thumb (like min(10, floor(N/5)) \n"))
+      
+      cat("\n DECISION:\n")
+      if (isTRUE(lb_white_safe)) {
+        cat("  -> FAIL TO REJECT H0: Residuals are White Noise. [ADF more reliable]\n")
+      } else if (isTRUE(lb_ok)) {
+        cat("  -> REJECT H0: Residuals are Correlated. [ADF may be biased]\n")
+      } else {
+        cat("  -> [!] WARNING: Ljung-Box P-Value is NA/Inf. Residual diagnosis failed.\n")
+      }
+      cat("\n")
+      
+      # ==========================================================================
+      # PHASE 3: KPSS + Pettitt + KPSS segments
+      # ==========================================================================
+      cat("==========================================================================\n")
+      cat("PHASE 3: KPSS + STRUCTURAL BREAK (Pettitt) + KPSS SEGMENTS\n")
+      cat("==========================================================================\n\n")
+      
+      # 3A: KPSS main
+      cat("PHASE 3A: KPSS (Stationarity Confirmation)\n")
+      cat(paste(" • H0: The series is Stationary around a", kpss_type, ".\n"))
+      cat(" • Ha: The series is Non-Stationary.\n")
+      
+      cat(sprintf(" • CRITERIA (p-value) : Reject H0 if p-value (%.6f) < α (%.4f)\n",
+                  eta_p_one, alpha_val))
+      cat(sprintf(" • CRITERIA (eta)     : Reject H0 if Eta-Obs (%.6f) > Eta-Crit (%.6f)  [urca]\n",
+                  eta_obs_uc, eta_crit_uc))
+      
+      cat("\n RESULT:\n")
+      cat(paste("  - Eta (Observed value) [urca]   :", round(eta_obs_uc, 6), "\n"))
+      cat(paste("  - Eta (Critical value) [urca]   :", round(eta_crit_uc, 6), "\n"))
+      cat(paste("  - p-value (one-tailed) [tseries]:", round(eta_p_one, 6), "\n"))
+      cat(paste("  - Eta (Observed) [tseries, FYI] :", round(eta_obs_ts, 6), "\n"))
+      
+      cat("\n DECISION:\n")
+      if (isTRUE(kpss_ok) && isTRUE(kpss_stationary)) {
+        cat("  -> FAIL TO REJECT H0: Stationarity supported by KPSS.\n")
+      } else if (isTRUE(kpss_ok) && !isTRUE(kpss_stationary)) {
+        cat("  -> REJECT H0: Non-stationarity indicated by KPSS.\n")
+      } else {
+        cat("  -> [!] WARNING: KPSS outputs are NA/Inf. KPSS inference is not valid.\n")
+      }
+      cat("--------------------------------------------------------------------------\n")
+      
+      # 3B: Pettitt + segments
+      cat("PHASE 3B: STRUCTURAL BREAK CHECK (Pettitt) + KPSS SEGMENT CHECK\n")
+      cat(" • Goal: Detect a single change-point (median shift) that can distort KPSS.\n")
+      cat(" • If a break exists, we re-run KPSS before/after the break.\n")
+      
+      pettitt_break <- FALSE
+      break_idx <- NA_integer_
+      
+      if (requireNamespace("trend", quietly = TRUE)) {
+        
+        pett_p <- to_num_safe(pettitt_res$p.value)
+        cat(sprintf(" • Pettitt p-value: %.6f | α: %.4f\n", pett_p, alpha_val))
+        
+        if (!is.null(pettitt_res$estimate) && is.finite(as.numeric(pettitt_res$estimate))) {
+          break_idx <- as.integer(as.numeric(pettitt_res$estimate))
+        }
+        
+        pettitt_break <- is.finite(pett_p) && (pett_p < alpha_val) && is.finite(break_idx)
+        
+        cat("\n RESULT:\n")
+        cat(paste("  - Break index (estimate):", ifelse(is.finite(break_idx), break_idx, "NA"), "\n"))
+        cat(paste("  - Pettitt statistic     :", round(to_num_safe(pettitt_res$statistic), 6), "\n"))
+        cat(paste("  - Pettitt p-value       :", round(pett_p, 6), "\n"))
+        
+        cat("\n DECISION:\n")
+        if (pettitt_break) {
+          cat("  -> REJECT H0: Break detected. Full-sample KPSS/ADF may be contaminated.\n")
+        } else {
+          cat("  -> FAIL TO REJECT H0: No strong evidence of a single break.\n")
+        }
+        
+        if (pettitt_break) {
+          
+          x1 <- x[1:break_idx]
+          x2 <- x[(break_idx + 1):valid_N]
+          
+          cat("--------------------------------------------------------------------------\n")
+          cat("PHASE 3C: KPSS RE-CHECK BY SEGMENTS\n")
+          cat("  • Segment 1 = [1 .. break]\n")
+          cat("  • Segment 2 = [break+1 .. N]\n")
+          
+          min_seg <- 12L
+          if (length(x1) < min_seg || length(x2) < min_seg) {
+            cat("  [!] WARNING: One segment is too short for reliable KPSS.\n")
+            cat(sprintf("     Segment lengths: n1=%d, n2=%d (min recommended=%d)\n",
+                        length(x1), length(x2), min_seg))
+          } else {
+            
+            kpss1 <- tryCatch(tseries::kpss.test(x1, null = kpss_type),
+                              error = function(e) list(statistic = NA_real_, p.value = NA_real_))
+            kpss2 <- tryCatch(tseries::kpss.test(x2, null = kpss_type),
+                              error = function(e) list(statistic = NA_real_, p.value = NA_real_))
+            
+            p1 <- to_num_safe(kpss1$p.value)
+            p2 <- to_num_safe(kpss2$p.value)
+            
+            cat(sprintf("  - KPSS p-value (Segment 1): %.6f\n", p1))
+            cat(sprintf("  - KPSS p-value (Segment 2): %.6f\n", p2))
+            
+            s1_stat <- is.finite(p1) && (p1 > alpha_val)
+            s2_stat <- is.finite(p2) && (p2 > alpha_val)
+            
+            cat("\n INTERPRETATION:\n")
+            if (s1_stat && s2_stat) {
+              cat("  [✓] Both segments look stationary by KPSS.\n")
+              cat("      -> Full-sample non-stationarity may be break-driven.\n")
+            } else if (!s1_stat && !s2_stat) {
+              cat("  [X] Both segments look non-stationary by KPSS.\n")
+              cat("      -> Non-stationarity is not only due to a break.\n")
+            } else {
+              cat("  [?] Mixed: one segment stationary, the other not.\n")
+              cat("      -> Consider regime modeling or adjust transformations.\n")
+            }
+          }
+        }
+        
+      } else {
+        cat(" [!] WARNING: Package 'trend' not installed → Pettitt break check skipped.\n")
+        cat("     ACTION: install.packages('trend')\n")
+      }
+      
+      # ==========================================================================
+      # PHASE 4: Final verdict
+      # ==========================================================================
+      cat("\n==========================================================================\n")
+      cat("PHASE 4: FINAL ACADEMIC VERDICT & ADVICE\n")
+      cat("==========================================================================\n")
+      
+      if (isTRUE(lb_ok) && !isTRUE(lb_white_safe)) {
+        cat(" [!] WARNING: Your ADF 'Tau' statistic is technically biased.\n")
+        cat("     ADVICE: Increase 'Lag Order' until Ljung-Box P-Value > α.\n\n")
+      }
+      
+      if (isTRUE(is_stationary) && isTRUE(kpss_stationary)) {
+        cat(" [✓] VERDICT: STRONG STATIONARITY confirmed by both ADF and KPSS.\n")
+        cat("     ACTION: Proceed to ARMA/ARIMA modeling with d=0.\n")
+      } else if (isTRUE(!is_stationary) && isTRUE(!kpss_stationary)) {
+        cat(" [X] VERDICT: CLEAR UNIT ROOT. Both tests confirm Non-Stationarity.\n")
+        cat("     ACTION: Apply differencing (d=1) and/or seasonal differencing (D=1 if seasonal).\n")
+      } else {
+        cat(" [?] VERDICT: CONFLICTING RESULTS (ADF vs KPSS).\n")
+        cat("     ADVICE: Near-unit-root, trend-stationary, or break-contaminated series.\n")
+        cat("     Double-check plots for breaks, seasonality, and variance changes.\n")
+      }
+      
+      cat("\n TECHNICAL APPENDIX (ADF Regression Coefficients):\n")
+      if (!is.null(res_urca) && !is.null(res_urca@testreg)) {
+        print(stats::coef(res_urca@testreg))
+      } else if (!is.null(res_urca)) {
+        cat("  [!] Not available via @testreg; printing summary(res_urca) instead.\n")
+        print(summary(res_urca))
+      } else {
+        cat("  [!] Not available (ur.df did not run).\n")
+      }
+      
     }, error = function(e) {
       cat(" EXECUTION ERROR: ", e$message, "\n")
-      cat("--------------------------------------------------------------------------\n")
-      cat(" CRITICAL ADVICE: \n")
-      cat("  • The differencing order (d+D) is likely too high for the data length.\n")
-      cat("  • ACTION: Reset transformations or reduce the Lag parameter.\n")
     })
+    
+    cat("\n")
+    
+    # ============================================================================
+    # SECTION 5: POST-SUMMARY + CHECKLIST + NEXT STEPS
+    # ============================================================================
     cat("==========================================================================\n")
+    cat("PHASE 5: POST-SUMMARY (Academic-quality snapshot)\n")
+    cat("==========================================================================\n")
+    
+    cat(" EVIDENCE SNAPSHOT (All key outcomes in one place):\n")
+    cat(sprintf(" [ ] N (effective sample size)              : %d\n", valid_N))
+    cat(sprintf(" [ ] Model type (ADF)                       : %s  (tau row: %s)\n", type_in, tau_row))
+    cat(sprintf(" [ ] Lag order (k)                          : %d\n", k))
+    cat(sprintf(" [ ] Alpha (α)                              : %.4f\n", alpha_val))
+    cat(sprintf(" [ ] Tau-Observed (urca)                    : %.6f\n", tau_obs))
+    cat(sprintf(" [ ] Tau-Critical (urca, %s)                : %.6f\n", alpha_col, tau_crit))
+    cat(sprintf(" [ ] ADF p-value (tseries reference)        : %.6f\n", to_num_safe(res_tseries$p.value)))
+    cat(sprintf(" [ ] Ljung-Box p-value (residuals)          : %.6f\n", to_num_safe(lb_test$p.value)))
+    cat(sprintf(" [ ] KPSS Eta observed (urca)               : %.6f\n", eta_obs_uc))
+    cat(sprintf(" [ ] KPSS Eta critical (urca, %s)           : %.6f\n", alpha_col, eta_crit_uc))
+    cat(sprintf(" [ ] KPSS p-value (one-tailed, tseries)     : %.6f\n", eta_p_one))
+    if (is.finite(k_reco)) {
+      tag_k <- if (isTRUE(k_reco == k)) "[✓]" else "[!]"
+      cat(sprintf(" %s Suggested k* (scan)                     : %d\n", tag_k, k_reco))
+    } else {
+      cat(" [?] Suggested k* (scan)                     : NA\n")
+    }
+    cat("--------------------------------------------------------------------------\n")
+    
+    cat(" CHECKLIST (Academic-quality acceptance criteria):\n")
+    
+    # Transformation provenance
+    cat(sprintf(" [ ] Tests run on transformed series (x=myData_Choice) : %s\n",
+                ifelse(!is.null(x_raw), "[✓] YES (same x used everywhere)", "[!] UNKNOWN")))
+    
+    # Data sanity
+    cat(sprintf(" [ ] Variance usable (sd>0)                          : %s\n",
+                ifelse(is.finite(stats::sd(x)) && stats::sd(x) > 0, "[✓] SATISFIED", "[!] NOT SATISFIED")))
+    if (!(is.finite(stats::sd(x)) && stats::sd(x) > 0)) {
+      cat("     [!] DANGER: sd=0/NA → many tests become meaningless.\n")
+    }
+    
+    # ADF extraction
+    cat(sprintf(" [ ] Tau is finite and usable                        : %s\n",
+                ifelse(is.finite(tau_obs), "[✓] SATISFIED", "[!] NOT SATISFIED")))
+    if (!is.finite(tau_obs)) {
+      cat("     [!] DANGER: Tau is NA/Inf → ADF inference cannot be trusted.\n")
+      cat("     [!] Common causes: constant/near-constant series, k too high,\n")
+      cat("         insufficient N after transformation.\n")
+    }
+    
+    cat(sprintf(" [ ] Tau critical value extracted                    : %s\n",
+                ifelse(is.finite(tau_crit), "[✓] SATISFIED", "[!] NOT SATISFIED")))
+    if (!is.finite(tau_crit)) {
+      cat("     [!] DANGER: Critical value missing → alpha/type mapping issue.\n")
+      cat("     [!] ACTION: verify alpha_col and tau_row exist in urca cval table.\n")
+    }
+    
+    # Residual whiteness
+    lb_p <- to_num_safe(lb_test$p.value)
+    cat(sprintf(" [ ] Residuals pass Ljung-Box (white noise)          : %s\n",
+                ifelse(is.finite(lb_p) && lb_p > alpha_val, "[✓] SATISFIED", "[X] NOT SATISFIED")))
+    if (is.finite(lb_p) && lb_p <= alpha_val) {
+      cat("     [!] WARNING: residual autocorrelation detected.\n")
+      cat("     [!] Interpretation: ADF may be biased (insufficient k).\n")
+    }
+    
+    # KPSS usability
+    cat(sprintf(" [ ] KPSS Eta observed & critical are usable         : %s\n",
+                ifelse(is.finite(eta_obs_uc) && is.finite(eta_crit_uc), "[✓] SATISFIED", "[!] NOT SATISFIED")))
+    if (!(is.finite(eta_obs_uc) && is.finite(eta_crit_uc))) {
+      cat("     [!] WARNING: urca KPSS eta/cval unavailable → rely on tseries p-value.\n")
+    }
+    
+    cat(sprintf(" [ ] KPSS p-value is usable                          : %s\n",
+                ifelse(is.finite(eta_p_one), "[✓] SATISFIED", "[!] NOT SATISFIED")))
+    if (!is.finite(eta_p_one)) {
+      cat("     [!] WARNING: KPSS p-value NA → rely on eta criterion (urca).\n")
+    }
+    
+    # Sample size and lag safety
+    cat(sprintf(" [ ] Sample size adequacy                            : %s\n",
+                ifelse(valid_N >= 30, "[✓] STRONG", ifelse(valid_N >= 15, "[?] BORDERLINE", "[X] WEAK"))))
+    if (valid_N < 15) {
+      cat("     [!] WARNING: very low power. Decisions may be unstable.\n")
+    }
+    
+    cat(sprintf(" [ ] Lag order reasonable relative to N              : %s\n",
+                ifelse(valid_N > (k + 10), "[✓] OK", "[!] TOO HIGH / RISKY")))
+    if (valid_N <= (k + 10)) {
+      cat("     [!] RISK: high k vs N can produce weak/unstable regression tests.\n")
+    }
+    
+    # Seasonality provenance (UI hint only)
+    cat(sprintf(" [ ] Seasonal differencing indicated (UI D>0)         : %s\n",
+                ifelse(seasonality_resolved, "[✓] YES", "[!] NO / UNKNOWN")))
+    
+    # ADF alternative sanity
+    cat(sprintf(" [ ] ADF alternative mode (Stationary/Explosive)      : %s\n", as.character(alt_in)))
+    if (identical(as.character(alt_in), "explosive")) {
+      cat("     [!] NOTE: Explosive mode is handled by tseries ADF p-value; urca tau rule is left-tail.\n")
+    }
+    
+    # Agreement
+    agreement_safe <- (isTRUE(is_stationary) && isTRUE(kpss_stationary)) ||
+      (isTRUE(!is_stationary) && isTRUE(!kpss_stationary))
+    
+    cat(sprintf(" [ ] ADF & KPSS agreement                             : %s\n",
+                ifelse(agreement_safe, "[✓] AGREEMENT", "[?] CONFLICT")))
+    if (!agreement_safe) {
+      cat("     [?] NOTE: conflicts are common with near-unit-root series, trend vs drift mismatch,\n")
+      cat("         structural breaks (Pettitt), or missing seasonal differencing.\n")
+    }
+    
+    # Structural break summary (Pettitt only)
+    if (requireNamespace("trend", quietly = TRUE)) {
+      cat("--------------------------------------------------------------------------\n")
+      cat(" STRUCTURAL BREAK SUMMARY (Pettitt):\n")
+      cat(sprintf(" [ ] Pettitt p-value : %.6f  (Reject H0 if < α)\n",
+                  to_num_safe(pettitt_res$p.value)))
+    } else {
+      cat("--------------------------------------------------------------------------\n")
+      cat(" STRUCTURAL BREAK SUMMARY (Pettitt):\n")
+      cat(" [!] WARNING: Package 'trend' is not installed. Pettitt summary unavailable.\n")
+      cat("     ACTION: install.packages('trend')\n")
+    }
+    
+    cat("--------------------------------------------------------------------------\n")
+    
+    # ============================================================================
+    # ACTIONABLE NEXT STEPS (with [✓] [X] [?] [!])
+    # ============================================================================
+    cat("==========================================================================\n")
+    cat(" ACTIONABLE NEXT STEPS (What to do now):\n")
+    cat("==========================================================================\n")
+    
+    # [1] Fix residual autocorrelation
+    if (is.finite(lb_p) && lb_p <= alpha_val) {
+      cat(" [X] [1] FIX RESIDUAL AUTOCORRELATION (LB failed)\n")
+      cat("     • Increase k gradually (e.g., k+1, k+2) and re-run.\n")
+      cat("     • If k gets too high relative to N, prefer differencing or seasonal differencing.\n")
+      cat("     • If series is seasonal (freq>1), consider D=1 before pushing k upward.\n")
+      if (is.finite(k_reco) && (k_reco != k)) {
+        cat(sprintf("     • Decision aid: try k*=%d (scan suggestion) first.\n", k_reco))
+      }
+    } else if (is.finite(lb_p) && lb_p > alpha_val) {
+      cat(" [✓] [1] RESIDUAL AUTOCORRELATION CHECK\n")
+      cat("     • Ljung-Box is acceptable → ADF regression is less likely biased.\n")
+    } else {
+      cat(" [?] [1] RESIDUAL AUTOCORRELATION CHECK\n")
+      cat("     • Ljung-Box p-value is NA/Inf → residual diagnosis is inconclusive.\n")
+      cat("     • Reduce k and/or verify the series after transformation.\n")
+    }
+    
+    # [2] Resolve ADF vs KPSS conflict
+    if (!agreement_safe) {
+      cat(" [?] [2] RESOLVE ADF vs KPSS CONFLICT\n")
+      cat("     • Use PHASE 0 'ADF SPEC SENSITIVITY' to pick the type with LB ok and stable decision.\n")
+      cat("     • Try ADF model type variants: none / drift / trend (match KPSS Level vs Trend).\n")
+      cat("     • If Pettitt indicates a break: split sample and re-test.\n")
+      cat("     • If series is seasonal: test after seasonal differencing (D=1) + maybe log.\n")
+      cat("     • Consider variance stabilization: log or Box-Cox (if positive data).\n")
+    } else {
+      cat(" [✓] [2] CONSISTENT DECISION\n")
+      cat("     • ADF and KPSS agree → proceed with identification/modeling.\n")
+    }
+    
+    # [3] Seasonality sanity (mark [✓] if seasonality_resolved)
+    season_tag <- if (isTRUE(seasonality_resolved)) "[✓]" else "[!]"
+    cat(sprintf(" %s [3] SEASONALITY SANITY (especially for AirPassengers-like series)\n", season_tag))
+    
+    if (is.finite(x_freq) && x_freq > 1) {
+      cat(sprintf("     • Detected frequency=%d → seasonality is plausible.\n", x_freq))
+      if (isTRUE(seasonality_resolved)) {
+        cat("     • Seasonality is marked as resolved (D>0) → continue ADF/KPSS on transformed series.\n")
+      } else {
+        cat("     • If ACF shows spikes at seasonal lags, use D=1 (seasonal differencing).\n")
+      }
+    } else {
+      cat("     • Frequency not available (not a ts object) → verify seasonality in your plot/ACF.\n")
+    }
+    
+    # [4] Explosive option sanity
+    if (identical(as.character(alt_in), "explosive")) {
+      cat(" [!] [4] EXPLOSIVE MODE NOTE\n")
+      cat("     • KPSS is not an 'explosive' test.\n")
+      cat("     • For explosive alternative, use tseries ADF p-value + visual diagnostics.\n")
+    } else {
+      cat(" [✓] [4] EXPLOSIVE MODE NOTE\n")
+      cat("     • Not in explosive mode → standard stationarity workflow applies.\n")
+    }
+    
+    cat("\n PRACTICAL MODELING PATH (for your Shiny workflow):\n")
+    if (isTRUE(is_stationary) && is.finite(lb_p) && (lb_p > alpha_val)) {
+      cat(" [✓] Use ARMA identification on current series → fit → residual analysis.\n")
+    } else if (!isTRUE(is_stationary)) {
+      cat(" [X] Apply differencing (d and/or D) → re-run ADF/KPSS → then identify ARMA.\n")
+    } else {
+      cat(" [?] Mixed evidence: consider differencing for safety and validate visually.\n")
+    }
+    
+    cat("--------------------------------------------------------------------------\n\n\n")
   })
   
   
-  # # 6. Choice ADF Stationarity Test with Interpretation
-  # output$teststationarited2St <- renderPrint({
-  #   # Require the data and the test parameters
-  #   req(myData_Choice(), input$alternd2St, input$LagOrderADFd2St, input$alphaSt2)
-  # 
-  #   # 1. Prepare Alpha and Critical Value Column Mapping
-  #   alpha_val <- as.numeric(input$alphaSt2)
-  #   alpha_col <- switch(as.character(alpha_val),
-  #                       "0.01" = "1pct",
-  #                       "0.05" = "5pct",
-  #                       "0.1"  = "10pct")
-  # 
-  #   # Calculate effective sample size for context
-  #   valid_N <- length(na.omit(myData_Choice()))
-  # 
-  #   cat("==========================================================================\n")
-  #   cat("      ADF TEST: CUSTOM TRANSFORMED SERIES (User Defined)                  \n")
-  #   cat("==========================================================================\n")
-  #   cat(" This diagnostic checks if your chosen combination of transformations     \n")
-  #   cat(" (Log, d, D) has successfully stabilized the time series.                 \n")
-  #   cat(paste(" • Effective Sample Size:", valid_N, "observations\n"))
-  #   cat("--------------------------------------------------------------------------\n")
-  # 
-  #   cat(" DECISION RULE:\n")
-  #   cat(" • H0: The transformed series has a Unit Root (Non-Stationary).           \n")
-  #   cat(" • H1: The transformed series is Stationary (Ready for Modeling).         \n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   cat(paste(" - Alpha (Significance Level):", alpha_val, "\n"))
-  #   cat(paste(" - If Tau (Observed) < Tau (Critical): Reject H0 (Stationary).\n"))
-  #   cat("--------------------------------------------------------------------------\n")
-  # 
-  #   tryCatch({
-  #     # 2. Standard ADF Test for p-values
-  #     res <- tseries::adf.test(
-  #       myData_Choice(),
-  #       alternative = input$alternd2St,
-  #       k = as.numeric(input$LagOrderADFd2St)
-  #     )
-  # 
-  #     # 3. Advanced ADF Test for Critical Values (Tau) using urca
-  #     # We use 'trend' to match standard tseries behavior
-  #     res_urca <- urca::ur.df(myData_Choice(), type = "trend", lags = as.numeric(input$LagOrderADFd2St))
-  #     crit_vals <- res_urca@cval
-  # 
-  #     # Extract values
-  #     tau_obs  <- res$statistic
-  #     tau_crit <- crit_vals["tau3", alpha_col]
-  #     p_val    <- res$p.value
-  # 
-  #     cat(" RESULT:\n")
-  #     cat(paste(" • Tau (Observed Value)  :", round(tau_obs, 4), "\n"))
-  #     cat(paste(" • Tau (Critical Value)  :", round(tau_crit, 4), "(at", alpha_col, ")\n"))
-  #     cat(paste(" • p-value (One-tailed)  :", round(p_val, 4), "\n"))
-  #     cat("--------------------------------------------------------------------------\n")
-  # 
-  #     cat(" DECISION:\n")
-  #     # Compare p-value against the dynamic alpha
-  #     if(p_val <= alpha_val) {
-  #       cat(paste("  • The p-value is", round(p_val, 4), "(<=", alpha_val, ").\n"))
-  #       cat(paste("  • Tau Observed (", round(tau_obs, 2), ") is more negative than Critical (", round(tau_crit, 2), ").\n"))
-  #       cat("  • DECISION: Reject H0. The current configuration is Stationary.\n")
-  #     } else {
-  #       cat(paste("  • The p-value is", round(p_val, 4), "(>", alpha_val, ").\n"))
-  #       cat(paste("  • Tau Observed (", round(tau_obs, 2), ") is not negative enough.\n"))
-  #       cat("  • DECISION: Fail to reject H0. The series remains Non-Stationary.\n")
-  #     }
-  # 
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE & ANALYSIS:\n")
-  # 
-  #     # --- SCENARIO 1: STATIONARY (SUCCESS) ---
-  #     if(p_val <= alpha_val) {
-  #       cat("  1. READY TO MODEL: This transformation is suitable for ARMA estimation.\n")
-  # 
-  #       cat("\n  2. QUALITY CHECK (Avoiding Over-Differencing):\n")
-  #       cat("     • If you applied d=2 or D=2, ensure the Standard Deviation didn't \n")
-  #       cat("       increase. Over-differencing adds artificial noise.\n")
-  # 
-  #       if(valid_N < 30) {
-  #         cat("\n  3. WARNING: Sample size is critically small. Verify results visually.\n")
-  #       }
-  # 
-  #       # --- SCENARIO 2: NON-STATIONARY (FAILURE) ---
-  #     } else {
-  #       cat("  1. DIAGNOSIS: Trend or seasonal patterns are still present.\n")
-  # 
-  #       cat("\n  2. SUGGESTED ACTIONS:\n")
-  #       cat("     • If mean is shifting: Increase Ordinary Difference (d).\n")
-  #       cat("     • If seasonal peaks remain: Increase Seasonal Difference (D).\n")
-  #       cat("     • If variance is unstable: Ensure 'Log' is selected.\n")
-  # 
-  #       cat("\n  3. LAG SENSITIVITY:\n")
-  #       cat("     • Your current Lag (", input$LagOrderADFd2St, ") might be too high for \n")
-  #       cat("       N =", valid_N, ". Try a lower lag to increase test power.\n")
-  #     }
-  # 
-  #   }, error = function(e) {
-  #     cat(" EXECUTION ERROR: ", e$message, "\n")
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" CRITICAL ADVICE: \n")
-  #     cat("  • Mathematical error: often caused by 'Other' frequency being too high\n")
-  #     cat("    relative to the number of data points available after differencing.\n")
-  #     cat("  • ACTION: Reduce 'Lag' or check your d/D orders.\n")
-  #   })
-  #   cat("==========================================================================\n")
-  # })
+
   
   
-  # # 6. Choice ADF Stationarity Test with Interpretation
-  # output$teststationarited2St <- renderPrint({
-  #   # Require the data and the test parameters
-  #   req(myData_Choice(), input$alternd2St, input$LagOrderADFd2St)
-  #   
-  #   # Calculate effective sample size for context
-  #   # (Differencing reduces N, and ADF needs enough data to be valid)
-  #   valid_N <- length(na.omit(myData_Choice()))
-  #   
-  #   cat("==========================================================================\n")
-  #   cat("      ADF TEST: CUSTOM TRANSFORMED SERIES (User Defined)                  \n")
-  #   cat("==========================================================================\n")
-  #   cat(" This diagnostic checks if your chosen combination of transformations     \n")
-  #   cat(" (Log, d, D) has successfully stabilized the time series.                 \n")
-  #   cat(paste(" • Effective Sample Size:", valid_N, "observations\n"))
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   cat(" DECISION RULE:\n")
-  #   cat(" • H0: The transformed series has a Unit Root (Non-Stationary).           \n")
-  #   cat(" • H1: The transformed series is Stationary (Ready for Modeling).         \n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   cat(" - If p-value < 0.05: Reject H0 (Stationary).\n")
-  #   cat(" - If p-value >= 0.05: Fail to reject H0 (Non-Stationary).\n")
-  #   cat("--------------------------------------------------------------------------\n")
-  #   
-  #   tryCatch({
-  #     # Run the ADF Test
-  #     res <- tseries::adf.test(
-  #       myData_Choice(), 
-  #       alternative = input$alternd2St, 
-  #       k = as.numeric(input$LagOrderADFd2St)
-  #     )
-  #     
-  #     cat(" RESULT:\n")
-  #     print(res)
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" DECISION:\n")
-  #     p_val <- res$p.value
-  #     
-  #     if(p_val < 0.05) {
-  #       cat("  • The p-value is", round(p_val, 4), "(< 0.05).\n")
-  #       cat("  • DECISION: Reject H0. The series is Stationary.\n")
-  #     } else {
-  #       cat("  • The p-value is", round(p_val, 4), "(>= 0.05).\n")
-  #       cat("  • DECISION: Fail to reject H0. The series is Non-Stationary.\n")
-  #     }
-  #     
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" ADVICE & ANALYSIS:\n")
-  #     
-  #     # --- SCENARIO 1: STATIONARY (SUCCESS) ---
-  #     if(p_val < 0.05) {
-  #       cat("  1. READY TO MODEL: This series is suitable for ACF/PACF analysis.\n")
-  #       cat("     You can now determine the AR(p) and MA(q) orders.\n")
-  #       
-  #       cat("\n  2. QUALITY CHECK (Avoiding Over-Differencing):\n")
-  #       cat("     • Stationarity is good, but check the Standard Deviation (SD).\n")
-  #       cat("     • If SD increased compared to the previous differencing level,\n")
-  #       cat("       you may have 'over-differenced' (d or D is too high).\n")
-  #       
-  #       if(valid_N < 30) {
-  #         cat("\n  3. WARNING: Sample size is small (< 30). ADF results may be unstable.\n")
-  #       }
-  #       
-  #       # --- SCENARIO 2: NON-STATIONARY (FAILURE) ---
-  #     } else {
-  #       cat("  1. DIAGNOSIS: The current transformation did not remove the trend/seasonality.\n")
-  #       
-  #       cat("\n  2. SUGGESTED ACTIONS:\n")
-  #       cat("     • If the plot shows increasing variance: Enable 'Log Transform'.\n")
-  #       cat("     • If a linear trend persists: Increase Difference (d) by 1.\n")
-  #       cat("     • If a repeating wave persists: Increase Seasonal Difference (D) by 1.\n")
-  #       
-  #       cat("\n  3. LAG SENSITIVITY:\n")
-  #       cat("     • Try reducing the Lag order. High lags consume degrees of freedom\n")
-  #       cat("       and reduce the power of the test to detect stationarity.\n")
-  #     }
-  #     
-  #   }, error = function(e) {
-  #     cat(" EXECUTION ERROR: ", e$message, "\n")
-  #     cat("--------------------------------------------------------------------------\n")
-  #     cat(" CRITICAL ADVICE: \n")
-  #     cat("  • Your combination of differences (d + D) has likely removed too many\n")
-  #     cat("    data points relative to the chosen Lag order.\n")
-  #     cat("  • ACTION: Reduce the Lag order or reduce the order of differencing.\n")
-  #   })
-  #   cat("==========================================================================\n")
-  # })
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  
+  
+  
+  
+  output$CHECKLIST <- renderPrint({
+    
+    # ============================================================================
+    # 0) SMALL HELPERS
+    # ============================================================================
+    `%||%` <- function(a, b) if (!is.null(a) && length(a) > 0 && !all(is.na(a))) a else b
+    
+    to_num_safe <- function(v, default = NA_real_) {
+      out <- suppressWarnings(as.numeric(v))
+      if (length(out) == 0 || all(is.na(out)) || !is.finite(out[1])) default else out[1]
+    }
+    
+    to_int_safe <- function(v, default = 0L) {
+      out <- suppressWarnings(as.integer(v))
+      if (length(out) == 0 || is.na(out[1]) || !is.finite(out[1])) default else out[1]
+    }
+    
+    safe_head_tail <- function(x, n = 5) {
+      x <- as.numeric(x)
+      x <- x[is.finite(x)]
+      if (length(x) == 0) return(list(head = numeric(0), tail = numeric(0)))
+      list(head = head(x, n), tail = tail(x, n))
+    }
+    
+    # Robust extractor for urca @cval (vector OR matrix; row/col name variations)
+    get_uc_cval <- function(cv, key) {
+      if (is.null(cv) || is.null(key) || !nzchar(key)) return(NA_real_)
+      
+      if (is.matrix(cv)) {
+        if (!is.null(colnames(cv)) && key %in% colnames(cv)) return(as.numeric(cv[1, key]))
+        if (!is.null(rownames(cv)) && key %in% rownames(cv)) return(as.numeric(cv[key, 1]))
+        
+        if (!is.null(colnames(cv))) {
+          m <- which(grepl(key, colnames(cv), fixed = TRUE))
+          if (length(m) > 0) return(as.numeric(cv[1, m[1]]))
+        }
+        if (!is.null(rownames(cv))) {
+          m <- which(grepl(key, rownames(cv), fixed = TRUE))
+          if (length(m) > 0) return(as.numeric(cv[m[1], 1]))
+        }
+        return(NA_real_)
+      }
+      
+      nm <- names(cv)
+      if (!is.null(nm) && key %in% nm) return(as.numeric(cv[[key]]))
+      if (!is.null(nm)) {
+        m <- which(grepl(key, nm, fixed = TRUE))
+        if (length(m) > 0) return(as.numeric(cv[[m[1]]]))
+      }
+      NA_real_
+    }
+    
+    # ============================================================================
+    # 1) INPUT COLLECTION (supports either naming convention in your UI)
+    # ============================================================================
+    alt_in  <- input$alternd2St %||% input$alternSt
+    lag_in  <- input$LagOrderADFd2St %||% input$LagOrderADFSt
+    a_in    <- input$alphaSt2
+    type_in <- input$adfTypeSt2
+    
+    # Optional transformation UI inputs (informational only)
+    d_in   <- input$d_n  %||% input$d  %||% NA
+    D_in   <- input$DS_n %||% input$D  %||% NA
+    log_in <- input$check_box %||% input$islog %||% FALSE
+    
+    req(myData_Choice())
+    
+    if (is.null(alt_in) || is.null(lag_in) || is.null(a_in) || is.null(type_in)) {
+      cat("==========================================================================\n")
+      cat(" [!] INPUT ERROR: One or more inputs are NULL (likely UI/server ID mismatch)\n")
+      cat("     Needed inputs:\n")
+      cat("       - alternative : input$alternd2St OR input$alternSt\n")
+      cat("       - lag         : input$LagOrderADFd2St OR input$LagOrderADFSt\n")
+      cat("       - alpha       : input$alphaSt2\n")
+      cat("       - adf type    : input$adfTypeSt2\n")
+      cat("==========================================================================\n")
+      return(invisible(NULL))
+    }
+    
+    # ============================================================================
+    # 2) DATA PREP
+    # ============================================================================
+    x_raw <- myData_Choice()
+    na_before <- sum(is.na(x_raw))
+    
+    x_class <- paste(class(x_raw), collapse = ", ")
+    x_freq  <- NA_integer_
+    if (inherits(x_raw, "ts")) x_freq <- tryCatch(stats::frequency(x_raw), error = function(e) NA_integer_)
+    
+    x <- as.numeric(stats::na.omit(x_raw))
+    valid_N <- length(x)
+    
+    k <- to_int_safe(lag_in, default = 0L)
+    if (!is.finite(k) || k < 0) k <- 0L
+    
+    alpha_raw <- as.character(a_in)
+    alpha_val <- to_num_safe(alpha_raw, default = 0.05)
+    
+    alpha_col <- switch(alpha_raw,
+                        "0.01" = "1pct",
+                        "0.05" = "5pct",
+                        "0.1"  = "10pct",
+                        "0.10" = "10pct",
+                        "1pct" = "1pct",
+                        "5pct" = "5pct",
+                        "10pct"= "10pct",
+                        "5pct")
+    
+    tau_row <- switch(type_in,
+                      "none"  = "tau1",
+                      "drift" = "tau2",
+                      "trend" = "tau3",
+                      "tau3")
+    
+    D_ui <- to_int_safe(D_in, default = 0L)
+    seasonality_resolved <- isTRUE(D_ui > 0L)
+    
+    # Quick sanity exits (still only printing the 3 sections)
+    if (valid_N < 5 || !is.finite(stats::sd(x)) || stats::sd(x) == 0) {
+      cat("==========================================================================\n")
+      cat(" CHECKLIST\n")
+      cat("==========================================================================\n\n")
+      cat(sprintf(" [ ] N (effective)                    : %d\n", valid_N))
+      cat(sprintf(" [ ] Variance usable (sd>0)           : %s\n",
+                  ifelse(is.finite(stats::sd(x)) && stats::sd(x) > 0, "[✓]", "[!]")))
+      cat("--------------------------------------------------------------------------\n")
+      cat(" FINAL ACADEMIC ADVICE\n")
+      cat("--------------------------------------------------------------------------\n\n")
+      if (valid_N < 5) {
+        cat(" [!] Too few observations after transformation. Provide more data points.\n")
+      } else {
+        cat(" [!] Series is constant/invalid after transformation (sd=0/NA).\n")
+        cat("     Fix data quality or transformation pipeline in myData_Choice().\n")
+      }
+      cat("--------------------------------------------------------------------------\n")
+      cat(" ACTIONABLE NEXT STEPS\n")
+      cat("--------------------------------------------------------------------------\n")
+      cat(" [!] [1] Verify myData_Choice() returns the transformed series (log/d/D).\n")
+      cat(" [!] [2] Print/plot the transformed series to confirm it is not constant.\n")
+      cat(" [!] [3] Re-run tests after fixing the above.\n")
+      cat("==========================================================================\n")
+      return(invisible(NULL))
+    }
+    
+    # ============================================================================
+    # 3) PREDECLARE OUTPUTS
+    # ============================================================================
+    res_urca <- NULL
+    res_tseries <- list(p.value = NA_real_)
+    lb_test <- list(statistic = NA_real_, p.value = NA_real_)
+    lb_lag <- NA_integer_
+    
+    res_kpss_ts <- list(statistic = NA_real_, p.value = NA_real_)
+    res_kpss_uc <- NULL
+    
+    tau_obs <- NA_real_
+    tau_crit <- NA_real_
+    
+    eta_obs_uc <- NA_real_
+    eta_crit_uc <- NA_real_
+    eta_obs_ts <- NA_real_
+    eta_p_one <- NA_real_
+    eta_col <- NA_character_
+    
+    pettitt_res <- list(statistic = NA_real_, p.value = NA_real_, estimate = NULL)
+    
+    is_stationary <- FALSE
+    kpss_stationary <- FALSE
+    agreement_safe <- FALSE
+    lb_white_safe <- FALSE
+    
+    # ============================================================================
+    # 4) COMPUTE TESTS (no verbose phases; we only use results for the 3 outputs)
+    # ============================================================================
+    tryCatch({
+      
+      if (!requireNamespace("urca", quietly = TRUE)) stop("Package 'urca' missing. install.packages('urca')")
+      if (!requireNamespace("tseries", quietly = TRUE)) stop("Package 'tseries' missing. install.packages('tseries')")
+      
+      # ADF (urca)
+      res_urca <- urca::ur.df(x, type = type_in, lags = k)
+      
+      tau_obs <- suppressWarnings(as.numeric(res_urca@teststat[tau_row]))
+      if (!is.finite(tau_obs)) {
+        tau_obs_fallback <- suppressWarnings(as.numeric(res_urca@teststat[1]))
+        if (is.finite(tau_obs_fallback)) tau_obs <- tau_obs_fallback
+      }
+      tau_crit <- suppressWarnings(as.numeric(res_urca@cval[tau_row, alpha_col]))
+      
+      # ADF p-value reference (tseries)
+      if (valid_N > (k + 10)) {
+        res_tseries <- tseries::adf.test(x, alternative = alt_in, k = k)
+      }
+      
+      # Ljung-Box on ADF residuals
+      lb_lag <- max(1L, min(10L, floor(valid_N / 5)))
+      lb_test <- Box.test(res_urca@res, lag = lb_lag, type = "Ljung-Box")
+      
+      # KPSS (tseries p-value, urca cvals)
+      kpss_type <- if (type_in == "trend") "Trend" else "Level"
+      res_kpss_ts <- tseries::kpss.test(x, null = kpss_type)
+      eta_obs_ts  <- to_num_safe(res_kpss_ts$statistic)
+      eta_p_one   <- to_num_safe(res_kpss_ts$p.value)
+      
+      kpss_type_urca <- if (type_in == "trend") "tau" else "mu"
+      res_kpss_uc    <- urca::ur.kpss(x, type = kpss_type_urca)
+      
+      eta_obs_uc <- suppressWarnings(as.numeric(res_kpss_uc@teststat))
+      
+      eta_col <- switch(alpha_raw,
+                        "0.01" = "1pct",
+                        "0.05" = "5pct",
+                        "0.1"  = "10pct",
+                        "0.10" = "10pct",
+                        "1pct" = "1pct",
+                        "5pct" = "5pct",
+                        "10pct"= "10pct",
+                        "5pct")
+      
+      eta_crit_uc <- suppressWarnings(get_uc_cval(res_kpss_uc@cval, eta_col))
+      
+      # Optional Pettitt
+      if (requireNamespace("trend", quietly = TRUE)) {
+        pettitt_res <- tryCatch(trend::pettitt.test(x),
+                                error = function(e) list(statistic = NA_real_, p.value = NA_real_, estimate = NULL))
+      }
+      
+      # Decisions
+      tau_ok <- is.finite(tau_obs) && is.finite(tau_crit)
+      lb_p   <- to_num_safe(lb_test$p.value)
+      lb_ok  <- is.finite(lb_p)
+      
+      is_stationary <- isTRUE(tau_ok) && (tau_obs < tau_crit)
+      
+      # KPSS rejects stationarity if p<alpha OR eta_obs>eta_crit (when available)
+      kpss_reject_by_p   <- is.finite(eta_p_one) && (eta_p_one < alpha_val)
+      kpss_reject_by_eta <- is.finite(eta_obs_uc) && is.finite(eta_crit_uc) && (eta_obs_uc > eta_crit_uc)
+      kpss_stationary <- !(kpss_reject_by_p || kpss_reject_by_eta)
+      
+      lb_white_safe <- lb_ok && (lb_p > alpha_val)
+      
+      agreement_safe <- (isTRUE(is_stationary) && isTRUE(kpss_stationary)) ||
+        (isTRUE(!is_stationary) && isTRUE(!kpss_stationary))
+      
+    }, error = function(e) {
+      cat("==========================================================================\n")
+      cat(" CHECKLIST\n")
+      cat("==========================================================================\n")
+      cat(" [!] Execution error while computing tests:\n")
+      cat("     ", e$message, "\n", sep = "")
+      cat("--------------------------------------------------------------------------\n")
+      cat(" FINAL ACADEMIC ADVICE\n")
+      cat("--------------------------------------------------------------------------\n")
+      cat(" [!] Install/enable required packages and re-run.\n")
+      cat("--------------------------------------------------------------------------\n")
+      cat(" ACTIONABLE NEXT STEPS\n")
+      cat("--------------------------------------------------------------------------\n")
+      cat(" [!] [1] install.packages('urca') and install.packages('tseries')\n")
+      cat(" [!] [2] Re-run after verifying myData_Choice() returns a numeric/ts vector.\n")
+      cat("==========================================================================\n")
+      return(invisible(NULL))
+    })
+    
+    # ============================================================================
+    # 5) OUTPUT ONLY: CHECKLIST, FINAL ACADEMIC ADVICE, ACTIONABLE NEXT STEPS
+    # ============================================================================
+    lb_p <- to_num_safe(lb_test$p.value)
+    adf_p <- to_num_safe(res_tseries$p.value)
+    pett_p <- to_num_safe(pettitt_res$p.value)
+    
+    # --------------------
+    # CHECKLIST
+    # --------------------
+    cat("==========================================================================\n")
+    cat(" CHECKLIST\n")
+    cat("==========================================================================\n")
+    
+    # ht <- safe_head_tail(x, 5)
+    
+    # cat(sprintf(" [ ] N (effective)                              : %d\n", valid_N))
+    # cat(sprintf(" [ ] ADF model type (none/drift/trend)          : %s\n", as.character(type_in)))
+    # cat(sprintf(" [ ] Lag k                                      : %d\n", k))
+    # cat(sprintf(" [ ] Alpha (α)                                  : %.4f\n", alpha_val))
+    # cat(sprintf(" [ ] Data class                                 : %s\n", x_class))
+    # cat(sprintf(" [ ] Frequency (if ts)                          : %s\n", ifelse(is.finite(x_freq), as.character(x_freq), "NA / not ts")))
+    # cat(sprintf(" [ ] NA count before na.omit                     : %d\n", na_before))
+    # cat(sprintf(" [ ] UI transform flags                          : log=%s | d=%s | D=%s\n",
+    #             ifelse(isTRUE(log_in), "ON", "OFF"),
+    #             ifelse(is.na(d_in), "NA", as.character(d_in)),
+    #             ifelse(is.na(D_in), "NA", as.character(D_in))))
+    # cat(sprintf(" [ ] First 5 values tested                       : %s\n", paste(round(ht$head, 4), collapse = ", ")))
+    # cat(sprintf(" [ ] Last  5 values tested                       : %s\n", paste(round(ht$tail, 4), collapse = ", ")))
+    # cat("--------------------------------------------------------------------------\n")
+    
+    # cat(sprintf(" [ ] ADF Tau observed is finite                  : %s\n", ifelse(is.finite(tau_obs), "[✓]", "[!]")))
+    # cat(sprintf(" [ ] ADF Tau critical is finite                  : %s\n", ifelse(is.finite(tau_crit), "[✓]", "[!]")))
+    # cat(sprintf(" [ ] Ljung-Box p-value is finite                 : %s\n", ifelse(is.finite(lb_p), "[✓]", "[!]")))
+    # cat(sprintf(" [ ] KPSS Eta observed (urca) is finite          : %s\n", ifelse(is.finite(eta_obs_uc), "[✓]", "[!]")))
+    # cat(sprintf(" [ ] KPSS Eta critical (urca) is finite          : %s\n", ifelse(is.finite(eta_crit_uc), "[✓]", "[!]" )))
+    # cat(sprintf(" [ ] KPSS p-value (tseries) is finite            : %s\n", ifelse(is.finite(eta_p_one), "[✓]", "[!]" )))
+    # cat("--------------------------------------------------------------------------\n")
+    
+    # Key decisions summary (compact)
+    cat(sprintf(" [ ] ADF decision (reject unit root => stationary) : %s\n",
+                ifelse(isTRUE(is_stationary), "[✓] STATIONARY", "[X] NON-STATIONARY")))
+    cat(sprintf(" [ ] KPSS decision (fail reject => stationary)     : %s\n",
+                ifelse(isTRUE(kpss_stationary), "[✓] STATIONARY", "[X] NON-STATIONARY")))
+    cat(sprintf(" [ ] ADF vs KPSS agreement                         : %s\n",
+                ifelse(isTRUE(agreement_safe), "[✓] AGREEMENT", "[?] CONFLICT")))
+    cat(sprintf(" [ ] Residual whiteness (LB (Ljung–Box) p>α)       : %s\n",
+                ifelse(is.finite(lb_p) && lb_p > alpha_val, "[✓] OK", ifelse(is.finite(lb_p), "[X] FAIL", "[?] UNKNOWN"))))
+    cat(sprintf(" [ ] Seasonal differencing indicated (UI D>0)      : %s\n",
+                ifelse(isTRUE(seasonality_resolved), "[✓] YES", "[!] NO / UNKNOWN")))
+    cat(sprintf(" [ ] Pettitt break check available                 : %s\n",
+                ifelse(requireNamespace("trend", quietly = TRUE), "[✓] YES", "[!] NO (trend pkg missing)")))
+    # if (requireNamespace("trend", quietly = TRUE)) {
+    #   cat(sprintf(" [ ] Pettitt p-value                               : %.6f\n", pett_p))
+    # }
+    
+    cat("\n")
+    
+    # --------------------
+    # FINAL ACADEMIC ADVICE
+    # --------------------
+    cat("==========================================================================\n")
+    cat(" FINAL ACADEMIC ADVICE\n")
+    cat("==========================================================================\n")
+    cat("\n")
+    # Explain conflict in a compact, decision-useful way
+    if (isTRUE(agreement_safe) && isTRUE(is_stationary) && isTRUE(kpss_stationary)) {
+      cat(" [✓] Strong evidence of stationarity (I(0)) from BOTH ADF and KPSS.\n")
+      if (!(is.finite(lb_p) && lb_p > alpha_val)) {
+        cat(" [!] But residual autocorrelation suggests your ADF lag may be too small.\n")
+        cat("     Treat the ADF conclusion as less reliable until LB passes.\n")
+      } else {
+        cat(" [✓] Residuals are consistent with a well-specified ADF regression.\n")
+      }
+      cat("     Academic implication: proceed with ARMA/ARIMA using d=0 (and D as already applied).\n")
+      
+    } else if (isTRUE(agreement_safe) && !isTRUE(is_stationary) && !isTRUE(kpss_stationary)) {
+      cat(" [X] Strong evidence of a unit root (non-stationarity) from BOTH tests.\n")
+      cat("     Academic implication: apply differencing (d=1) and re-test.\n")
+      if (is.finite(x_freq) && x_freq > 1 && !isTRUE(seasonality_resolved)) {
+        cat(" [!] Seasonal frequency detected; consider seasonal differencing (D=1) before increasing k.\n")
+      }
+      
+    } else {
+      cat(" [?] ADF and KPSS are in conflict.\n")
+      cat("     This is common when the series is near-unit-root, trend-stationary vs difference-stationary,\n")
+      cat("     has structural breaks, seasonality not properly removed, or lag k is mis-specified.\n")
+      
+      if (requireNamespace("trend", quietly = TRUE) && is.finite(pett_p) && pett_p < alpha_val) {
+        cat(" [!] Pettitt suggests a structural break (p < α). Breaks often cause ADF/KPSS disagreement.\n")
+      }
+      
+      if (is.finite(x_freq) && x_freq > 1 && !isTRUE(seasonality_resolved)) {
+        cat(" [!] Seasonal frequency detected but seasonal differencing is NOT indicated (D=0).\n")
+        cat("     Unremoved seasonality often triggers KPSS non-stationarity while ADF looks borderline.\n")
+      }
+      
+      if (is.finite(lb_p) && lb_p <= alpha_val) {
+        cat(" [!] Ljung-Box fails => ADF regression residuals are autocorrelated; your ADF decision is less trustworthy.\n")
+      }
+      
+      cat("     Academic implication: be conservative—prefer differencing (and/or D=1 if seasonal), then re-test.\n")
+    }
+    
+    cat(sprintf("\n (Numbers) ADF tau=%.6f | tau_crit=%.6f | ADF p(ref)=%.6f\n", tau_obs, tau_crit, adf_p))
+    cat(sprintf("           KPSS eta_obs=%.6f | eta_crit=%.6f | KPSS p=%.6f\n", eta_obs_uc, eta_crit_uc, eta_p_one))
+    cat(sprintf("           LB (the Ljung–Box Q test) p=%.6f (lag=%s)\n", lb_p, ifelse(is.finite(lb_lag), as.character(lb_lag), "NA")))
+            cat("            |__ it’s normal to choose LB lag by a rule-of-thumb (like min(10, floor(N/5)) \n")
+    cat("\n")
+    
+    # --------------------
+    # ACTIONABLE NEXT STEPS
+    # --------------------
+    cat("==========================================================================\n")
+    cat(" ACTIONABLE NEXT STEPS\n")
+    cat("==========================================================================\n")
+    
+    
+    # [1] Residual autocorrelation
+    cat("\n")
+    if (is.finite(lb_p) && lb_p <= alpha_val) {
+      cat(" [X] [1] FIX RESIDUAL AUTOCORRELATION (LB failed)\n")
+      cat("     • Increase k gradually (k+1, k+2) and re-run.\n")
+      cat("     • If k becomes large vs N, prefer (d=1) and/or (D=1 if seasonal) instead of pushing k.\n")
+    } else if (is.finite(lb_p) && lb_p > alpha_val) {
+      cat(" [✓] [1] RESIDUALS LOOK OK (LB passed)\n")
+      cat("     • Your ADF regression is less likely biased by autocorrelation.\n")
+    } else {
+      cat(" [?] [1] RESIDUAL DIAGNOSTICS INCONCLUSIVE\n")
+      cat("     • LB p-value is NA/Inf. Reduce k and re-run; verify x is not pathological.\n")
+    }
+    
+    # [2] Agreement vs conflict
+    cat("\n")
+    if (!isTRUE(agreement_safe)) {
+      cat(" [?] [2] RESOLVE THE ADF vs KPSS CONFLICT\n")
+      cat("     • Re-test ADF with model types: none / drift / trend (choose what your plot suggests).\n")
+      cat("     • If seasonal frequency exists, try D=1 (seasonal differencing) before debating k.\n")
+      cat("     • If series is strictly positive, try log or Box-Cox for variance stabilization.\n")
+      if (requireNamespace("trend", quietly = TRUE)) {
+        if (is.finite(pett_p) && pett_p < alpha_val) {
+          cat("     • Break detected: split sample around the break and re-run KPSS/ADF on each segment.\n")
+        } else {
+          cat("     • No strong break evidence at α: focus on model type (trend/drift) + seasonality + k.\n")
+        }
+      } else {
+        cat("     • Install 'trend' to check breaks: install.packages('trend')\n")
+      }
+    } else {
+      cat(" [✓] [2] TESTS AGREE — MOVE FORWARD\n")
+      cat("     • Use this decision to pick d (and D if seasonal) for ARIMA/SARIMA modeling.\n")
+    }
+    
+    # [3] Seasonality sanity with required rule: [✓] if resolved, else [!]
+    cat("\n")
+    season_tag <- if (isTRUE(seasonality_resolved)) "[✓]" else "[!]"
+    cat(sprintf(" %s [3] SEASONALITY SANITY\n", season_tag))
+    if (is.finite(x_freq) && x_freq > 1) {
+      cat(sprintf("     • Frequency=%d detected.\n", x_freq))
+      if (isTRUE(seasonality_resolved)) {
+        cat("     • D>0 in UI indicates seasonality treatment is ON (as long as myData_Choice() applies it).\n")
+      } else {
+        cat("     • Consider D=1 if ACF shows seasonal spikes at lag = frequency, 2*frequency, ...\n")
+      }
+    } else {
+      cat("     • Frequency not available: rely on plot/ACF to decide if seasonal differencing is needed.\n")
+    }
+    
+    # [4] Explosive note
+    cat("\n")
+    if (identical(as.character(alt_in), "explosive")) {
+      cat(" [!] [4] EXPLOSIVE MODE NOTE\n")
+      cat("     • KPSS is not an explosive test. Use tseries ADF p-value + plots.\n")
+    } else {
+      cat(" [✓] [4] EXPLOSIVE MODE NOTE\n")
+      cat("     • Standard stationarity workflow applies.\n")
+    }
+    
+    
+    
+    # --------------------------------------------------------------------------
+    # EXTRA ACTIONABLE NEXT STEPS (more complete workflow)
+    # --------------------------------------------------------------------------
+    
+    # [5] Choose ADF model type systematically (avoid random picking)
+    cat("\n")
+    cat(" [!] [5] CHOOSE ADF MODEL TYPE SYSTEMATICALLY (avoid mis-specification)\n")
+    cat("     • Use your time plot:\n")
+    cat("       - Clear deterministic trend  → set type='trend'\n")
+    cat("       - No clear trend, non-zero mean → set type='drift'\n")
+    cat("       - Mean around ~0 (rare)      → set type='none'\n")
+    cat("     • Wrong type_in is a top cause of ADF vs KPSS conflict.\n")
+    
+    # [6] Lag strategy: use Ljung-Box as your guardrail
+    cat("\n")
+    cat(" [!] [6] USE LB AS A LAG-SELECTION GUARDRAIL\n")
+    cat("     • Increase k until LB p-value > α (residuals approx. white).\n")
+    cat("     • Stop increasing k if N becomes too small relative to k (risk: N <= k+10).\n")
+    cat("     • If you hit that risk, prefer differencing (d or D) instead of more k.\n")
+    
+    # [7] Seasonality protocol (if frequency known)
+    cat("\n")
+    if (is.finite(x_freq) && x_freq > 1) {
+      cat(" [!] [7] SEASONALITY PROTOCOL (freq detected)\n")
+      cat("     • Check ACF for spikes at seasonal lags: freq, 2*freq, ...\n")
+      if (isTRUE(seasonality_resolved)) {
+        cat("     [✓] D>0 indicated → ensure myData_Choice() truly applied seasonal differencing.\n")
+      } else {
+        cat("     [X] D=0 indicated → if seasonal spikes exist, set D=1 and re-test.\n")
+      }
+    }
+    
+    # [8] Break protocol (if Pettitt available)
+    cat("\n")
+    if (requireNamespace("trend", quietly = TRUE)) {
+      cat(" [!] [8] BREAK PROTOCOL (Pettitt)\n")
+      if (is.finite(pett_p) && (pett_p < alpha_val)) {
+        cat("     [!] Break detected → do this:\n")
+        cat("       1) Split the series around the estimated break index.\n")
+        cat("       2) Re-run KPSS/ADF on each segment.\n")
+        cat("       3) If segments are stationary but full sample is not → break-driven non-stationarity.\n")
+      } else {
+        cat("     [✓] No strong single-break evidence at α.\n")
+        cat("     • If conflict persists, consider multiple breaks or gradual regime changes.\n")
+      }
+    } else {
+      cat(" [!] [8] BREAK PROTOCOL (Pettitt)\n")
+      cat("     [!] trend package not installed → install.packages('trend') to enable break diagnostics.\n")
+    }
+    
+    # [9] Conservative “default safe choice” rule (useful in teaching apps)
+    cat("\n")
+    cat(" [!] [9] DEFAULT SAFE CHOICE (when unsure)\n")
+    cat("     • If ADF/KPSS conflict persists after fixing seasonality + lag:\n")
+    cat("       - Prefer differencing (d=1) (and D=1 if seasonal) then re-test.\n")
+    cat("     • This reduces the chance of building ARMA on a near-integrated series.\n")
+    
+    # [10] Sanity check transformations inside myData_Choice()
+    cat("\n")
+    cat(" [!] [10] TRANSFORMATION SANITY INSIDE myData_Choice()\n")
+    cat("     • Ensure the same transformed object is returned for ALL downstream tests.\n")
+    cat("     • Avoid mixing ts and numeric conversions before applying frequency-based operations.\n")
+    cat("     • After log, verify positivity and handle zeros (e.g., log1p) if needed.\n")
+    
+    
+    cat("==========================================================================\n\n")
+    
+    # --------------------------------------------------------------------------
+    # EXTRA FINAL ACADEMIC ADVICE (more complete decision logic)
+    # --------------------------------------------------------------------------
+    
+    # Power / sample size warnings (high impact)
+    if (valid_N < 30) {
+      cat(" [!] Power warning: with N < 30, ADF/KPSS can be unstable (low power / size distortions).\n")
+      if (valid_N < 15) {
+        cat("     [X] N < 15 is very weak for reliable inference; treat conclusions as provisional.\n")
+      } else {
+        cat("     [?] N is borderline; combine with plots + conservative transformations.\n")
+      }
+    } else {
+      cat(" [✓] Sample size is generally adequate for classical stationarity tests.\n")
+    }
+    
+    # Lag-vs-N safety
+    if (valid_N <= (k + 10)) {
+      cat(" [!] Lag risk: k is large relative to N (N <= k+10). Regression-based tests may misbehave.\n")
+      cat("     Action: reduce k OR increase N, and prefer differencing/seasonal differencing over huge k.\n")
+    } else {
+      cat(" [✓] Lag order looks safe relative to N.\n")
+    }
+    
+    # Model-type specification advice (none/drift/trend)
+    cat(" [!] Model-type (none/drift/trend) matters:\n")
+    cat("     • If the series has a visible non-zero mean but no deterministic trend → prefer 'drift'.\n")
+    cat("     • If the series has a clear deterministic trend → prefer 'trend'.\n")
+    cat("     • If the series oscillates around zero (rare in real data) → 'none'.\n")
+    
+    # Seasonality: warn if frequency exists but D not indicated
+    if (is.finite(x_freq) && x_freq > 1 && !isTRUE(seasonality_resolved)) {
+      cat(" [!] Seasonality risk: frequency suggests seasonality, but D=0 in UI.\n")
+      cat("     Missing seasonal differencing can cause KPSS to reject stationarity and/or ADF to look borderline.\n")
+    } else if (is.finite(x_freq) && x_freq > 1 && isTRUE(seasonality_resolved)) {
+      cat(" [✓] Seasonality flag: D>0 in UI indicates seasonal treatment is intended.\n")
+    }
+    
+    # Structural break contamination (Pettitt)
+    if (requireNamespace("trend", quietly = TRUE) && is.finite(pett_p) && (pett_p < alpha_val)) {
+      cat(" [!] Structural break contamination: Pettitt indicates a change-point (p < α).\n")
+      cat("     ADF/KPSS disagreements are common under breaks; consider segment tests or break-aware models.\n")
+    }
+    
+    # Near-unit-root / borderline zone heuristic
+    # (We don't have direct 'borderline' threshold universally, so we use agreement + p-values)
+    if (!isTRUE(agreement_safe) && is.finite(adf_p) && is.finite(eta_p_one)) {
+      if (adf_p > 0.01 && adf_p < 0.10 && eta_p_one > 0.01 && eta_p_one < 0.10) {
+        cat(" [?] Near-unit-root zone: both tests are near typical cutoffs.\n")
+        cat("     Treat the series as highly persistent; prefer conservative differencing and validate by forecasting performance.\n")
+      }
+    }
+    
+    # Explosive alternative caveat (important correctness note)
+    if (identical(as.character(alt_in), "explosive")) {
+      cat(" [!] Explosive caveat: urca tau critical values are for the usual left-tail unit-root framework.\n")
+      cat("     For explosive detection, rely primarily on tseries::adf.test p-value (right-tail) + plots.\n")
+    }
+    
+    
+    cat("==========================================================================\n\n")
+    
+    # Practical path
+    cat(" PRACTICAL MODELING PATH:\n")
+    if (isTRUE(is_stationary) && is.finite(lb_p) && (lb_p > alpha_val)) {
+      cat(" [✓] Treat as I(0): identify ARMA on current series → fit → residual analysis.\n")
+    } else if (!isTRUE(is_stationary)) {
+      cat(" [X] Treat as I(1): apply differencing (d and/or D) → re-test → then identify ARMA.\n")
+    } else {
+      cat(" [?] Borderline/mixed: prefer conservative differencing and validate with residual diagnostics.\n")
+    }
+    
+    cat("==========================================================================\n\n")
+    
+    
+    
+  })
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
+  
+  
+  
+  
   
   # 7. Auto-ARIMA on Selected Transformation
   output$ARIMA_d_D_log <- renderPrint({
@@ -4645,65 +5230,109 @@ server <- function(input, output, session) {
 
   
   
-  
-  # 2.    AUGMENTED DICKEY-FULLER (ADF) TEST
+  # 2. AUGMENTED DICKEY-FULLER (ADF) TEST WITH ENHANCED DIAGNOSTICS
   output$teststationariteARIMApdq <- renderPrint({
-    req(tsData())
+    req(tsData(), input$adfType2, input$alphaSt_ARIMA)
     myData <- tsData()
     
-    # 1. Run the Test and Capture Output
-    result <- tryCatch({
-      # Perform the actual ADF test
-      adf_result <- tseries::adf.test(myData, 
-                                      alternative = input$altern2, 
-                                      k = input$LagOrderADF2)
+    # 1. Setup Alpha and Critical Value Mapping
+    alpha_val <- as.numeric(input$alphaSt_ARIMA)
+    alpha_col <- switch(as.character(alpha_val), "0.01" = "1pct", "0.05" = "5pct", "0.1"  = "10pct")
+    tau_row   <- switch(input$adfType2, "none" = "tau1", "drift" = "tau2", "trend" = "tau3")
+    
+    # 2. Calculate Diagnostic Metrics
+    current_sd <- sd(myData, na.rm = TRUE)
+    n_obs      <- length(na.omit(myData))
+    
+    cat("==========================================================================\n")
+    cat("                AUGMENTED DICKEY-FULLER (ADF) TEST REPORT                 \n")
+    cat("==========================================================================\n")
+    cat(paste(" MODEL SPECIFICATION :", toupper(input$adfType2), "\n"))
+    cat(paste(" EFFECTIVE OBS (N)   :", n_obs, "\n"))
+    cat(paste(" SERIES STD. DEV     :", round(current_sd, 4), "\n"))
+    cat("--------------------------------------------------------------------------\n")
+    
+    cat(" DECISION RULE:\n")
+    cat(" • H0: The series has a Unit Root (NON-STATIONARY).\n")
+    cat(" • H1: The series is STATIONARY.\n")
+    cat(paste(" • CRITERION: Reject H0 if Tau (Observed) < Tau (Critical).\n"))
+    cat("--------------------------------------------------------------------------\n")
+    
+    tryCatch({
+      # 3. Perform the Test
+      # We use urca::ur.df as the engine
+      adf_res <- urca::ur.df(myData, 
+                             type = input$adfType2, 
+                             lags = as.numeric(input$LagOrderADF2))
       
-      # 2. Construct the Professional Report
-      capture.output({
-        cat("================================================================\n")
-        cat("               AUGMENTED DICKEY-FULLER (ADF) TEST               \n")
-        cat("               Metric: Unit Root Stationarity Test              \n")
-        cat("================================================================\n\n")
-        
-        # Print the formal test output
-        print(adf_result)
-        
-        cat("\n================================================================\n")
-        cat("                   STATISTICAL INTERPRETATION                   \n")
-        cat("================================================================\n")
-        
-        # Extract p-value
-        pval <- as.numeric(adf_result$p.value)
-        
-        cat("Hypothesis Testing:\n")
-        cat("  H0: The series has a unit root (It is NON-STATIONARY).\n")
-        cat("  Ha: The series is STATIONARY.\n\n")
-        
-        cat("Decision Rule:\n")
-        if(pval < 0.05) {
-          cat("  RESULT: Significant Evidence of Stationarity (p < 0.05).\n")
-          cat("  DECISION: Reject H0. The series is stationary.\n")
-          cat("  ADVICE: No further differencing (d=0) may be required for this\n")
-          cat("          specific component of the model.\n")
-        } else {
-          cat("  RESULT: Insufficient Evidence of Stationarity (p >= 0.05).\n")
-          cat("  DECISION: Fail to reject H0. The series is non-stationary.\n")
-          cat("  ADVICE: A unit root exists. You likely need to apply at least\n")
-          cat("          one level of differencing (d=1) to stabilize the mean.\n")
-        }
-        
-        cat("================================================================\n")
-      })
+      tau_obs  <- adf_res@teststat[1] 
+      tau_crit <- adf_res@cval[tau_row, alpha_col]
+      
+      # 4. Residual Diagnostics (The White Noise Check)
+      # Extract residuals from the internal ADF regression to ensure test validity
+      adf_residuals <- adf_res@res
+      lb_test       <- Box.test(adf_residuals, lag = min(10, n_obs/5), type = "Ljung-Box")
+      lb_p          <- lb_test$p.value
+      
+      cat(" RESULT:\n")
+      cat(paste(" • Tau (Observed Value) :", round(tau_obs, 4), "\n"))
+      cat(paste(" • Tau (Critical Value) :", round(tau_crit, 4), "at", (alpha_val * 100), "% level\n"))
+      cat(paste(" • Residual White Noise : p =", round(lb_p, 4), 
+                if(lb_p > 0.05) " (PASSED)" else " (FAILED)"), "\n")
+      cat("--------------------------------------------------------------------------\n")
+      
+      cat(" DECISION:\n")
+      if(tau_obs < tau_crit) {
+        cat(paste(" • Tau Observed is more negative than the Critical Value.\n"))
+        cat(" • DECISION: Reject H0. The series is STATIONARY.\n")
+        is_stationary <- TRUE
+      } else {
+        cat(paste(" • Tau Observed is NOT more negative than the Critical Value.\n"))
+        cat(" • DECISION: Fail to reject H0. The series is NON-STATIONARY.\n")
+        is_stationary <- FALSE
+      }
+      
+      cat("--------------------------------------------------------------------------\n")
+      cat(" ADVICE & ANALYSIS DIRECTIVES:\n")
+      
+      # DIRECTIVE 1: STATIONARITY STATUS
+      if(is_stationary) {
+        cat(" 1. MODELING: Proceed with d=0 (Integrated of order 0).\n")
+      } else {
+        cat(" 1. MODELING: Apply differencing (d=1). The series is I(1).\n")
+      }
+      
+      # DIRECTIVE 2: TEST RELIABILITY (LJUNG-BOX)
+      cat("\n 2. TEST VALIDITY (Residual Analysis):\n")
+      if(lb_p > 0.05) {
+        cat("    • SUCCESS: Residuals are White Noise. The test results are reliable.\n")
+      } else {
+        cat("    • WARNING: The ADF residuals show serial correlation.\n")
+        cat("    • DIRECTIVE: The current Lag (k) is too low. Increase 'Lag' to \n")
+        cat("      fully capture the dynamics and fix the bias in Tau.\n")
+      }
+      
+      # DIRECTIVE 3: OVER-DIFFERENCING CHECK
+      cat("\n 3. TRANSFORMATION CHECK:\n")
+      cat("    • If this series was already differenced and Std. Dev increased,\n")
+      cat("      revert to the previous state. Over-differencing masks real data.\n")
+      
+      # DIRECTIVE 4: STRUCTURAL BREAKS
+      cat("\n 4. ADVANCED DIAGNOSTICS:\n")
+      cat("    • If Tau is close to Critical but fails, look for a 'Structural Break'.\n")
+      cat("    • A single level shift can make a stationary series appear I(1).\n")
+      
     }, error = function(e) {
-      return(paste("Error in ADF Test:", e$message))
+      cat(" EXECUTION ERROR: ", e$message, "\n")
+      cat("--------------------------------------------------------------------------\n")
+      cat(" ACTION: Ensure Lag order is reasonable and series has no leading NAs.\n")
     })
     
-    # Call your help function
-    helpADF()
-    
-    # Display result
-    cat(paste(result, collapse = "\n"))
+    cat("==========================================================================\n")
   })
+  
+  
+ 
   
   
 
