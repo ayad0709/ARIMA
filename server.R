@@ -572,6 +572,7 @@ server <- function(input, output, session) {
     output$dataPrint <- renderTable({
       req(data(), input$dateCol)
       df <- data()
+      
       try({
         if(is.numeric(df[[input$dateCol]])) {
           df[[input$dateCol]] <- as.Date(df[[input$dateCol]], origin = "1899-12-30")
@@ -580,7 +581,10 @@ server <- function(input, output, session) {
         }
         df[[input$dateCol]] <- format(df[[input$dateCol]], "%d/%m/%Y")
       }, silent = TRUE)
-      head(df, 100) 
+      
+      # Return the full dataframe instead of head(df, 100)
+      df 
+      
     }, rownames = TRUE)
     
     # 4. Conditional Sidebar Buttons
@@ -826,19 +830,103 @@ server <- function(input, output, session) {
     return(final_table)
   }, digits = 4)
   
-  # 3. Detailed Statistics (pastecs::stat.desc)
+
+  
+  
+  # 3. Detailed Statistics (pastecs::stat.desc) — formatted table + CI as [a , b]
   output$data_StatisticsText2 <- renderPrint({
     req(selected_column_data())
     
-    # Compute descriptive statistics using pastecs
-    stats_output <- pastecs::stat.desc(selected_column_data(), norm = TRUE)
+    x <- as.numeric(stats::na.omit(selected_column_data()))
+    req(length(x) > 0)
+    
+    if (!requireNamespace("pastecs", quietly = TRUE)) {
+      cat("ERROR: Package 'pastecs' is not installed.\n")
+      return(invisible(NULL))
+    }
+    
+    # Compute statistics
+    s <- pastecs::stat.desc(x, norm = TRUE)
+    
+    # Build table
+    df <- data.frame(
+      Statistic = names(s),
+      Value     = as.numeric(s),
+      stringsAsFactors = FALSE
+    )
+    
+    # Confidence interval (display only)
+    ci_half <- s["CI.mean.0.95"]
+    ci_low  <- s["mean"] - ci_half
+    ci_high <- s["mean"] + ci_half
+    
+    # Replace CI row with formatted interval
+    df <- df[df$Statistic != "CI.mean.0.95", ]
+    df <- rbind(
+      df,
+      data.frame(
+        Statistic = "95% Confidence Interval (Mean)",
+        Value = NA_real_,
+        stringsAsFactors = FALSE
+      )
+    )
+    
+    # Rename statistics
+    label_map <- c(
+      "nbr.val"  = "Number of observations (N)",
+      "nbr.null" = "Number of zeros",
+      "nbr.na"   = "Number of missing values (NA)",
+      "min"      = "Minimum",
+      "max"      = "Maximum",
+      "range"    = "Range (max − min)",
+      "sum"      = "Sum",
+      "mean"     = "Mean",
+      "median"   = "Median",
+      "SE.mean"  = "Std. error of mean",
+      "var"      = "Variance",
+      "std.dev"  = "Standard deviation",
+      "coef.var" = "Coefficient of variation",
+      "skewness" = "Skewness",
+      "kurtosis" = "Kurtosis",
+      "normtest.W" = "Normality (Shapiro) W",
+      "normtest.p" = "Normality (Shapiro) p-value"
+    )
+    
+    df$Statistic <- ifelse(df$Statistic %in% names(label_map),
+                           unname(label_map[df$Statistic]),
+                           df$Statistic)
+    
+    # Formatting (SPACE as thousands separator)
+    is_count <- grepl("^Number of ", df$Statistic)
+    
+    df$Value <- ifelse(
+      is_count,
+      format(round(df$Value),
+             big.mark = " ",
+             scientific = FALSE,
+             trim = TRUE),
+      formatC(df$Value,
+              format = "f",
+              digits = 4,
+              big.mark = " ")
+    )
+    
+    # Insert CI display
+    ci_row <- which(df$Statistic == "95% Confidence Interval (Mean)")
+    df$Value[ci_row] <- sprintf(
+      "[ %.4f , %.4f ]",
+      ci_low,
+      ci_high
+    )
     
     cat("Detailed Descriptive Statistics\n")
-    cat("-------------------------------\n")
-    
-    # Format as a named list for cleaner print output
-    print(as.data.frame(stats_output))
+    cat("--------------------------------\n")
+    print(df, row.names = FALSE, right = FALSE)
   })
+  
+  
+  
+  
   
   # 4. Integrated Model Output (ARIMA & Holt-Winters)
   output$modelOutput <- renderPrint({
@@ -4943,33 +5031,623 @@ server <- function(input, output, session) {
   })
 
 
+  # output$model_ARIMApdq_p_values <- renderPrint({
+  #   req(tsData())
+  #       if (input$driftYN == "TRUE") {
+  #     driftConsideration =TRUE
+  #   }
+  #   else {
+  #     driftConsideration =FALSE
+  #   }
+  # 
+  #   myData <- tsData()
+  # 
+  #   sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
+  #   # sarima_model <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
+  # 
+  #   cat("............................................................................\n")
+  #   cat("                     Testing the coefficients values                        \n")
+  #   cat("............................................................................\n")
+  #   cat(" H0 : the coefficient = 0                                                   \n")
+  #   cat(" Ha : the coefficient is different from 0                                   \n")
+  #   cat("............................................................................\n")
+  #   cat(" p-value < 0.05 indicates that the corresponding coefficient is             \n")
+  #   cat("                significantly different from 0                              \n")
+  #   cat("............................................................................\n")
+  #   coeftest(sarima_model)
+  # })
+
+  
   output$model_ARIMApdq_p_values <- renderPrint({
     req(tsData())
-        if (input$driftYN == "TRUE") {
-      driftConsideration =TRUE
-    }
-    else {
-      driftConsideration =FALSE
-    }
-
-    myData <- tsData()
-
-    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
-    # sarima_model <- Arima(myData, order=c(input$ARIMAp,input$ARIMAd,input$ARIMAq),seasonal = c(input$ARIMAps,input$ARIMAds,input$ARIMAqs), include.drift = driftConsideration)
-
-    cat("............................................................................\n")
-    cat("                     Testing the coefficients values                        \n")
-    cat("............................................................................\n")
-    cat(" H0 : the coefficient = 0                                                   \n")
-    cat(" Ha : the coefficient is different from 0                                   \n")
-    cat("............................................................................\n")
-    cat(" p-value < 0.05 indicates that the corresponding coefficient is             \n")
-    cat("                significantly different from 0                              \n")
-    cat("............................................................................\n")
-    coeftest(sarima_model)
+    
+    # --- Setup Drift ---
+    driftConsideration <- if (input$driftYN == "TRUE") TRUE else FALSE
+    
+    # --- Load Model ---
+    # Assuming results_ARIMA_pdPD_drift() is a reactive returning the model in $modelOutput
+    res <- results_ARIMA_pdPD_drift()
+    req(res)
+    sarima_model <- res$modelOutput
+    
+    # ============================================================================
+    # 1) HEADER & HYPOTHESIS
+    # ============================================================================
+    cat("==========================================================================\n")
+    cat("                SARIMA COEFFICIENT SIGNIFICANCE TEST                      \n")
+    cat("==========================================================================\n")
+    
+    cat(" DECISION RULE:\n")
+    cat(" • H0 : The coefficient = 0 (Not significant).\n")
+    cat(" • Ha : The coefficient is different from 0 (Significant).\n")
+    cat(" -> CRITERIA: Reject H0 if P-Value < Alpha (usually 0.05).\n")
+    cat("--------------------------------------------------------------------------\n")
+    
+    # ============================================================================
+    # 2) RESULT (Statistical Output)
+    # ============================================================================
+    cat("\n RESULT:\n")
+    
+    tryCatch({
+      if (!requireNamespace("lmtest", quietly = TRUE)) stop("Package 'lmtest' is required.")
+      
+      # Generate the coefficient test table
+      ctest <- lmtest::coeftest(sarima_model)
+      print(ctest)
+      
+      # ============================================================================
+      # 3) DECISION
+      # ============================================================================
+      cat("\n DECISION:\n")
+      
+      # Check if all coefficients are significant
+      p_values <- ctest[, 4]
+      insignificant_coefs <- names(p_values[p_values > 0.05])
+      
+      if (length(insignificant_coefs) == 0) {
+        cat("  -> ALL coefficients are significantly different from 0 at the 5% level.\n")
+      } else {
+        cat(sprintf("  -> WARNING: The following coefficient(s) are NOT significant: %s\n", 
+                    paste(insignificant_coefs, collapse = ", ")))
+      }
+      
+      # ============================================================================
+      # 4) ADVICE
+      # ============================================================================
+      cat("\n ADVICE:\n")
+      if (length(insignificant_coefs) > 0) {
+        cat(" • Consider simplifying the model (Parsimony Principle).\n")
+        cat(" • Try reducing the order (p, q, P, or Q) of the insignificant components.\n")
+        cat(" • If 'drift' or 'intercept' is insignificant, try setting include.drift = FALSE.\n")
+      } else {
+        cat(" • The model parameters are statistically well-defined.\n")
+        cat(" • Proceed to Residual Diagnostics (Ljung-Box, Normality) to ensure validity.\n")
+      }
+      
+    }, error = function(e) {
+      cat(" [!] Error calculating p-values: ", e$message, "\n")
+    })
+    
+    cat("==========================================================================\n")
   })
 
-
+  
+  
+  
+  
+  
+  output$residual_independence_diagnostic <- renderPrint({
+    req(results_ARIMA_pdPD_drift())
+    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
+    resids <- residuals(sarima_model)
+    n <- length(resids)
+    alpha_val <- 0.05
+    
+    # Determination of lags: 
+    # For seasonal data, checking up to 20 lags is standard practice.
+    lb_lag <- 20 
+    
+    cat("==========================================================================\n")
+    cat("             ACADEMIC REPORT: RESIDUAL INDEPENDENCE ANALYSIS              \n")
+    cat("==========================================================================\n")
+    
+    cat(" DECISION RULE:\n")
+    cat(" • Null Hypothesis (H0): Residuals are independent (White Noise).\n")
+    cat(" • Alternative Hypothesis (Ha): Residuals exhibit serial correlation.\n")
+    cat(sprintf(" • Significance Level (α): %.2f\n", alpha_val))
+    cat(" • Rejection Criterion: Reject H0 if Test Statistic > Critical Value\n")
+    cat("   (or equivalently, if P-value < α).\n")
+    cat("--------------------------------------------------------------------------\n")
+    
+    tryCatch({
+      # --- 1. Ljung-Box (Refined Portmanteau) ---
+      lb_test <- Box.test(resids, lag = lb_lag, type = "Ljung-Box")
+      lb_crit <- qchisq(1 - alpha_val, df = lb_lag)
+      
+      # --- 2. Box-Pierce (Original Portmanteau) ---
+      bp_test <- Box.test(resids, lag = lb_lag, type = "Box-Pierce")
+      bp_crit <- qchisq(1 - alpha_val, df = lb_lag)
+      
+      # ============================================================================
+      # TEST 1: LJUNG-BOX (Q*)
+      # ============================================================================
+      cat(" 1. LJUNG-BOX PORTMANTEAU TEST (Q*)\n")
+      cat(sprintf("    - Test Statistic (Q*): %.4f\n", lb_test$statistic))
+      cat(sprintf("    - Critical Value     : %.4f (χ², df=%d)\n", lb_crit, lb_lag))
+      cat(sprintf("    - P-Value            : %.4f\n", lb_test$p.value))
+      
+      cat("\n RESULT:\n")
+      cat(sprintf("  The Ljung-Box test yields a Q*-statistic of %.4f for %d lags. This \n", lb_test$statistic, lb_lag))
+      cat("  metric is specifically adjusted to provide better power in small to \n")
+      cat("  medium-sized samples compared to the original Box-Pierce test.\n")
+      
+      cat("\n DECISION:\n")
+      if(lb_test$p.value < alpha_val) {
+        cat(sprintf("  Given that the Q*-statistic (%.4f) exceeds the critical value (%.4f), \n", lb_test$statistic, lb_crit))
+        cat("  we reject the null hypothesis of independence at the 5% level.\n")
+      } else {
+        cat(sprintf("  Since the Q*-statistic (%.4f) is below the critical threshold (%.4f), \n", lb_test$statistic, lb_crit))
+        cat("  we fail to reject the null hypothesis. The residuals exhibit no \n")
+        cat("  statistically significant autocorrelation.\n")
+      }
+      cat("--------------------------------------------------------------------------\n")
+      
+      # ============================================================================
+      # TEST 2: BOX-PIERCE (Q)
+      # ============================================================================
+      cat(" 2. BOX-PIERCE TEST (Q)\n")
+      cat(sprintf("    - Test Statistic (Q) : %.4f\n", bp_test$statistic))
+      cat(sprintf("    - Critical Value     : %.4f (χ², df=%d)\n", bp_crit, lb_lag))
+      cat(sprintf("    - P-Value            : %.4f\n", bp_test$p.value))
+      
+      cat("\n RESULT:\n")
+      cat(sprintf("  The Box-Pierce test provides a statistic of %.4f. This original \n", bp_test$statistic))
+      cat("  portmanteau measure evaluates the sum of squared autocorrelations \n")
+      cat("  to determine if the error process is purely random.\n")
+      
+      cat("\n DECISION:\n")
+      if(bp_test$p.value < alpha_val) {
+        cat("  The observed p-value is below the significance threshold of 0.05. \n")
+        cat("  The null hypothesis is rejected, suggesting that the model has \n")
+        cat("  failed to capture some of the temporal dynamics in the data.\n")
+      } else {
+        cat("  The observed p-value exceeds the significance threshold. We fail \n")
+        cat("  to reject the null hypothesis of residual independence.\n")
+      }
+      cat("--------------------------------------------------------------------------\n")
+      
+      # ============================================================================
+      # FINAL ADVICE
+      # ============================================================================
+      cat("\n ADVICE:\n")
+      p_vals <- c(lb_test$p.value, bp_test$p.value)
+      reject_count <- sum(p_vals < alpha_val)
+      
+      if (reject_count > 0) {
+        cat(" • Significant portmanteau statistics indicate that the residuals are \n")
+        cat("   not white noise. The current SARIMA specification is inadequate.\n")
+        cat(" • Action: Increase the complexity of the model by adding AR (p/P) or \n")
+        cat("   MA (q/Q) terms to account for the remaining autocorrelation.\n")
+        cat(" • Review the ACF plot: Any spikes crossing the significance bounds \n")
+        cat("   identify the specific lags that require further modeling.\n")
+      } else {
+        cat(" • The diagnostics for residual independence are satisfied. The errors \n")
+        cat("   behave as a white noise process.\n")
+        cat(" • Recommendation: The model is statistically adequate; proceed to \n")
+        cat("   forecasting and out-of-sample validation.\n")
+      }
+      
+    }, error = function(e) {
+      cat(" [!] Error in independence diagnostics: ", e$message, "\n")
+    })
+    
+    cat("==========================================================================\n")
+  })
+  
+  
+  # output$model_LjungBox_test <- renderPrint({
+  #   req(results_ARIMA_pdPD_drift())
+  #   sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
+  #   resids <- residuals(sarima_model)
+  #   
+  #   # Determination of lags: min(2*m, n/5) is a common rule of thumb
+  #   # For seasonal data (m), we often check up to lag 20.
+  #   lb_lag <- 20 
+  #   
+  #   cat("==========================================================================\n")
+  #   cat("                LJUNG-BOX TEST FOR RESIDUAL AUTOCORRELATION               \n")
+  #   cat("==========================================================================\n")
+  #   
+  #   cat(" DECISION RULE:\n")
+  #   cat(" • H0 : Residuals are independent (White Noise).\n")
+  #   cat(" • Ha : Residuals exhibit autocorrelation (Model is inadequate).\n")
+  #   cat(" -> CRITERIA: Reject H0 if P-Value < 0.05.\n")
+  #   cat("--------------------------------------------------------------------------\n")
+  #   
+  #   # --- RESULT ---
+  #   lb_test <- Box.test(resids, lag = lb_lag, type = "Ljung-Box")
+  #   cat("\n RESULT:\n")
+  #   cat(sprintf("  - Statistic (Q) : %.4f\n", lb_test$statistic))
+  #   cat(sprintf("  - Lag tested    : %d\n", lb_lag))
+  #   cat(sprintf("  - P-Value       : %.4f\n", lb_test$p.value))
+  #   
+  #   # --- DECISION ---
+  #   cat("\n DECISION:\n")
+  #   if (lb_test$p.value > 0.05) {
+  #     cat("  -> FAIL TO REJECT H0: Residuals are White Noise.\n")
+  #   } else {
+  #     cat("  -> REJECT H0: Significant autocorrelation detected in residuals.\n")
+  #   }
+  #   
+  #   # --- ADVICE ---
+  #   cat("\n ADVICE:\n")
+  #   if (lb_test$p.value <= 0.05) {
+  #     cat(" • The model has not captured all the information in the data.\n")
+  #     cat(" • Consider increasing the AR (p) or MA (q) orders.\n")
+  #     cat(" • Check the ACF/PACF plots of the residuals to identify remaining patterns.\n")
+  #   } else {
+  #     cat(" • The model specification is adequate regarding independence.\n")
+  #     cat(" • You may proceed with forecasting.\n")
+  #   }
+  #   cat("==========================================================================\n")
+  # })
+  
+  
+  
+  
+  output$model_Normality_test <- renderPrint({
+    req(results_ARIMA_pdPD_drift())
+    resids <- as.numeric(residuals(results_ARIMA_pdPD_drift()$modelOutput))
+    n <- length(resids)
+    alpha_val <- 0.05 
+    
+    cat("==========================================================================\n")
+    cat("                ACADEMIC REPORT: RESIDUAL NORMALITY ANALYSIS              \n")
+    cat("==========================================================================\n")
+    
+    cat(" DECISION RULE:\n")
+    cat(" • Null Hypothesis (H0): Residuals are independent and identically \n")
+    cat("   distributed (i.i.d.) following a Normal distribution N(0, σ²).\n")
+    cat(" • Alternative Hypothesis (Ha): Residuals deviate significantly from \n")
+    cat("   the Gaussian distribution.\n")
+    cat(sprintf(" • Significance Level (α): %.2f\n", alpha_val))
+    cat(" • Rejection Criterion: Reject H0 if Test Statistic > Critical Value\n")
+    cat("   (or equivalently, if P-value < α).\n")
+    cat("--------------------------------------------------------------------------\n")
+    
+    tryCatch({
+      # --- 1. Shapiro-Wilk ---
+      sw_test <- shapiro.test(resids)
+      # W-test critical values are complex to calculate; decision is based on P-value.
+      
+      # --- 2. Jarque-Bera ---
+      if (!requireNamespace("tseries", quietly = TRUE)) stop("Install 'tseries'")
+      jb_test <- tseries::jarque.bera.test(resids)
+      jb_crit <- qchisq(1 - alpha_val, df = 2)
+      
+      # --- 3. Anderson-Darling ---
+      if (!requireNamespace("nortest", quietly = TRUE)) stop("Install 'nortest'")
+      ad_test <- nortest::ad.test(resids)
+      # Adjustment for A^2 at 5% alpha for normality
+      ad_crit <- 0.752 
+      
+      # ============================================================================
+      # TEST 1: SHAPIRO-WILK
+      # ============================================================================
+      cat(" 1. SHAPIRO-WILK TEST (W)\n")
+      cat(sprintf("    - Test Statistic (W): %.4f\n", sw_test$statistic))
+      cat(sprintf("    - P-Value           : %.4f\n", sw_test$p.value))
+      
+      cat("\n RESULT:\n")
+      cat(sprintf("  The Shapiro-Wilk test yields a W-statistic of %.4f. This metric \n", sw_test$statistic))
+      cat(sprintf("  measures the correlation between the sample data and normal scores.\n"))
+      
+      cat("\n DECISION:\n")
+      if(sw_test$p.value < alpha_val) {
+        cat("  At the 5% significance level, the p-value is less than α. We reject the \n")
+        cat("  null hypothesis of normality.\n")
+      } else {
+        cat("  At the 5% significance level, the p-value exceeds α. We fail to reject \n")
+        cat("  the null hypothesis; the residuals are consistent with a normal distribution.\n")
+      }
+      cat("--------------------------------------------------------------------------\n")
+      
+      # ============================================================================
+      # TEST 2: JARQUE-BERA
+      # ============================================================================
+      cat(" 2. JARQUE-BERA TEST (JB)\n")
+      cat(sprintf("    - Test Statistic (JB): %.4f\n", jb_test$statistic))
+      cat(sprintf("    - Critical Value     : %.4f (χ², df=2)\n", jb_crit))
+      cat(sprintf("    - P-Value            : %.4f\n", jb_test$p.value))
+      
+      cat("\n RESULT:\n")
+      cat(sprintf("  The Jarque-Bera statistic is %.4f, which evaluates the joint null \n", jb_test$statistic))
+      cat(sprintf("  hypothesis of zero skewness and a kurtosis of three.\n"))
+      
+      cat("\n DECISION:\n")
+      if(jb_test$statistic > jb_crit) {
+        cat(sprintf("  The JB statistic (%.4f) is greater than the critical value (%.4f). \n", jb_test$statistic, jb_crit))
+        cat("  We reject the null hypothesis, indicating significant skewness or kurtosis.\n")
+      } else {
+        cat(sprintf("  The JB statistic (%.4f) is below the critical value (%.4f). \n", jb_test$statistic, jb_crit))
+        cat("  We fail to reject the null hypothesis of normality.\n")
+      }
+      cat("--------------------------------------------------------------------------\n")
+      
+      # ============================================================================
+      # TEST 3: ANDERSON-DARLING
+      # ============================================================================
+      cat(" 3. ANDERSON-DARLING TEST (A²)\n")
+      cat(sprintf("    - Test Statistic (A²): %.4f\n", ad_test$statistic))
+      cat(sprintf("    - Critical Value     : %.4f\n", ad_crit))
+      cat(sprintf("    - P-Value            : %.4f\n", ad_test$p.value))
+      
+      cat("\n RESULT:\n")
+      cat(sprintf("  The Anderson-Darling distance is calculated as A² = %.4f. This test \n", ad_test$statistic))
+      cat(sprintf("  places specific emphasis on the behavior of the distribution tails.\n"))
+      
+      cat("\n DECISION:\n")
+      if(ad_test$statistic > ad_crit) {
+        cat(sprintf("  Because A² (%.4f) exceeds the critical threshold of %.4f, we reject \n", ad_test$statistic, ad_crit))
+        cat("  the null hypothesis. The distribution tails deviate from Gaussian expectations.\n")
+      } else {
+        cat(sprintf("  Because A² (%.4f) is below the critical threshold of %.4f, we fail \n", ad_test$statistic, ad_crit))
+        cat("  to reject the null hypothesis.\n")
+      }
+      cat("--------------------------------------------------------------------------\n")
+      
+      # ============================================================================
+      # FINAL ADVICE
+      # ============================================================================
+      cat("\n ADVICE:\n")
+      p_vals <- c(sw_test$p.value, jb_test$p.value, ad_test$p.value)
+      reject_count <- sum(p_vals < alpha_val)
+      
+      if (reject_count > 0) {
+        cat(" • If significant asymmetry is detected (Jarque-Bera), identify potential \n")
+        cat("   outliers or high-leverage points that may bias the parameter estimates.\n")
+        cat(" • When the Anderson-Darling test rejects normality, the forecast confidence \n")
+        cat("   intervals may be unreliable due to heavy-tailed error distributions.\n")
+        cat(" • Consider applying a Box-Cox or Logarithmic transformation to the original \n")
+        cat("   series to stabilize the residual variance.\n")
+      } else {
+        cat(" • All tests maintain consistency: the normality assumption is satisfied.\n")
+        cat(" • You may report the model results and prediction intervals with high \n")
+        cat("   statistical confidence.\n")
+      }
+      
+    }, error = function(e) {
+      cat(" [!] Error in normality computation: ", e$message, "\n")
+    })
+    
+    cat("==========================================================================\n")
+  })
+  
+  
+  # output$model_Normality_test <- renderPrint({
+  #   req(results_ARIMA_pdPD_drift())
+  #   resids <- as.numeric(residuals(results_ARIMA_pdPD_drift()$modelOutput))
+  #   n <- length(resids)
+  #   alpha_val <- 0.05 
+  #   
+  #   cat("==========================================================================\n")
+  #   cat("                ACADEMIC REPORT: RESIDUAL NORMALITY ANALYSIS              \n")
+  #   cat("==========================================================================\n")
+  #   
+  #   cat(" DECISION RULE:\n")
+  #   cat(" • Null Hypothesis (H0): The residuals are independent and identically \n")
+  #   cat("   distributed (i.i.d.) following a Normal distribution N(0, σ²).\n")
+  #   cat(" • Alternative Hypothesis (Ha): The residual distribution deviates \n")
+  #   cat("   significantly from Gaussian normality.\n")
+  #   cat(sprintf(" • Significance Level (α): %.2f\n", alpha_val))
+  #   cat(" • Rejection Criterion: Reject H0 if the calculated P-value < α.\n")
+  #   cat("--------------------------------------------------------------------------\n")
+  #   
+  #   # ============================================================================
+  #   # 2) RESULT (Explicit & Sentence-Based)
+  #   # ============================================================================
+  #   cat("\n RESULT:\n")
+  #   
+  #   tryCatch({
+  #     # 1. Shapiro-Wilk 
+  #     sw_test <- shapiro.test(resids)
+  #     
+  #     # 2. Jarque-Bera 
+  #     if (!requireNamespace("tseries", quietly = TRUE)) stop("Install 'tseries'")
+  #     jb_test <- tseries::jarque.bera.test(resids)
+  #     jb_crit <- qchisq(1 - alpha_val, df = 2)
+  #     
+  #     # 3. Anderson-Darling 
+  #     if (!requireNamespace("nortest", quietly = TRUE)) stop("Install 'nortest'")
+  #     ad_test <- nortest::ad.test(resids)
+  #     ad_crit <- 0.752 # Standard asymptotic critical value for A^2 at 5%
+  #     
+  #     # Result Sentences
+  #     cat(sprintf(" 1. The Shapiro-Wilk test yields a W-statistic of %.4f with an \n", sw_test$statistic))
+  #     cat(sprintf("    associated p-value of %.4f.\n", sw_test$p.value))
+  #     
+  #     cat(sprintf(" 2. The Jarque-Bera test statistic, which evaluates skewness and \n"))
+  #     cat(sprintf("    kurtosis, is calculated as %.4f compared to a critical value \n", jb_test$statistic))
+  #     cat(sprintf("    of %.4f (χ² with 2 d.f.), resulting in a p-value of %.4f.\n", jb_crit, jb_test$p.value))
+  #     
+  #     cat(sprintf(" 3. The Anderson-Darling distance (A²) is found to be %.4f relative \n", ad_test$statistic))
+  #     cat(sprintf("    to the threshold of %.4f, with a resulting p-value of %.4f.\n", ad_crit, ad_test$p.value))
+  #     cat("--------------------------------------------------------------------------\n")
+  #     
+  #     # ============================================================================
+  #     # 3) DECISION (Formal Consensus Logic)
+  #     # ============================================================================
+  #     cat("\n DECISION:\n")
+  #     
+  #     p_vals <- c(sw_test$p.value, jb_test$p.value, ad_test$p.value)
+  #     reject_count <- sum(p_vals < alpha_val)
+  #     
+  #     if (reject_count == 0) {
+  #       cat(" Based on the empirical evidence, we fail to reject the null hypothesis \n")
+  #       cat(" at the 5% level of significance. All three statistical tests maintain \n")
+  #       cat(" consistency in suggesting that the residuals follow a normal distribution.\n")
+  #     } else if (reject_count == 3) {
+  #       cat(" The null hypothesis of normality is rejected across all utilized tests. \n")
+  #       cat(" There is strong statistical evidence that the residuals are not normally \n")
+  #       cat(" distributed, suggesting a violation of the underlying model assumptions.\n")
+  #     } else {
+  #       cat(sprintf(" The tests provide mixed evidence, with %d out of 3 tests rejecting \n", reject_count))
+  #       cat(" the null hypothesis. This indicates that while the central distribution \n")
+  #       cat(" may appear Gaussian, specific characteristics such as tail behavior or \n")
+  #       cat(" asymmetry are statistically significant.\n")
+  #     }
+  #     
+  #     # ============================================================================
+  #     # 4) ADVICE
+  #     # ============================================================================
+  #     cat("\n ADVICE:\n")
+  #     if (reject_count > 0) {
+  #       cat(" • If Jarque-Bera is significant, evaluate the presence of high-leverage \n")
+  #       cat("   outliers that may be inflating the skewness or kurtosis parameters.\n")
+  #       cat(" • If Anderson-Darling is significant, exercise caution when interpreting \n")
+  #       cat("   forecast intervals, as the error tails are heavier than expected.\n")
+  #       cat(" • Academic Recommendation: Apply a Box-Cox transformation or consider a \n")
+  #       cat("   robust estimation method (e.g., Student-t distributed errors).\n")
+  #     } else {
+  #       cat(" • The assumption of normality is satisfied; inferential statistics and \n")
+  #       cat("   confidence intervals derived from this model can be reported with \n")
+  #       cat("   high confidence.\n")
+  #     }
+  #     
+  #   }, error = function(e) {
+  #     cat(" [!] Error in normality computation: ", e$message, "\n")
+  #   })
+  #   
+  #   cat("==========================================================================\n")
+  # })
+  
+  
+  # output$model_Normality_test <- renderPrint({
+  #   req(results_ARIMA_pdPD_drift())
+  #   resids <- as.numeric(residuals(results_ARIMA_pdPD_drift()$modelOutput))
+  #   
+  #   cat("==========================================================================\n")
+  #   cat("                MULTI-TEST RESIDUAL NORMALITY DIAGNOSTIC                  \n")
+  #   cat("==========================================================================\n")
+  #   
+  #   cat(" DECISION RULE:\n")
+  #   cat(" • H0 : Residuals follow a Normal Distribution.\n")
+  #   cat(" • Ha : Residuals do NOT follow a Normal Distribution.\n")
+  #   cat(" -> CRITERIA: Reject H0 if P-Value < 0.05.\n")
+  #   cat("--------------------------------------------------------------------------\n")
+  #   
+  #   # ============================================================================
+  #   # 2) RESULT: THE TEST BATTERY
+  #   # ============================================================================
+  #   cat("\n RESULT:\n")
+  #   
+  #   tryCatch({
+  #     # 1. Shapiro-Wilk (Best for small to medium samples)
+  #     sw_test <- shapiro.test(resids)
+  #     
+  #     # 2. Jarque-Bera (Focuses on Skewness and Kurtosis)
+  #     if (!requireNamespace("tseries", quietly = TRUE)) stop("Install 'tseries'")
+  #     jb_test <- tseries::jarque.bera.test(resids)
+  #     
+  #     # 3. Anderson-Darling (Sensitive to the tails of the distribution)
+  #     if (!requireNamespace("nortest", quietly = TRUE)) stop("Install 'nortest'")
+  #     ad_test <- nortest::ad.test(resids)
+  #     
+  #     # Formatting Results Table
+  #     results_df <- data.frame(
+  #       Test = c("Shapiro-Wilk", "Jarque-Bera", "Anderson-Darling"),
+  #       Statistic = c(sw_test$statistic, jb_test$statistic, ad_test$statistic),
+  #       P_Value = c(sw_test$p.value, jb_test$p.value, ad_test$p.value)
+  #     )
+  #     print(results_df, row.names = FALSE)
+  #     
+  #     # ============================================================================
+  #     # 3) DECISION
+  #     # ============================================================================
+  #     cat("\n DECISION:\n")
+  #     
+  #     # Global decision logic (consensus approach)
+  #     p_vals <- results_df$P_Value
+  #     reject_count <- sum(p_vals < 0.05)
+  #     
+  #     if (reject_count == 0) {
+  #       cat("  -> FAIL TO REJECT H0: All tests suggest residuals are NORMAL.\n")
+  #     } else if (reject_count == 3) {
+  #       cat("  -> REJECT H0: All tests suggest residuals are NON-NORMAL.\n")
+  #     } else {
+  #       cat(sprintf("  -> MIXED EVIDENCE: %d out of 3 tests reject normality.\n", reject_count))
+  #     }
+  #     
+  #     # ============================================================================
+  #     # 4) ADVICE
+  #     # ============================================================================
+  #     cat("\n ADVICE:\n")
+  #     if (reject_count > 0) {
+  #       cat(" • If Jarque-Bera is low: Your residuals have high Skewness/Kurtosis (outliers).\n")
+  #       cat(" • If Anderson-Darling is low: Your model fails to predict extreme values (tails).\n")
+  #       cat(" • RECO: Consider a Log or Box-Cox transformation to stabilize variance.\n")
+  #       cat(" • RECO: Check the Q-Q Plot. If points deviate at the ends, tails are the issue.\n")
+  #     } else {
+  #       cat(" • Normality assumption is satisfied across all metrics.\n")
+  #       cat(" • Prediction intervals and t-statistics are highly reliable.\n")
+  #     }
+  #     
+  #   }, error = function(e) {
+  #     cat(" [!] Error in normality computation: ", e$message, "\n")
+  #   })
+  #   
+  #   cat("==========================================================================\n")
+  # })
+  
+  # output$model_Normality_test <- renderPrint({
+  #   req(results_ARIMA_pdPD_drift())
+  #   resids <- residuals(results_ARIMA_pdPD_drift()$modelOutput)
+  #   
+  #   cat("==========================================================================\n")
+  #   cat("                JARQUE-BERA TEST FOR RESIDUAL NORMALITY                   \n")
+  #   cat("==========================================================================\n")
+  #   
+  #   cat(" DECISION RULE:\n")
+  #   cat(" • H0 : Residuals follow a Normal Distribution.\n")
+  #   cat(" • Ha : Residuals do NOT follow a Normal Distribution.\n")
+  #   cat(" -> CRITERIA: Reject H0 if P-Value < 0.05.\n")
+  #   cat("--------------------------------------------------------------------------\n")
+  #   
+  #   # --- RESULT ---
+  #   tryCatch({
+  #     if (!requireNamespace("tseries", quietly = TRUE)) stop("Package 'tseries' required.")
+  #     jb_test <- tseries::jarque.bera.test(resids)
+  #     
+  #     cat("\n RESULT:\n")
+  #     cat(sprintf("  - JB Statistic : %.4f\n", jb_test$statistic))
+  #     cat(sprintf("  - P-Value      : %.4f\n", jb_test$p.value))
+  #     
+  #     # --- DECISION ---
+  #     cat("\n DECISION:\n")
+  #     if (jb_test$p.value > 0.05) {
+  #       cat("  -> FAIL TO REJECT H0: Residuals appear normally distributed.\n")
+  #     } else {
+  #       cat("  -> REJECT H0: Residuals deviate significantly from normality.\n")
+  #     }
+  #     
+  #     # --- ADVICE ---
+  #     cat("\n ADVICE:\n")
+  #     if (jb_test$p.value <= 0.05) {
+  #       cat(" • Non-normality can lead to unreliable confidence intervals.\n")
+  #       cat(" • Check for outliers or consider a Box-Cox transformation of the data.\n")
+  #       cat(" • Examine the Histogram and Q-Q Plot of residuals for visual confirmation.\n")
+  #     } else {
+  #       cat(" • Assumption satisfied. Prediction intervals are likely reliable.\n")
+  #     }
+  #     
+  #   }, error = function(e) {
+  #     cat(" [!] Error: ", e$message, "\n")
+  #   })
+  #   
+  #   cat("==========================================================================\n")
+  # })
+  
+  
   output$plot_ACF_PACF_Res_pdq <- renderPlot({
     req(tsData())
     myData <- tsData()
@@ -5006,25 +5684,63 @@ server <- function(input, output, session) {
   })
 
 
-  output$timeSeriesPlot_SARIMA <- renderPlot({
-    req(tsData())
-    ts_data <- tsData()  #  time series data
-    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput   #  SARIMA model
-    forecasted_Data <- forecast(sarima_model,h=input$length)
-
-
-    fitted_values <- fitted(sarima_model)
-
-
-    #Plot the time series data
-    plot(forecasted_Data, type = "l", lwd = 2, col = "red4", main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
-    lines(fitted_values, col = "firebrick3", type = "l", lwd = 2)
-    # Add the fitted values from the SARIMA model
-    # fitted_values <- fitted(sarima_model)
-    lines(ts_data, col = "black", type = "l", lwd = 2)  # 'type = "p"' plots the fitted values as points
-
-    # plot(sarima_model)
-  })
+  # output$timeSeriesPlot_SARIMA <- renderPlot({
+  #   req(tsData())
+  #   ts_data <- tsData()  #  time series data
+  #   sarima_model <- results_ARIMA_pdPD_drift()$modelOutput   #  SARIMA model
+  #   forecasted_Data <- forecast(sarima_model,h=input$length)
+  # 
+  # 
+  #   fitted_values <- fitted(sarima_model)
+  # 
+  # 
+  #   #Plot the time series data
+  #   plot(forecasted_Data, type = "l", lwd = 2, col = "red4", main = userData$mainTitle, xlab = userData$xLabel, ylab = userData$yLabel)
+  #   lines(fitted_values, col = "firebrick3", type = "l", lwd = 2)
+  #   # Add the fitted values from the SARIMA model
+  #   # fitted_values <- fitted(sarima_model)
+  #   lines(ts_data, col = "black", type = "l", lwd = 2)  # 'type = "p"' plots the fitted values as points
+  # 
+  #   # plot(sarima_model)
+  # })
+  
+  
+  
+  output$timeSeriesPlot_SARIMA <- renderPlot(
+    {
+      req(tsData(), results_ARIMA_pdPD_drift())
+      
+      ts_data <- tsData()
+      sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
+      forecasted_Data <- forecast::forecast(sarima_model, h = input$length)
+      
+      fitted_values <- fitted(sarima_model)
+      
+      # Plot forecast
+      plot(
+        forecasted_Data,
+        type = "l",
+        lwd  = 2,
+        col  = "red4",
+        main = userData$mainTitle,
+        xlab = userData$xLabel,
+        ylab = userData$yLabel
+      )
+      
+      # Add fitted values
+      lines(fitted_values, col = "firebrick3", lwd = 2)
+      
+      # Add original series
+      lines(ts_data, col = "black", lwd = 2)
+    },
+    width = function() {
+      as.numeric(gsub("[^0-9]", "", userData$plotWidth))
+    },
+    height = function() {
+      as.numeric(gsub("[^0-9]", "", userData$plotHeight))
+    }
+  )
+  
 
 
 
@@ -5594,63 +6310,284 @@ server <- function(input, output, session) {
 
   
   #  SHAPIRO-WILK NORMALITY TEST ON RESIDUALLS 
-  output$ShapiroTest <- renderPrint({
-    req(tsData())
-    
-    # 1. Retrieve the fitted model
-    sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
-    req(sarima_model) 
-    
-    # 2. Header & Definition
-    cat("==========================================================================\n")
-    cat("               SHAPIRO-WILK NORMALITY TEST ON RESIDUALLS                  \n")
-    cat("==========================================================================\n")
-    cat(" The Shapiro-Wilk test evaluates whether the residuals of your model      \n")
-    cat(" follow a Normal (Gaussian) distribution.                                 \n")
-    cat("--------------------------------------------------------------------------\n")
-    cat(" DECISION RULE:\n")
-    cat(" • H0 (p > 0.05): Residuals are Normal (Desired for ARIMA).\n")
-    cat(" • H1 (p <= 0.05): Residuals are NOT Normal.\n")
-    cat("--------------------------------------------------------------------------\n")
-    
-    # 3. Perform Test
-    residualData <- as.numeric(resid(sarima_model))
-    residualData <- residualData[!is.na(residualData)] # Remove NAs from differencing
-    st_result <- shapiro.test(residualData)
-    
-    # 4. Result Output
-    cat(" RESULT:\n")
-    print(st_result)
-    
-    # 5. Dynamic Conclusion
-    pval <- st_result$p.value
-    cat("--------------------------------------------------------------------------\n")
-    cat(" CONCLUSION:\n")
-    if (pval > 0.05) {
-      cat("  SUCCESS: The p-value is > 0.05. We fail to reject the null hypothesis.\n")
-      cat("  The residuals appear to be normally distributed.\n")
-    } else {
-      cat("  WARNING: The p-value is <= 0.05. We reject the null hypothesis.\n")
-      cat("  The residuals do NOT follow a normal distribution.\n")
-    }
-    
-    # 6. Actionable Advice
-    cat("--------------------------------------------------------------------------\n")
-    cat(" ADVICE:\n")
-    if (pval > 0.05) {
-      cat("  Your model residuals meet the normality assumption. You can proceed   \n")
-      cat("  with confidence in your forecasts and prediction intervals.\n")
-    } else {
-      cat("  Consider: \n")
-      cat("  1. Checking for outliers that may skew the distribution.\n")
-      cat("  2. Applying a Box-Cox transformation (e.g., Log) to the data.\n")
-      cat("  3. Verifying if a significant 'Trend' or 'Seasonality' remains.\n")
-    }
-    cat("==========================================================================\n")
-  }) 
+  # output$ShapiroTest <- renderPrint({
+  #   req(tsData())
+  #   
+  #   # 1. Retrieve the fitted model
+  #   sarima_model <- results_ARIMA_pdPD_drift()$modelOutput
+  #   req(sarima_model) 
+  #   
+  #   # 2. Header & Definition
+  #   cat("==========================================================================\n")
+  #   cat("               SHAPIRO-WILK NORMALITY TEST ON RESIDUALLS                  \n")
+  #   cat("==========================================================================\n")
+  #   cat(" The Shapiro-Wilk test evaluates whether the residuals of your model      \n")
+  #   cat(" follow a Normal (Gaussian) distribution.                                 \n")
+  #   cat("--------------------------------------------------------------------------\n")
+  #   cat(" DECISION RULE:\n")
+  #   cat(" • H0 (p > 0.05): Residuals are Normal (Desired for ARIMA).\n")
+  #   cat(" • H1 (p <= 0.05): Residuals are NOT Normal.\n")
+  #   cat("--------------------------------------------------------------------------\n")
+  #   
+  #   # 3. Perform Test
+  #   residualData <- as.numeric(resid(sarima_model))
+  #   residualData <- residualData[!is.na(residualData)] # Remove NAs from differencing
+  #   st_result <- shapiro.test(residualData)
+  #   
+  #   # 4. Result Output
+  #   cat(" RESULT:\n")
+  #   print(st_result)
+  #   
+  #   # 5. Dynamic Conclusion
+  #   pval <- st_result$p.value
+  #   cat("--------------------------------------------------------------------------\n")
+  #   cat(" CONCLUSION:\n")
+  #   if (pval > 0.05) {
+  #     cat("  SUCCESS: The p-value is > 0.05. We fail to reject the null hypothesis.\n")
+  #     cat("  The residuals appear to be normally distributed.\n")
+  #   } else {
+  #     cat("  WARNING: The p-value is <= 0.05. We reject the null hypothesis.\n")
+  #     cat("  The residuals do NOT follow a normal distribution.\n")
+  #   }
+  #   
+  #   # 6. Actionable Advice
+  #   cat("--------------------------------------------------------------------------\n")
+  #   cat(" ADVICE:\n")
+  #   if (pval > 0.05) {
+  #     cat("  Your model residuals meet the normality assumption. You can proceed   \n")
+  #     cat("  with confidence in your forecasts and prediction intervals.\n")
+  #   } else {
+  #     cat("  Consider: \n")
+  #     cat("  1. Checking for outliers that may skew the distribution.\n")
+  #     cat("  2. Applying a Box-Cox transformation (e.g., Log) to the data.\n")
+  #     cat("  3. Verifying if a significant 'Trend' or 'Seasonality' remains.\n")
+  #   }
+  #   cat("==========================================================================\n")
+  # }) 
   
+  output$model_Normality_test2 <- renderPrint({
+    req(results_ARIMA_pdPD_drift())
+    residualData <- as.numeric(residuals(results_ARIMA_pdPD_drift()$modelOutput))
+    n_obs <- length(residualData)
+    alpha_val <- 0.05
+    
+    tryCatch({
+      # --- 1. SHAPIRO-WILK ---
+      sw_test <- shapiro.test(residualData)
+      
+      cat("==========================================================================\n")
+      cat("             1.  SHAPIRO-WILK NORMALITY TEST ON RESIDUALS                  \n")
+      cat("==========================================================================\n")
+      cat(" The Shapiro-Wilk test evaluates whether the residuals of your model      \n")
+      cat(" follow a Normal (Gaussian) distribution.                                 \n")
+      cat("--------------------------------------------------------------------------\n")
+      cat(" DECISION RULE:\n")
+      cat(" • H0 (p > 0.05): Residuals are Normal (Desired for ARIMA).\n")
+      cat(" • H1 (p <= 0.05): Residuals are NOT Normal.\n")
+      cat("--------------------------------------------------------------------------\n")
+      cat(" RESULT:\n")
+      print(sw_test)
+      cat("\n--------------------------------------------------------------------------\n")
+      cat(" CONCLUSION (APA Format):\n")
+      if(sw_test$p.value > alpha_val) {
+        cat(sprintf("  A Shapiro-Wilk test indicated that the residuals did not deviate \n"))
+        cat(sprintf("  significantly from normality, W = %.3f, p = %.3f.\n", sw_test$statistic, sw_test$p.value))
+      } else {
+        cat(sprintf("  A Shapiro-Wilk test indicated that the residuals deviated \n"))
+        cat(sprintf("  significantly from normality, W = %.3f, p = %.3f.\n", sw_test$statistic, sw_test$p.value))
+      }
+      cat("--------------------------------------------------------------------------\n")
+      cat(" ADVICE:\n")
+      if(sw_test$p.value <= alpha_val) {
+        cat("  1. Check for outliers that may skew the distribution.\n")
+        cat("  2. Apply a Box-Cox transformation (e.g., Log) to the data.\n")
+      } else {
+        cat("  The normality assumption is satisfied.\n")
+      }
+      cat("==========================================================================\n\n\n")
+      
+      # --- 2. JARQUE-BERA ---
+      if (requireNamespace("tseries", quietly = TRUE)) {
+        jb_test <- tseries::jarque.bera.test(residualData)
+        
+        cat("==========================================================================\n")
+        cat("             2.  JARQUE-BERA TEST (SKEWNESS & KURTOSIS)                   \n")
+        cat("==========================================================================\n")
+        cat(" The Jarque-Bera test determines if the residuals have the skewness       \n")
+        cat(" and kurtosis matching a normal distribution.                             \n")
+        cat("--------------------------------------------------------------------------\n")
+        cat(" DECISION RULE:\n")
+        cat(" • H0 (p > 0.05): Skewness and Kurtosis are consistent with Normality.\n")
+        cat(" • H1 (p <= 0.05): Residuals exhibit significant Skewness or Kurtosis.\n")
+        cat("--------------------------------------------------------------------------\n")
+        cat(" RESULT:\n")
+        print(jb_test)
+        cat("\n--------------------------------------------------------------------------\n")
+        cat(" CONCLUSION (APA Format):\n")
+        if(jb_test$p.value > alpha_val) {
+          cat(sprintf("  The Jarque-Bera test showed that residuals were normally distributed \n"))
+          cat(sprintf("  regarding skewness and kurtosis, X2(2, N = %d) = %.2f, p = %.3f.\n", n_obs, jb_test$statistic, jb_test$p.value))
+        } else {
+          cat(sprintf("  The Jarque-Bera test showed that residuals significantly deviated \n"))
+          cat(sprintf("  from normality, X2(2, N = %d) = %.2f, p = %.3f.\n", n_obs, jb_test$statistic, jb_test$p.value))
+        }
+        cat("--------------------------------------------------------------------------\n")
+        cat(" ADVICE:\n")
+        cat("  Failure suggests the presence of 'Fat Tails' or significant asymmetry.\n")
+        cat("==========================================================================\n\n\n")
+      }
+      
+      # --- 3. ANDERSON-DARLING ---
+      if (requireNamespace("nortest", quietly = TRUE)) {
+        ad_test <- nortest::ad.test(residualData)
+        
+        cat("==========================================================================\n")
+        cat("             3.  ANDERSON-DARLING NORMALITY TEST                          \n")
+        cat("==========================================================================\n")
+        cat(" This test gives more weight to the tails of the distribution.            \n")
+        cat("--------------------------------------------------------------------------\n")
+        cat(" DECISION RULE:\n")
+        cat(" • H0 (p > 0.05): Residuals follow a Normal Distribution.\n")
+        cat(" • H1 (p <= 0.05): The distribution tails deviate from Normality.\n")
+        cat("--------------------------------------------------------------------------\n")
+        cat(" RESULT:\n")
+        print(ad_test)
+        cat("\n--------------------------------------------------------------------------\n")
+        cat(" CONCLUSION (APA Format):\n")
+        if(ad_test$p.value > alpha_val) {
+          cat(sprintf("  An Anderson-Darling test was non-significant, A2 = %.3f, p = %.3f, \n", ad_test$statistic, ad_test$p.value))
+          cat("  suggesting the data follow a normal distribution.\n")
+        } else {
+          cat(sprintf("  An Anderson-Darling test was significant, A2 = %.3f, p = %.3f, \n", ad_test$statistic, ad_test$p.value))
+          cat("  suggesting the data deviate significantly from normality.\n")
+        }
+        cat("--------------------------------------------------------------------------\n")
+        cat(" ADVICE:\n")
+        cat("  This test is sensitive to extreme values. Verify the Q-Q plot for outliers.\n")
+        cat("==========================================================================\n")
+      }
+      
+    }, error = function(e) {
+      cat(" [!] Error in normality analysis: ", e$message, "\n")
+    })
+  })
 
-
+  # output$model_Normality_test2 <- renderPrint({
+  #   req(results_ARIMA_pdPD_drift())
+  #   residualData <- as.numeric(residuals(results_ARIMA_pdPD_drift()$modelOutput))
+  #   alpha_val <- 0.05
+  #   
+  #   tryCatch({
+  #     # --- 1. SHAPIRO-WILK ---
+  #     sw_test <- shapiro.test(residualData)
+  #     
+  #     cat("==========================================================================\n")
+  #     cat("             1.  SHAPIRO-WILK NORMALITY TEST ON RESIDUALS                  \n")
+  #     cat("==========================================================================\n")
+  #     cat(" The Shapiro-Wilk test evaluates whether the residuals of your model      \n")
+  #     cat(" follow a Normal (Gaussian) distribution.                                 \n")
+  #     cat("--------------------------------------------------------------------------\n")
+  #     cat(" DECISION RULE:\n")
+  #     cat(" • H0 (p > 0.05): Residuals are Normal (Desired for ARIMA).\n")
+  #     cat(" • H1 (p <= 0.05): Residuals are NOT Normal.\n")
+  #     cat("--------------------------------------------------------------------------\n")
+  #     cat(" RESULT:\n\n")
+  #     print(sw_test)
+  #     cat("\n--------------------------------------------------------------------------\n")
+  #     cat(" CONCLUSION:\n")
+  #     if(sw_test$p.value > alpha_val) {
+  #       cat("  SUCCESS: The p-value is > 0.05. We fail to reject the null hypothesis.\n")
+  #       cat("  The residuals follow a normal distribution.\n")
+  #     } else {
+  #       cat("  WARNING: The p-value is <= 0.05. We reject the null hypothesis.\n")
+  #       cat("  The residuals do NOT follow a normal distribution.\n")
+  #     }
+  #     cat("--------------------------------------------------------------------------\n")
+  #     cat(" ADVICE:\n")
+  #     if(sw_test$p.value <= alpha_val) {
+  #       cat("  Consider: \n")
+  #       cat("  1. Checking for outliers that may skew the distribution.\n")
+  #       cat("  2. Applying a Box-Cox transformation (e.g., Log) to the data.\n")
+  #       cat("  3. Verifying if a significant 'Trend' or 'Seasonality' remains.\n")
+  #     } else {
+  #       cat("  The normality assumption is satisfied. Prediction intervals are reliable.\n")
+  #     }
+  #     cat("==========================================================================\n\n\n")
+  #     
+  #     # --- 2. JARQUE-BERA ---
+  #     if (requireNamespace("tseries", quietly = TRUE)) {
+  #       jb_test <- tseries::jarque.bera.test(residualData)
+  #       
+  #       cat("==========================================================================\n")
+  #       cat("             2.  JARQUE-BERA TEST (SKEWNESS & KURTOSIS)                   \n")
+  #       cat("==========================================================================\n")
+  #       cat(" The Jarque-Bera test determines if the residuals have the skewness       \n")
+  #       cat(" and kurtosis matching a normal distribution.                             \n")
+  #       cat("--------------------------------------------------------------------------\n")
+  #       cat(" DECISION RULE:\n")
+  #       cat(" • H0 (p > 0.05): Skewness and Kurtosis are consistent with Normality.\n")
+  #       cat(" • H1 (p <= 0.05): Residuals exhibit significant Skewness or Kurtosis.\n")
+  #       cat("--------------------------------------------------------------------------\n")
+  #       cat(" RESULT:\n\n")
+  #       print(jb_test)
+  #       cat("\n--------------------------------------------------------------------------\n")
+  #       cat(" CONCLUSION:\n")
+  #       if(jb_test$p.value > alpha_val) {
+  #         cat("  SUCCESS: The p-value is > 0.05. The errors are symmetrical.\n")
+  #       } else {
+  #         cat("  WARNING: The p-value is <= 0.05. The distribution is biased or peaked.\n")
+  #       }
+  #       cat("--------------------------------------------------------------------------\n")
+  #       cat(" ADVICE:\n")
+  #       if(jb_test$p.value <= alpha_val) {
+  #         cat("  A failure here often indicates 'Fat Tails'. Your model may be \n")
+  #         cat("  underestimating the probability of extreme events.\n")
+  #       } else {
+  #         cat("  Residual symmetry is confirmed.\n")
+  #       }
+  #       cat("==========================================================================\n\n\n")
+  #     }
+  #     
+  #     # --- 3. ANDERSON-DARLING ---
+  #     if (requireNamespace("nortest", quietly = TRUE)) {
+  #       ad_test <- nortest::ad.test(residualData)
+  #       
+  #       cat("==========================================================================\n")
+  #       cat("             3.  ANDERSON-DARLING NORMALITY TEST                          \n")
+  #       cat("==========================================================================\n")
+  #       cat(" This test gives more weight to the tails of the distribution than        \n")
+  #       cat(" the Shapiro-Wilk test.                                                   \n")
+  #       cat("--------------------------------------------------------------------------\n")
+  #       cat(" DECISION RULE:\n")
+  #       cat(" • H0 (p > 0.05): Residuals follow a Normal Distribution.\n")
+  #       cat(" • H1 (p <= 0.05): The distribution tails deviate from Normality.\n")
+  #       cat("--------------------------------------------------------------------------\n")
+  #       cat(" RESULT:\n\n")
+  #       print(ad_test)
+  #       cat("\n--------------------------------------------------------------------------\n")
+  #       cat(" CONCLUSION:\n")
+  #       if(ad_test$p.value > alpha_val) {
+  #         cat("  SUCCESS: The p-value is > 0.05. Tails are consistent with Normality.\n")
+  #       } else {
+  #         cat("  WARNING: The p-value is <= 0.05. Significant tail deviation detected.\n")
+  #       }
+  #       cat("--------------------------------------------------------------------------\n")
+  #       cat(" ADVICE:\n")
+  #       if(ad_test$p.value <= alpha_val) {
+  #         cat("  If this test fails while others pass, your model has 'Outlier' issues.\n")
+  #       } else {
+  #         cat("  Distributional tails are statistically well-behaved.\n")
+  #       }
+  #       cat("==========================================================================\n")
+  #     }
+  #     
+  #   }, error = function(e) {
+  #     cat(" [!] Error in normality analysis: ", e$message, "\n")
+  #   })
+  # })
+  
+  
+  
   ########  ########  ########  ########  ########  ########  ########  ########
   #
   #

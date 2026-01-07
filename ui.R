@@ -2,25 +2,35 @@
 # 1. LIBRARIES & DEPENDENCIES  
 ################################################################################
 
+
 packages <- c(
   "shiny", "shinythemes", "data.table", "ggplot2", "lubridate",
   "urca", "summarytools", "dplyr", "fpp2", "forecast", "stats",
   "Kendall", "lmtest", "vtable", "shinyalert", "mathjaxr", "psych",
   "tseries", "seasonal", "xts", "astsa", "ggfortify", "pastecs",
   "tsibble", "feasts", "readxl", "TSstudio", "latex2exp", "Hmisc",
-  "foreign", "shinyWidgets", "shinyjs", "plotly"
+  "foreign", "shinyWidgets", "shinyjs", "plotly", "nortest", "trend" ,"nortest"
 )
 
-# Load packages (do NOT install packages inside a Shiny app)
-missing_pkgs <- packages[!vapply(packages, requireNamespace, logical(1), quietly = TRUE)]
-if (length(missing_pkgs) > 0) {
-  stop(
-    "Missing packages: ", paste(missing_pkgs, collapse = ", "), "\n",
-    "Install them once (outside Shiny) with:\n",
-    "install.packages(c(", paste(sprintf('"%s"', missing_pkgs), collapse = ", "), "))"
-  )
+# 2. Identify which ones are NOT yet installed
+missing_packages <- packages[!(packages %in% installed.packages()[, "Package"])]
+
+# 3. Only install the missing ones
+if (length(missing_packages) > 0) {
+  install.packages(missing_packages)
 }
 
+# # Load packages (do NOT install packages inside a Shiny app)
+# missing_pkgs <- packages[!vapply(packages, requireNamespace, logical(1), quietly = TRUE)]
+# if (length(missing_pkgs) > 0) {
+#   stop(
+#     "Missing packages: ", paste(missing_pkgs, collapse = ", "), "\n",
+#     "Install them once (outside Shiny) with:\n",
+#     "install.packages(c(", paste(sprintf('"%s"', missing_pkgs), collapse = ", "), "))"
+#   )
+# }
+
+# 4. Load all packages into the session
 invisible(lapply(packages, library, character.only = TRUE))
 
 # Safe theme wrapper for hrbrthemes::theme_ipsum()
@@ -596,7 +606,7 @@ shinyUI(
                                 mainPanel(width=10,
                                           tabsetPanel(
                                             tabPanel("ARIMA (*)", uiOutput("Previsions_Plot_pdq_UI")),
-                                            tabPanel("Model & Equation",
+                                            tabPanel("Model & Eq.",
                                                      tabsetPanel(
                                                        
                                                        #tabPanel("Model", verbatimTextOutput("model_ARIMApdq")),
@@ -610,9 +620,11 @@ shinyUI(
                                                        
                                                        tabPanel("Model Equation", uiOutput("sarima_eq_render_numerical_1")),
                                                      )),
-                                            tabPanel("Model with p-values", verbatimTextOutput("model_ARIMApdq_p_values")),
+                                            tabPanel("Coeff.Sig.", verbatimTextOutput("model_ARIMApdq_p_values")),
+                                            tabPanel("Res.iid.diag.", verbatimTextOutput("residual_independence_diagnostic")),
+                                            tabPanel("Res.Normality", verbatimTextOutput("model_Normality_test")),
                                             tabPanel("ACF+PACF", plotOutput("plot_ACF_PACF_Res_pdq", width=600, height = 550)),
-                                            tabPanel("unit Cercle", plotOutput("unit_Circle_pdq", width=750, height = 580)),
+                                            tabPanel("Unit Cercle", plotOutput("unit_Circle_pdq", width=750, height = 580)),
                                             tabPanel("Plot", plotOutput("timeSeriesPlot_SARIMA", width=750, height = 580)),
                                           ))
                               )),
@@ -726,7 +738,7 @@ shinyUI(
                                 tabPanel("Res. (*)", uiOutput("chkResARIMApdq_UI")),
                                 tabPanel("Diag. (*)", uiOutput("tsdiagARIMApdq_UI")),
                                 tabPanel("Diag 2.", plotOutput("tsdiag2",width=700,height = 600)),
-                                tabPanel("Shapiro-Wilk", verbatimTextOutput("ShapiroTest")),
+                                tabPanel("Normality Test on Residuals", verbatimTextOutput("model_Normality_test2")),
                               )),
 
                      tabPanel("Forecaste", tableOutput("forecast_ARIMA_pdq")),
