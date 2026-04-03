@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SARIMA Guide | Interpreting ACF & PACF</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">SARIMA Exploration Lab</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="index.html">Overview</a>
+        <a href="playground.html">Playground</a>
+        <a class="active" href="guide.html">Guide</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container guide-layout">
+    <section class="card">
+      <h1>How to choose SARIMA terms using ACF and PACF</h1>
+      <p>
+        Use ACF and PACF as pattern clues, not rigid rules. Start with candidate orders,
+        then validate with residual diagnostics and out-of-sample performance.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>1) PACF cutoff can suggest AR terms (<code>p</code>)</h2>
+      <p>
+        If PACF has strong spikes at early lags and then quickly becomes small, this often hints at
+        a non-seasonal AR process. A rough starting point for <code>p</code> is where PACF appears to cut off.
+      </p>
+      <div class="mini-diagram" aria-hidden="true">
+        <span style="--h: 0.76"></span><span style="--h: 0.62"></span><span style="--h: 0.48"></span>
+        <span style="--h: 0.16"></span><span style="--h: 0.10"></span><span style="--h: 0.06"></span>
+      </div>
+      <p class="muted">Visual cue: PACF spikes high at low lags, then fade quickly.</p>
+    </section>
+
+    <section class="card">
+      <h2>2) ACF cutoff can suggest MA terms (<code>q</code>)</h2>
+      <p>
+        If ACF has strong early spikes and then drops near zero after a few lags, this often suggests
+        non-seasonal MA structure. A rough starting point for <code>q</code> is where ACF appears to cut off.
+      </p>
+      <div class="mini-diagram acf" aria-hidden="true">
+        <span style="--h: 0.80"></span><span style="--h: 0.68"></span><span style="--h: 0.52"></span>
+        <span style="--h: 0.21"></span><span style="--h: 0.08"></span><span style="--h: 0.03"></span>
+      </div>
+      <p class="muted">Visual cue: ACF drops off after a short lag window.</p>
+    </section>
+
+    <section class="card">
+      <h2>3) Seasonal spikes can suggest <code>P</code> and <code>Q</code></h2>
+      <p>
+        For monthly data (<code>s=12</code>), spikes at lags 12, 24, 36, ... can indicate seasonal dependence.
+        PACF seasonal spikes often motivate seasonal AR terms (<code>P</code>), while ACF seasonal spikes can motivate
+        seasonal MA terms (<code>Q</code>).
+      </p>
+      <p>
+        Use the playground to test this intuition by raising spikes near seasonal lags and comparing how your
+        selected parameters match those patterns.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>4) Always validate with diagnostics</h2>
+      <ul>
+        <li>Check residual ACF/PACF to confirm little remaining structure.</li>
+        <li>Compare candidate models using AIC/BIC and forecast error.</li>
+        <li>Test on validation windows; avoid selecting terms only by visual pattern matching.</li>
+      </ul>
+      <p class="callout">
+        This tool is for conceptual learning and pattern intuition, not formal model fitting.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>Next step: open the playground and practice mapping patterns to model orders.</p>
+    </div>
+  </footer>
+</body>
+</html>

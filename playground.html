@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SARIMA Playground | ACF & PACF Lab</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">SARIMA Exploration Lab</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="index.html">Overview</a>
+        <a class="active" href="playground.html">Playground</a>
+        <a href="guide.html">Guide</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h1>Interactive SARIMA Playground</h1>
+      <p class="muted">
+        Drag spikes vertically to simulate ACF/PACF patterns and compare them with SARIMA parameter choices.
+      </p>
+
+      <div class="controls-grid">
+        <div class="control-card">
+          <label for="pRange">Non-seasonal AR (<code>p</code>)</label>
+          <div class="range-row">
+            <input id="pRange" type="range" min="0" max="10" step="1" value="1" />
+            <output id="pValue" for="pRange">1</output>
+          </div>
+        </div>
+
+        <div class="control-card">
+          <label for="qRange">Non-seasonal MA (<code>q</code>)</label>
+          <div class="range-row">
+            <input id="qRange" type="range" min="0" max="10" step="1" value="1" />
+            <output id="qValue" for="qRange">1</output>
+          </div>
+        </div>
+
+        <div class="control-card">
+          <label for="PRange">Seasonal AR (<code>P</code>)</label>
+          <div class="range-row">
+            <input id="PRange" type="range" min="0" max="10" step="1" value="1" />
+            <output id="PValue" for="PRange">1</output>
+          </div>
+        </div>
+
+        <div class="control-card">
+          <label for="QRange">Seasonal MA (<code>Q</code>)</label>
+          <div class="range-row">
+            <input id="QRange" type="range" min="0" max="10" step="1" value="1" />
+            <output id="QValue" for="QRange">1</output>
+          </div>
+        </div>
+      </div>
+
+      <div class="lag-controls">
+        <label for="acfLags">ACF lags</label>
+        <input id="acfLags" type="number" min="8" max="120" step="1" value="48" />
+
+        <label for="pacfLags">PACF lags</label>
+        <input id="pacfLags" type="number" min="8" max="120" step="1" value="48" />
+
+        <button id="resetBtn" class="btn btn-secondary" type="button">Reset defaults</button>
+      </div>
+    </section>
+
+    <section class="chart-grid">
+      <article class="card chart-card">
+        <div class="chart-head">
+          <h2>ACF</h2>
+          <p class="muted">Blue spikes: draggable values. Gold guides: MA/seasonal MA cues.</p>
+        </div>
+        <svg id="acfChart" class="spike-chart" viewBox="0 0 760 320" role="img" aria-label="Interactive ACF spike chart"></svg>
+      </article>
+
+      <article class="card chart-card">
+        <div class="chart-head">
+          <h2>PACF</h2>
+          <p class="muted">Purple spikes: draggable values. Gold guides: AR/seasonal AR cues.</p>
+        </div>
+        <svg id="pacfChart" class="spike-chart" viewBox="0 0 760 320" role="img" aria-label="Interactive PACF spike chart"></svg>
+      </article>
+    </section>
+
+    <section class="card model-panel">
+      <h2>Live model suggestion context</h2>
+      <p class="model-tag">Current model: <strong id="modelDisplay">SARIMA(1,1,1)(1,1,1)[12]</strong></p>
+      <p class="muted">Defaults held constant here: <code>d = 1</code>, <code>D = 1</code>, <code>s = 12</code>.</p>
+      <ul id="hintList" class="hint-list"></ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>Tip: simulate sharp cutoffs vs gradual decay to compare AR-like and MA-like behavior.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

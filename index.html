@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SARIMA Lab | Learn with ACF & PACF</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">SARIMA Exploration Lab</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a class="active" href="index.html">Overview</a>
+        <a href="playground.html">Playground</a>
+        <a href="guide.html">Guide</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero card">
+      <h1>Understand SARIMA choices through interactive ACF & PACF patterns</h1>
+      <p>
+        <strong>SARIMA</strong> models seasonality and short-term correlation in time-series data.
+        <strong>ACF</strong> (Autocorrelation Function) helps reveal moving-average behavior,
+        while <strong>PACF</strong> (Partial Autocorrelation Function) helps reveal autoregressive behavior.
+      </p>
+      <p>
+        This app is designed to help you connect visual spike patterns with SARIMA parameter selection:
+        non-seasonal terms <code>p</code> and <code>q</code>, plus seasonal terms <code>P</code> and <code>Q</code>.
+      </p>
+
+      <div class="cta-row">
+        <a class="btn btn-primary" href="playground.html">Open Interactive Playground</a>
+        <a class="btn btn-secondary" href="guide.html">Read Parameter Guide</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>What you can do in this lab</h2>
+      <div class="feature-grid">
+        <article>
+          <h3>Manipulate SARIMA terms</h3>
+          <p>Adjust <code>p</code>, <code>q</code>, <code>P</code>, and <code>Q</code> with instant model updates.</p>
+        </article>
+        <article>
+          <h3>Drag ACF & PACF spikes</h3>
+          <p>Edit spike heights directly on the charts to simulate different autocorrelation structures.</p>
+        </article>
+        <article>
+          <h3>Control lag depth</h3>
+          <p>Set how many lags are visible for both ACF and PACF to inspect short and longer-range effects.</p>
+        </article>
+        <article>
+          <h3>Learn with live hints</h3>
+          <p>See practical interpretation tips that react to the chart patterns and selected model terms.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>Educational SARIMA sandbox for conceptual learning (not automated model fitting).</p>
+    </div>
+  </footer>
+</body>
+</html>
